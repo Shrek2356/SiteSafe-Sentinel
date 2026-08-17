@@ -1,0 +1,16 @@
+path: D:/env/yolo_site_workspace/datasets/ConstructionSite_export
+
+train: images/train
+val: images/test
+test: images/test
+
+nc: 7
+
+names:
+  0: excavator
+  1: rebar
+  2: worker_with_white_hard_hat
+  3: rule_1_violation
+  4: rule_2_violation
+  5: rule_3_violation
+  6: rule_4_violation

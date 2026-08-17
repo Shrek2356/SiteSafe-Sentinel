@@ -1,0 +1,84 @@
+{
+  "_comment": "道路损毁风险目录：用于以本项目检测流水线做道路病害自动标注。annotation_class是五类掩码体系的映射线索（DamageCore=道路本体损伤 / ConnectedHazard=与道路相邻或覆盖的异常 / 由映射器结合关系核验结果最终定类）。subject任务统一定位道路主体(RoadSupport)。",
+  "core": [
+    {
+      "risk_id": "pothole",
+      "name_zh": "路面坑槽",
+      "description": "路面出现坑洞、坑槽或剥落成坑的破损区域。",
+      "entity_hints": ["road surface", "pothole on road surface"],
+      "relation_hint": "inside",
+      "mask_strategy_hint": "object_only",
+      "annotation_class": "DamageCore"
+    },
+    {
+      "risk_id": "crack",
+      "name_zh": "路面裂缝",
+      "description": "路面存在线状裂缝、网状龟裂或块状开裂。",
+      "entity_hints": ["road surface", "crack on road pavement"],
+      "relation_hint": "inside",
+      "mask_strategy_hint": "object_only",
+      "annotation_class": "DamageCore"
+    },
+    {
+      "risk_id": "subsidence",
+      "name_zh": "路面沉陷变形",
+      "description": "路面出现明显沉陷、隆起、车辙或波浪状变形。",
+      "entity_hints": ["road surface", "sunken or deformed road surface area"],
+      "relation_hint": "inside",
+      "mask_strategy_hint": "object_only",
+      "annotation_class": "DamageCore"
+    },
+    {
+      "risk_id": "road_collapse",
+      "name_zh": "路基塌方缺口",
+      "description": "路面或路基整体塌陷、缺失、断裂形成的大范围破坏。",
+      "entity_hints": ["road surface", "collapsed road section or missing roadbed"],
+      "relation_hint": "overlap",
+      "mask_strategy_hint": "object_only",
+      "annotation_class": "DamageCore"
+    },
+    {
+      "risk_id": "water_accumulation",
+      "name_zh": "路面积水",
+      "description": "路面上存在明显积水或水洼覆盖。",
+      "entity_hints": ["road surface", "water puddle on road surface"],
+      "relation_hint": "overlap",
+      "mask_strategy_hint": "object_only",
+      "annotation_class": "ConnectedHazard"
+    },
+    {
+      "risk_id": "rockfall_on_road",
+      "name_zh": "路面落石",
+      "description": "山体或边坡滚落的石块滞留在路面或路肩上。",
+      "entity_hints": ["road surface", "fallen rocks on road"],
+      "relation_hint": "overlap",
+      "mask_strategy_hint": "object_only",
+      "annotation_class": "ConnectedHazard"
+    },
+    {
+      "risk_id": "slope_debris",
+      "name_zh": "边坡滑塌堆积物",
+      "description": "路侧边坡滑塌产生的土石堆积物侵入路面或紧贴路缘。",
+      "entity_hints": ["road surface", "landslide debris pile beside or on road"],
+      "relation_hint": "overlap",
+      "mask_strategy_hint": "object_only",
+      "annotation_class": "ConnectedHazard"
+    },
+    {
+      "risk_id": "road_debris",
+      "name_zh": "路面散落异物",
+      "description": "路面散落建筑垃圾、货物、树枝等异物。",
+      "entity_hints": ["road surface", "debris or foreign objects scattered on road"],
+      "relation_hint": "overlap",
+      "mask_strategy_hint": "object_only",
+      "annotation_class": "ConnectedHazard"
+    }
+  ],
+  "distractors": [
+    {"risk_id": "aircraft_on_road", "name_zh": "航空器迫降占道", "description": "航空器降落或坠落在道路上。"},
+    {"risk_id": "large_sinkhole_swallow", "name_zh": "天坑吞没车辆", "description": "巨型天坑正在吞没车辆或建筑。"},
+    {"risk_id": "wild_animal_crossing", "name_zh": "大型野生动物占道", "description": "大型野生动物在道路上停留。"},
+    {"risk_id": "flood_submersion", "name_zh": "洪水淹没道路", "description": "大范围洪水完全淹没道路通行断面。"},
+    {"risk_id": "train_derailment_on_road", "name_zh": "列车脱轨侵入道路", "description": "脱轨列车侵入公路路面。"}
+  ]
+}

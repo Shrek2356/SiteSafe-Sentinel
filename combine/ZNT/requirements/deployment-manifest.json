@@ -1,0 +1,68 @@
+{
+  "schema_version": 3,
+  "delivery_version": "2026-08-16-audit-fixed",
+  "artifact_policy": {
+    "code_package_contains_model_weights": false,
+    "model_weights_delivery": "separate-model-bundle",
+    "note": "The code/demo package keeps pre-rendered evidence assets but excludes model weights. Offline/cloud deployers must obtain the matching model bundle from the project owner."
+  },
+  "presentation_assets": {
+    "enabled_by_default": true,
+    "disable_build_env": "VITE_ENABLE_PRESENTATION_ASSETS=false",
+    "scope": "frontend-only; does not alter real detection or Agent records"
+  },
+  "recommended_environment": {
+    "os": "Windows 10/11 x64",
+    "python": "3.10.x (64-bit)",
+    "node": "20 or 22 LTS",
+    "ram_gb_min_offline": 32,
+    "ram_gb_recommended_offline": 64,
+    "disk_free_gb_recommended": 35,
+    "gpu_vram_gb_min_offline": 12,
+    "gpu_vram_gb_recommended_offline": 16
+  },
+  "models": {
+    "qwen_model_path": {
+      "label": "Qwen3-VL-8B-Instruct GGUF Q4_K_M",
+      "required_for": ["offline"],
+      "expected_name": "Qwen3-VL-8B-Instruct-Q4_K_M.gguf",
+      "approx_gb": 4.68,
+      "source": "https://huggingface.co/Qwen/Qwen3-VL-8B-Instruct-GGUF"
+    },
+    "qwen_mmproj_path": {
+      "label": "Qwen3-VL vision projector mmproj BF16",
+      "required_for": ["offline"],
+      "expected_name": "mmproj-BF16.gguf",
+      "approx_gb": 1.08,
+      "source": "Use the mmproj paired with the exact Qwen GGUF repository/revision"
+    },
+    "sam3_checkpoint_path": {
+      "label": "SAM3 checkpoint",
+      "required_for": ["offline", "cloud"],
+      "expected_name": "sam3.pt",
+      "approx_gb": 3.21,
+      "source": "https://github.com/facebookresearch/sam3"
+    },
+    "clip_checkpoint_path": {
+      "label": "OpenCLIP ViT-L/14 checkpoint (optional)",
+      "required_for": [],
+      "expected_name": "ViT-L-14.pt",
+      "approx_gb": 0.87,
+      "source": "https://github.com/mlfoundations/open_clip"
+    },
+    "yolo_css_weights_path": {
+      "label": "Project YOLO CSS weights",
+      "required_for": ["offline", "cloud"],
+      "expected_name": "yolo26m_css_v28_baseline_best.pt",
+      "approx_gb": 0.041,
+      "source": "Project-trained artifact; delivered separately in the project model bundle (not included in the code/demo zip)"
+    },
+    "yolo_construction_weights_path": {
+      "label": "Project YOLO ConstructionSite weights",
+      "required_for": ["offline", "cloud"],
+      "expected_name": "yolo26m_construction_site_best.pt",
+      "approx_gb": 0.041,
+      "source": "Project-trained artifact; delivered separately in the project model bundle (not included in the code/demo zip)"
+    }
+  }
+}

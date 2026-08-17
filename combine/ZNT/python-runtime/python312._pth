@@ -1,0 +1,6 @@
+python312.zip
+.
+Lib\site-packages
+..\detectmodel\Site_Safety_OpenRisk
+..\detectmodel\Site_Safety_OpenRisk\src
+import site

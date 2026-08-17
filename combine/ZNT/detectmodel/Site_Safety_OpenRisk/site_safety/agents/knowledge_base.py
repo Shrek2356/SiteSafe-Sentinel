@@ -1,0 +1,202 @@
+"""条款级RAG知识库：把任意安全规程文档扔进目录即可被检索。
+
+用法：把 .md / .txt / .pdf / .docx 文件放入 knowledge_base/ 目录，
+系统自动按标题与条款编号切块、建立索引；检索走与规范库相同的
+可插拔后端（sentence-transformers优先，TF-IDF字符n-gram兜底）。
+文件增删改后自动重建索引（按目录指纹判断）。
+"""
+from __future__ import annotations
+
+import re
+from dataclasses import dataclass
+from pathlib import Path
+from typing import List, Optional, Tuple
+
+# 条款切分锚点：markdown标题 / "第x条|章|节" / "1.2.3"式编号
+_CLAUSE_PATTERN = re.compile(
+    r"^(#{1,6}\s+.+|第[一二三四五六七八九十百\d]+[条章节].*|\d+(?:\.\d+)+\s*.+)$",
+    re.MULTILINE,
+)
+_MAX_CHUNK_CHARS = 600
+_MIN_CHUNK_CHARS = 10
+
+
+@dataclass
+class KnowledgeChunk:
+    chunk_id: str
+    source_file: str
+    section: str
+    text: str
+
+
+def _read_document(path: Path) -> str:
+    suffix = path.suffix.lower()
+    if suffix in {".md", ".txt"}:
+        return path.read_text(encoding="utf-8", errors="ignore")
+    if suffix == ".pdf":
+        from pypdf import PdfReader
+
+        return "\n".join(page.extract_text() or "" for page in PdfReader(str(path)).pages)
+    if suffix == ".docx":
+        import docx
+
+        return "\n".join(p.text for p in docx.Document(str(path)).paragraphs)
+    return ""
+
+
+def _split_clauses(text: str) -> List[Tuple[str, str]]:
+    """按标题/条款编号切块，返回[(section标题, 正文)]；超长块再按空行细分。"""
+    matches = list(_CLAUSE_PATTERN.finditer(text))
+    blocks: List[Tuple[str, str]] = []
+    if not matches:
+        blocks = [("正文", text)]
+    else:
+        if matches[0].start() > 0:
+            blocks.append(("前言", text[: matches[0].start()]))
+        for index, match in enumerate(matches):
+            end = matches[index + 1].start() if index + 1 < len(matches) else len(text)
+            section = match.group(0).lstrip("# ").strip()
+            blocks.append((section, text[match.end():end]))
+    chunks: List[Tuple[str, str]] = []
+    for section, body in blocks:
+        body = body.strip()
+        content = f"{section}\n{body}" if body else section
+        if len(content) < _MIN_CHUNK_CHARS:
+            continue
+        if len(content) <= _MAX_CHUNK_CHARS:
+            chunks.append((section, content))
+        else:  # 超长条款按空行二次切分
+            part = ""
+            for paragraph in re.split(r"\n\s*\n", content):
+                if len(part) + len(paragraph) > _MAX_CHUNK_CHARS and part:
+                    chunks.append((section, part.strip()))
+                    part = ""
+                part += paragraph + "\n\n"
+            if part.strip():
+                chunks.append((section, part.strip()))
+    return chunks
+
+
+class KnowledgeBase:
+    def __init__(self, kb_dir: str | Path) -> None:
+        self.kb_dir = Path(kb_dir)
+        self.chunks: List[KnowledgeChunk] = []
+        self._fingerprint: Optional[tuple] = None
+        self._retriever = None
+        self.refresh()
+
+    def _current_fingerprint(self) -> tuple:
+        if not self.kb_dir.is_dir():
+            return ()
+        return tuple(
+            sorted(
+                (p.name, p.stat().st_mtime_ns, p.stat().st_size)
+                for p in self.kb_dir.iterdir()
+                if p.suffix.lower() in {".md", ".txt", ".pdf", ".docx"}
+            )
+        )
+
+    def refresh(self, *, force: bool = False) -> bool:
+        """目录有变化时重建索引；返回是否重建。"""
+        fingerprint = self._current_fingerprint()
+        if not force and fingerprint == self._fingerprint:
+            return False
+        self._fingerprint = fingerprint
+        self.chunks = []
+        if self.kb_dir.is_dir():
+            for path in sorted(self.kb_dir.iterdir()):
+                if path.suffix.lower() not in {".md", ".txt", ".pdf", ".docx"}:
+                    continue
+                try:
+                    text = _read_document(path)
+                except Exception:
+                    continue
+                for index, (section, content) in enumerate(_split_clauses(text)):
+                    self.chunks.append(
+                        KnowledgeChunk(
+                            chunk_id=f"KB-{path.stem}-{index:03d}",
+                            source_file=path.name,
+                            section=section[:80],
+                            text=content,
+                        )
+                    )
+        self._retriever = None  # 懒重建
+        return True
+
+    def _ensure_retriever(self):
+        if self._retriever is None and self.chunks:
+            documents = [c.text for c in self.chunks]
+            try:
+                from sklearn.feature_extraction.text import TfidfVectorizer
+
+                self._vectorizer = TfidfVectorizer(analyzer="char_wb", ngram_range=(1, 3))
+                self._matrix = self._vectorizer.fit_transform(documents)
+                self._retriever = "tfidf_char_ngram"
+            except Exception:
+                from site_safety.agents.text_similarity import PortableCharTfidf
+
+                self._portable_vectorizer = PortableCharTfidf(documents)
+                self._retriever = "portable_tfidf_char_ngram"
+        return self._retriever
+
+    def prepare_index(self) -> str:
+        """Eagerly build the local index so the first detection is not delayed."""
+        self.refresh()
+        return self._ensure_retriever() or "empty"
+
+    def search(
+        self, query: str, *, top_k: int = 5, min_score: float = 0.10
+    ) -> List[dict]:
+        self.refresh()
+        if not query.strip() or self._ensure_retriever() is None:
+            return []
+        if self._retriever == "portable_tfidf_char_ngram":
+            scores = self._portable_vectorizer.similarities(query)
+        else:
+            try:
+                from sklearn.metrics.pairwise import cosine_similarity
+
+                scores = cosine_similarity(
+                    self._vectorizer.transform([query]), self._matrix
+                )[0]
+            except Exception:
+                from site_safety.agents.text_similarity import PortableCharTfidf
+
+                self._portable_vectorizer = PortableCharTfidf([c.text for c in self.chunks])
+                self._retriever = "portable_tfidf_char_ngram"
+                scores = self._portable_vectorizer.similarities(query)
+        ranked = sorted(zip(self.chunks, scores), key=lambda x: x[1], reverse=True)
+        return [
+            {
+                "chunk_id": chunk.chunk_id,
+                "source_file": chunk.source_file,
+                "section": chunk.section,
+                "text": chunk.text[:400],
+                "score": round(float(score), 4),
+            }
+            for chunk, score in ranked[:top_k]
+            if score >= min_score
+        ]
+
+    def summary(self) -> dict:
+        self.refresh()
+        documents = []
+        if self.kb_dir.is_dir():
+            for path in sorted(self.kb_dir.iterdir()):
+                if path.suffix.lower() not in {".md", ".txt", ".pdf", ".docx"}:
+                    continue
+                documents.append(
+                    {
+                        "source_file": path.name,
+                        "size_bytes": path.stat().st_size,
+                        "modified_at": path.stat().st_mtime,
+                        "chunk_count": sum(c.source_file == path.name for c in self.chunks),
+                    }
+                )
+        return {
+            "files": [item["source_file"] for item in documents],
+            "documents": documents,
+            "file_count": len(documents),
+            "chunk_count": len(self.chunks),
+            "retriever": self._retriever or "not_built",
+        }

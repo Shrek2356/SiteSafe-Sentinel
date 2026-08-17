@@ -1,0 +1,66 @@
+[
+  {
+    "id": 1,
+    "file": "case1.png",
+    "src": "/examples/case1.png",
+    "title": "高处作业未佩戴安全带",
+    "risk": "坠落风险",
+    "outcome": "/outcomes/case1_overlay.png"
+  },
+  {
+    "id": 2,
+    "file": "case2.png",
+    "src": "/examples/case2.png",
+    "title": "吊装作业下方有人",
+    "risk": "起重伤害风险",
+    "outcome": "/outcomes/case2_overlay.png"
+  },
+  {
+    "id": 3,
+    "file": "case3.png",
+    "src": "/examples/case3.png",
+    "title": "临边洞口未防护",
+    "risk": "坠落风险",
+    "outcome": "/outcomes/case3_overlay.png"
+  },
+  {
+    "id": 4,
+    "file": "case4.png",
+    "src": "/examples/case4.png",
+    "title": "电气线路裸露违规用电",
+    "risk": "触电风险",
+    "outcome": "/outcomes/case4_overlay.png"
+  },
+  {
+    "id": 5,
+    "file": "case5.png",
+    "src": "/examples/case5.png",
+    "title": "材料堆放违规·通道堵塞",
+    "risk": "管理风险",
+    "outcome": "/outcomes/case5_overlay.png"
+  },
+  {
+    "id": 6,
+    "file": "case6.png",
+    "src": "/examples/case6.png",
+    "title": "脚手架安全隐患",
+    "risk": "坍塌跌落风险",
+    "outcome": "/results/case6_original.jpg"
+  },
+  {
+    "id": 7,
+    "file": "case7.png",
+    "src": "/examples/case7.png",
+    "title": "未佩戴安全帽",
+    "risk": "个人防护缺失",
+    "outcome": "/outcomes/case7_overlay.png"
+  },
+  {
+    "id": 8,
+    "file": "case8.png",
+    "src": "/examples/case8.png",
+    "title": "工人独自昏倒",
+    "risk": "紧急安全事故",
+    "outcome": "/outcomes/case8_overlay.png"
+  }
+]

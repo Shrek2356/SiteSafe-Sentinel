@@ -1,0 +1,10 @@
+name: yolo26_site
+channels:
+  - https://mirrors.bfsu.edu.cn/anaconda/cloud/pytorch/
+  - https://mirrors.ustc.edu.cn/anaconda/pkgs/free/
+  - https://mirrors.ustc.edu.cn/anaconda/pkgs/main/
+  - defaults
+dependencies:
+  - pip
+  - python=3.12
+prefix: D:\Anaconda3\envs\yolo26_site
