@@ -1,0 +1,25 @@
+SiteSafe-Sentinel Proprietary Source-Available License v1.0
+
+Copyright (c) 2026 SiteSafe-Sentinel Project Authors. All Rights Reserved.
+
+Authorized repository collaborators may view, clone, and run this software
+solely for private evaluation, competition review, academic demonstration, or
+internal non-commercial testing.
+
+Without prior written permission from the copyright owner, no person or
+organization may publish, redistribute, sublicense, sell, commercially exploit,
+deploy in production, modify and distribute derivative works, use this project
+for model training or competing-product development, remove attribution, or
+represent this project or substantially similar work as their own.
+
+Public visibility or access through GitHub grants no rights beyond those
+required by GitHub's Terms of Service and the limited permission above.
+
+Third-party software, models, weights, datasets, fonts, images, character
+materials, and trademarks remain governed by their respective licenses and
+owners. This license applies only to original SiteSafe-Sentinel materials and
+does not override third-party terms. See THIRD_PARTY_NOTICE.md.
+
+No patent or trademark license is granted. The software is provided "AS IS",
+without warranty of any kind. For research, deployment, or commercial
+authorization, contact the repository owner.
