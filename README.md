@@ -1,5 +1,14 @@
 # SiteSafe-Sentinel 嘉然今天也在守护工地
 An open-risk visual detection and multi-agent safety management platform for construction sites.
+
+<p align="center">
+  <a href="./combine/ZNT/video/%E5%80%99%E6%9C%BA%E5%8A%A8%E7%94%BB.mp4" title="点击观看原始高清视频">
+    <img src="./assets/readme/sitesafe-sentinel-intro.gif" width="720" alt="嘉然正在检查工地安全系统各模块" />
+  </a>
+</p>
+
+<p align="center"><em>点击动画可查看原始高清视频</em></p>
+
 # 工地安全智能检测系统
 
 
