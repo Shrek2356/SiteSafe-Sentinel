@@ -1,5 +1,5 @@
-#筑安智巡——面向开放施工风险的多模态安全监管智能体
-SiteSafe-Sentinel 嘉然今天也在守护工地
+# 筑安智巡——面向开放施工风险的多模态安全监管智能体
+## SiteSafe-Sentinel 嘉然今天也在守护工地
 An open-risk visual detection and multi-agent safety management platform for construction sites.
 
 <p align="center">
