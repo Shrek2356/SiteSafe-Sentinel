@@ -1,6 +1,6 @@
 param(
     [string]$Destination = 'E:\work\competition\FINAL_DELIVERABLES_20260907',
-    [string]$Name = 'SiteSafe-Sentinel_Desktop_v1.2.0'
+    [string]$Name = 'SiteSafe-Sentinel_Desktop_v1.3.0_visual'
 )
 $ErrorActionPreference = 'Stop'
 $appSource = [IO.Path]::GetFullPath((Join-Path $PSScriptRoot '..'))
@@ -41,7 +41,7 @@ foreach ($file in @('package.json','package-lock.json','vite.config.js','index.h
     Copy-Item -LiteralPath (Join-Path $appSource "pc-admin\$file") -Destination (Join-Path $releaseRoot "pc-admin\$file")
 }
 Copy-Item -LiteralPath (Join-Path $appSource 'desktop-dist\SiteSafe-Sentinel.exe') -Destination (Join-Path $releaseRoot 'SiteSafe-Sentinel.exe')
-Copy-Item -LiteralPath (Join-Path $appSource 'docs\桌面版v1.2产品体验与使用指南.md') -Destination (Join-Path $releaseRoot 'README.md')
+Copy-Item -LiteralPath (Join-Path $appSource 'docs\桌面版v1.3视觉升级与使用指南.md') -Destination (Join-Path $releaseRoot 'README.md')
 Copy-Item -LiteralPath (Join-Path $appSource 'desktop\start-desktop.bat') -Destination (Join-Path $releaseRoot 'start-platform.bat')
 # Retain source public/ assets alongside the compiled app for full development handoff.
 Copy-Item -LiteralPath (Join-Path $appSource 'desktop\restore-frontend-assets.ps1') -Destination (Join-Path $releaseRoot 'pc-admin\restore-frontend-assets.ps1')

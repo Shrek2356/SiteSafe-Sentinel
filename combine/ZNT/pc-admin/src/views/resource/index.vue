@@ -97,5 +97,5 @@ onMounted(async () => {
 </script>
 
 <style scoped>
-.tip { color: #8c8c8c; font-size: 12px; margin-top: 12px; }
+.tip { color: var(--text-secondary); font-size: 12px; margin-top: 12px; }
 </style>

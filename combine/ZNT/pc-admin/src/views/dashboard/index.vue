@@ -6,8 +6,8 @@
   <div class="dashboard">
     <a-alert v-if="dashboardError" type="warning" show-icon :message="dashboardError" style="margin-bottom:16px"><template #description><a-button size="small" :loading="dashboardLoading" @click="loadDashboard()">重新加载</a-button> <router-link to="/help-center?tab=diagnostics">查看连接诊断</router-link></template></a-alert>
     <section v-if="workspaceStyle === 'professional'" class="workspace-hero">
-      <div class="workspace-copy"><span class="workspace-eyebrow">SITESAFE SENTINEL / 安全工作空间</span><h1>让风险被看见，<br/><em>让处置有着落。</em></h1><p>{{ projectTitle }}<span v-if="projectAddress"> · {{ projectAddress }}</span></p><div class="workspace-actions"><a-button type="primary" size="large" @click="router.push('/realtime-detect')"><PlusOutlined /> 新建图片检测</a-button><a-button size="large" @click="router.push('/help-center')">开始使用指南 <ArrowRightOutlined /></a-button></div></div>
-      <div class="workspace-art" aria-hidden="true"><div class="art-orbit"></div><svg viewBox="0 0 360 180" fill="none"><path d="M24 157H342M76 157V70H162V157M92 70V31H126V70M196 157V95H294V157M212 95V53H280V95M39 157V116H76M137 31H247M187 17V157M119 31L187 17L247 31M247 31V70" stroke="currentColor" stroke-width="1.3"/><path d="M90 86H147M90 107H147M90 128H147M209 110H282M209 131H282" stroke="currentColor" stroke-opacity=".4"/><circle cx="249" cy="70" r="4" fill="#e1ab85" stroke="none"/></svg><div class="art-note"><span></span> 感知 · 研判 · 处置 · 复盘</div></div>
+      <div class="workspace-copy"><span class="workspace-eyebrow">SITESAFE SENTINEL / 安全工作空间</span><h1>看见风险，<em>守护每一处现场。</em></h1><p>{{ projectTitle }}<span v-if="projectAddress"> · {{ projectAddress }}</span></p><div class="workspace-actions"><a-button type="primary" size="large" @click="router.push('/realtime-detect')"><PlusOutlined /> 新建图片检测</a-button><a-button size="large" @click="router.push('/help-center')">开始使用指南 <ArrowRightOutlined /></a-button></div></div>
+      <div class="workspace-art" aria-hidden="true"><div class="art-orbit"></div><svg viewBox="0 0 360 180" fill="none"><path d="M24 157H342M76 157V70H162V157M92 70V31H126V70M196 157V95H294V157M212 95V53H280V95M39 157V116H76M137 31H247M187 17V157M119 31L187 17L247 31M247 31V70" stroke="currentColor" stroke-width="1.3"/><path d="M90 86H147M90 107H147M90 128H147M209 110H282M209 131H282" stroke="currentColor" stroke-opacity=".4"/><circle cx="249" cy="70" r="4" fill="var(--hero-accent)" stroke="none"/></svg><div class="art-note"><span></span> 感知 · 研判 · 处置 · 复盘</div></div>
     </section>
     <!-- 队形象横幅：嘉然今天也在守护工地 -->
     <div v-else class="team-banner" :key="projectKey">
@@ -33,7 +33,7 @@
     <a-row :gutter="12" class="metrics" :class="{ 'metrics-flash': dataFlash }">
       <a-col v-for="m in metrics" :key="projectKey + '-' + m.key" :span="4" style="flex: 1; max-width: 20%">
         <a-tooltip :title="m.tip || '点击查看明细'">
-          <div class="metric-card clickable" :class="'t-' + m.type" @click="onMetricClick(m)">
+          <div class="metric-card clickable" role="button" tabindex="0" @keydown.enter="onMetricClick(m)" @keydown.space.prevent="onMetricClick(m)" :aria-label="`${m.label} ${m.value}${m.unit}，查看明细`" :class="'t-' + m.type" @click="onMetricClick(m)">
             <div class="metric-label">
               <span class="label-with-mood">
                 <img v-if="workspaceStyle === 'showcase' && metricMood(m.key)" class="mood-mini" :src="metricMood(m.key).src" :alt="metricMood(m.key).tip" />
@@ -112,8 +112,8 @@
               <a-progress
                 :percent="t.rate"
                 size="small"
-                :stroke-color="'#f26a57'"
-                :trail-color="'#f7e3d7'"
+                stroke-color="var(--success)"
+                trail-color="var(--surface-muted)"
                 style="flex: 1; margin: 0 8px"
               />
               <span>{{ t.fixed }}/{{ t.total }}</span>
@@ -123,7 +123,7 @@
             <div class="sub-title">高频隐患 TOP5</div>
             <div v-for="(h, i) in topHazards" :key="h.name" class="top-item">
               <span>{{ i + 1 }}. {{ h.name }}</span>
-              <a-badge :count="h.count" :number-style="{ backgroundColor: '#f26a57' }" />
+              <a-badge :count="h.count" :number-style="{ backgroundColor: 'var(--primary-soft)', color: 'var(--link)' }" />
             </div>
           </div>
         </div>
@@ -157,6 +157,7 @@ import { useUserStore } from '@/stores/user'
 import { JR, TEAM_NAME, metricMood } from '@/utils/jr'
 import { subscribeModules } from '@/utils/moduleBus'
 import { colorTheme } from '@/utils/theme'
+import { chartTheme } from '@/utils/designTokens'
 import { workspaceStyle } from '@/utils/preferences'
 import { canVisit } from '@/utils/guidance'
 import { PlusOutlined, ArrowRightOutlined } from '@ant-design/icons-vue'
@@ -225,17 +226,16 @@ function openVideoCase(v) {
 
 
 function renderCharts() {
-  const warmSlice = ['#f26a57', '#f0a14d', '#ffd36b', '#d18d70', '#c85a43']
-  const dark = colorTheme.value === 'dark'
-  const chartText = dark ? '#dbe6ec' : '#595959'
-  const chartGrid = dark ? '#33434f' : '#e8e8e8'
+  const visual = chartTheme(colorTheme.value)
+  const chartText = visual.text
+  const chartGrid = visual.grid
 
   if (trendRef.value) {
     if (!trendChart) trendChart = echarts.init(trendRef.value)
     trendChart.setOption({
       backgroundColor: 'transparent',
       title: { text: '风险时段分布', textStyle: { fontSize: 13, color: chartText } },
-      tooltip: { trigger: 'axis' },
+      tooltip: { ...visual.tooltip, trigger: 'axis' },
       grid: { left: 40, right: 16, top: 36, bottom: 24 },
       xAxis: { type: 'category', data: riskTrend.value.hours, axisLabel: { color: chartText }, axisLine: { lineStyle: { color: chartGrid } } },
       yAxis: { type: 'value', minInterval: 1, axisLabel: { color: chartText }, splitLine: { lineStyle: { color: chartGrid } } },
@@ -243,9 +243,9 @@ function renderCharts() {
         type: 'line',
         smooth: true,
         data: riskTrend.value.values,
-        areaStyle: { opacity: 0.15, color: '#f7c3b4' },
-        lineStyle: { color: '#f26a57', width: 2.5 },
-        itemStyle: { color: '#f26a57' },
+        areaStyle: { opacity: 0.15, color: visual.primary },
+        lineStyle: { color: visual.primary, width: 2.5 },
+        itemStyle: { color: visual.primary },
       }],
     }, true)
   }
@@ -254,15 +254,15 @@ function renderCharts() {
     pieChart.setOption({
       backgroundColor: 'transparent',
       title: { text: '隐患类型占比', textStyle: { fontSize: 13, color: chartText } },
-      tooltip: { trigger: 'item' },
+      tooltip: { ...visual.tooltip, trigger: 'item' },
       series: [{
         type: 'pie',
         radius: ['35%', '60%'],
         data: hazardTypes.value.map((item, index) => ({
           ...item,
-          itemStyle: { color: warmSlice[index % warmSlice.length] },
+          itemStyle: { color: visual.colors[index % visual.colors.length] },
         })),
-        label: { fontSize: 11, color: dark ? '#ffc0ad' : '#8a3a30' },
+        label: { fontSize: 11, color: chartText },
       }],
     }, true)
   }
@@ -380,14 +380,14 @@ onBeforeUnmount(() => {
   max-width: 100%;
   padding: 4px 12px;
   border-radius: 999px;
-  background: rgba(242, 106, 87, 0.1);
-  border: 1px solid rgba(242, 106, 87, 0.22);
+  background: var(--primary-soft);
+  border: 1px solid color-mix(in srgb,var(--primary) 22%,transparent);
   color: var(--text-primary);
   font-size: 12px;
   line-height: 1.4;
 }
 .project-chip-label {
-  color: #c85a43;
+  color: var(--link);
   font-weight: 600;
   flex-shrink: 0;
 }
@@ -419,7 +419,7 @@ onBeforeUnmount(() => {
 }
 @keyframes dash-pulse {
   0% { transform: translateY(0); box-shadow: none; }
-  40% { transform: translateY(-2px); box-shadow: 0 8px 18px rgba(242, 106, 87, 0.14); }
+  40% { transform: translateY(-2px); box-shadow: 0 8px 18px color-mix(in srgb,var(--primary) 14%,transparent); }
   100% { transform: translateY(0); box-shadow: none; }
 }
 .metric-card {
@@ -427,7 +427,7 @@ onBeforeUnmount(() => {
   border: 1px solid var(--border-color);
   border-radius: 8px;
   padding: 14px 16px;
-  border-top: 3px solid #f26a57;
+  border-top: 3px solid var(--primary);
 }
 .label-with-mood { display: inline-flex; align-items: center; gap: 4px; }
 .mood-mini { width: 22px; height: 22px; object-fit: contain; }
@@ -439,9 +439,9 @@ onBeforeUnmount(() => {
   box-shadow: 0 6px 16px rgba(0, 0, 0, 0.08);
   transform: translateY(-2px);
 }
-.metric-card.t-danger { border-top-color: #ff4d4f; }
-.metric-card.t-warning { border-top-color: #fa8c16; }
-.metric-card.t-success { border-top-color: #f26a57; }
+.metric-card.t-danger { border-top-color: var(--danger); }
+.metric-card.t-warning { border-top-color: var(--warning); }
+.metric-card.t-success { border-top-color: var(--primary); }
 .metric-label {
   color: var(--text-secondary);
   font-size: 13px;
@@ -449,7 +449,7 @@ onBeforeUnmount(() => {
   justify-content: space-between;
   align-items: center;
 }
-.link-hint { color: #c85a43; font-size: 12px; opacity: 0.85; }
+.link-hint { color: var(--link); font-size: 12px; opacity: 0.85; }
 .metric-value { font-size: 28px; font-weight: 700; line-height: 1.3; }
 .unit { font-size: 14px; margin-left: 4px; font-weight: 400; }
 .metric-trend { font-size: 12px; color: var(--text-secondary); }
@@ -485,7 +485,7 @@ onBeforeUnmount(() => {
   height: 260px;
   border-radius: 6px;
   overflow: hidden;
-  background: #4e2c27;
+  background: var(--media-bg);
   cursor: pointer;
 }
 .cover-wrap img { width: 100%; height: 100%; object-fit: cover; display: block; }
@@ -526,7 +526,7 @@ onBeforeUnmount(() => {
 }
 .rank-no {
   width: 18px; height: 18px; border-radius: 50%;
-  background: #f26a57; color: #fff; text-align: center; line-height: 18px; font-size: 11px;
+  background: var(--primary-soft); color: var(--link); text-align: center; line-height: 18px; font-size: 11px;
 }
 .rank-name { width: 72px; }
 .top-item { justify-content: space-between; }
@@ -537,12 +537,47 @@ onBeforeUnmount(() => {
   padding: 12px 16px;
 }
 .warm-ghost-btn {
-  color: #c85a43 !important;
+  color: var(--link) !important;
 }
 .ai-demo-actions {
   margin-top: 16px;
   text-align: right;
 }
-.workspace-hero{position:relative;overflow:hidden;display:flex;justify-content:space-between;min-height:238px;padding:30px 34px;background:var(--product-ink);border-radius:18px;color:#f2f5f4;margin-bottom:22px}.workspace-copy{z-index:1;min-width:0}.workspace-eyebrow{font-size:10px;letter-spacing:2px;color:#a6bec1}.workspace-copy h1{font-size:30px;line-height:1.4;letter-spacing:.5px;margin:14px 0 12px;color:#f8faf9;font-weight:600}.workspace-copy h1 em{font-style:normal;color:#eac1a4}.workspace-copy p{color:#afc3c6;font-size:12px;margin:0 0 22px;max-width:600px}.workspace-actions{display:flex;gap:12px}.workspace-actions :deep(.ant-btn){font-size:12px;height:36px;border-radius:8px}.workspace-actions :deep(.ant-btn-default){background:#ffffff0b;border-color:#ffffff30;color:#e4eeec}.workspace-art{position:relative;align-self:center;width:35%;min-width:260px;max-width:400px;margin-right:10px;color:#91b6b8}.workspace-art svg{position:relative;z-index:1;width:100%;height:auto}.art-orbit{position:absolute;width:240px;height:240px;right:0;top:-60px;border-radius:50%;border:1px solid #b5d5cc16;box-shadow:0 0 0 26px #b5d5cc06,0 0 0 54px #b5d5cc04}.art-note{position:relative;font-size:10px;letter-spacing:3px;text-align:right;color:#a6bdbd;margin-top:15px}.art-note span{display:inline-block;width:5px;height:5px;border-radius:50%;background:#deb492;margin-right:8px}.main-row{row-gap:16px}@media(max-width:1150px){.workspace-art{min-width:200px;width:28%;opacity:.65}.workspace-hero{padding:26px}.workspace-copy h1{font-size:27px}}
+.workspace-hero { position:relative; overflow:hidden; display:flex; align-items:center; justify-content:space-between; gap:20px; min-height:214px; padding:28px 32px; background:linear-gradient(115deg,#142e3c,#173c49); border:1px solid #365564; border-radius:18px; color:var(--hero-text); margin-bottom:20px; }
+.workspace-copy { position:relative; z-index:1; min-width:0; flex:1; }
+.workspace-eyebrow { display:flex; align-items:center; gap:9px; font-size:10px; letter-spacing:2px; color:var(--hero-muted); }
+.workspace-eyebrow::before { content:''; width:18px; height:2px; background:var(--hero-accent); }
+.workspace-copy h1 { font-size:clamp(24px,2.15vw,34px); line-height:1.5; letter-spacing:-.5px; margin:12px 0 9px; color:var(--hero-text); font-weight:650; }
+.workspace-copy h1 em { font-style:normal; color:var(--hero-accent); }
+.workspace-copy p { color:var(--hero-muted); font-size:12px; margin:0 0 22px; max-width:620px; }
+.workspace-actions { display:flex; flex-wrap:wrap; gap:12px; }
+.workspace-actions :deep(.ant-btn) { font-size:12px; height:36px; border-radius:8px; }
+.workspace-actions :deep(.ant-btn-primary:not(:disabled)) { background:#88e0ca; border-color:#88e0ca; color:#123b35; }
+.workspace-actions :deep(.ant-btn-primary:not(:disabled):hover) { background:#acf0df; border-color:#acf0df; color:#123b35; }
+.workspace-actions :deep(.ant-btn-default) { background:#ffffff08; border-color:#ffffff40; color:#e4eef4; }
+.workspace-actions :deep(.ant-btn-default:hover) { background:#ffffff15; border-color:#88e0ca; color:#fff; }
+.workspace-art { position:relative; align-self:center; width:29%; min-width:190px; max-width:340px; color:#85b4bf; }
+.workspace-art svg { position:relative; z-index:1; width:100%; height:auto; }
+.art-orbit { position:absolute; width:210px; height:210px; right:0; top:-55px; border-radius:50%; border:1px solid #8ce0ca24; box-shadow:0 0 0 28px #b5d5cc07,0 0 0 56px #b5d5cc04; }
+.art-note { position:relative; font-size:10px; letter-spacing:2px; text-align:right; color:var(--hero-muted); margin-top:5px; }
+.art-note span { display:inline-block; width:5px; height:5px; border-radius:50%; background:var(--hero-accent); margin-right:8px; }
+.main-row { row-gap:16px; }
+.metric-card { position:relative; padding:18px; border-top:1px solid var(--border-color); overflow:hidden; }
+.metric-card::after { content:''; position:absolute; top:20px; left:0; width:3px; height:20px; background:var(--info); border-radius:0 3px 3px 0; }
+.metric-card.t-danger,.metric-card.t-warning,.metric-card.t-success { border-top-color:var(--border-color); }
+.metric-card.t-danger::after { background:var(--danger); }
+.metric-card.t-warning::after { background:var(--warning); }
+.metric-card.t-success::after { background:var(--success); }
+.metric-value { font-size:32px; font-weight:600; line-height:1.5; color:var(--text-primary); }
+.metric-label { font-size:12px; }
+.unit { color:var(--text-muted); font-size:12px; margin-left:5px; }
+.link-hint { font-size:11px; color:var(--text-muted); }
+.metric-trend { font-size:11px; color:var(--text-muted); }
+.panel { padding:18px; }
+.panel-title { display:flex; align-items:center; flex-wrap:wrap; gap:5px; font-size:14px; margin-bottom:16px; }
+.sub-tip { display:block; margin-left:0; font-size:11px; }
+.video-caption { flex-wrap:wrap; }
+.video-caption .time { font-size:10px; }
+@media(max-width:1150px) { .workspace-art{display:none} .workspace-hero{padding:26px} .metric-card{padding:14px 12px} .metric-label{font-size:11px} .link-hint{display:none} }
 .dashboard{min-width:0;width:100%;padding:0 6px}.quick-bar :deep(.ant-space){flex-wrap:wrap}.quick-bar{gap:10px;flex-wrap:wrap}
 </style>

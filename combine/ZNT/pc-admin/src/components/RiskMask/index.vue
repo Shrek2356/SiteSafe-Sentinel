@@ -38,7 +38,9 @@ defineProps({
   left: 0;
   padding: 1px 6px;
   font-size: 11px;
-  color: #fff;
+  /* Labels sit on fixed red/orange/yellow image annotations, not theme surfaces. */
+  color: #102431;
+  font-weight: 650;
   white-space: nowrap;
   border-radius: 2px;
 }

@@ -34,19 +34,19 @@ const statusText = computed(() => statusMap[props.order.status] || props.order.s
 
 <style scoped>
 .wo-card {
-  background: #fff;
+  background: var(--surface);
   border-radius: 8px;
   padding: 12px 14px;
-  border-left: 4px solid #d9d9d9;
+  border-left: 4px solid var(--border-color);
   cursor: pointer;
   transition: box-shadow 0.2s;
 }
 .wo-card:hover {
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
 }
-.level-red { border-left-color: #ff4d4f; }
-.level-orange { border-left-color: #fa8c16; }
-.level-yellow { border-left-color: #fadb14; }
+.level-red { border-left-color: var(--danger); }
+.level-orange { border-left-color: var(--warning); }
+.level-yellow { border-left-color: var(--caution); }
 .wo-head {
   display: flex;
   align-items: center;
@@ -56,7 +56,7 @@ const statusText = computed(() => statusMap[props.order.status] || props.order.s
 .wo-id {
   flex: 1;
   font-size: 12px;
-  color: #8c8c8c;
+  color: var(--text-secondary);
 }
 .wo-title {
   font-weight: 600;
@@ -66,6 +66,6 @@ const statusText = computed(() => statusMap[props.order.status] || props.order.s
   display: flex;
   gap: 12px;
   font-size: 12px;
-  color: #8c8c8c;
+  color: var(--text-secondary);
 }
 </style>

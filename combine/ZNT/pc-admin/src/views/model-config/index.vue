@@ -13,15 +13,17 @@
         <a-table :columns="thCols" :data-source="thresholds" row-key="key" :pagination="false">
           <template #bodyCell="{ column, record }">
             <template v-if="column.key === 'value'">
+              <div class="threshold-control">
               <a-slider
                 v-model:value="record.value"
                 :min="0.5"
                 :max="0.99"
                 :step="0.01"
-                style="width: 220px; display: inline-block; margin-right: 12px"
+                style="flex: 1; min-width: 100px"
                 @change="(v) => onThreshold(record.key, v)"
               />
               <span>{{ record.value }}</span>
+              </div>
             </template>
             <template v-else-if="column.key === 'source'">
               <a-tag :color="record.approved ? 'green' : 'blue'">
@@ -276,7 +278,7 @@ const modelComponents = [
 
 const thCols = [
   { title: '检测项', dataIndex: 'label', key: 'label' },
-  { title: '阈值', key: 'value' },
+  { title: '阈值', key: 'value', width: 260 },
   { title: '配置来源', key: 'source', width: 150 },
   { title: '说明', dataIndex: 'desc', key: 'desc' },
 ]
@@ -536,17 +538,19 @@ onMounted(() => {
 </script>
 
 <style scoped>
-.tip { color: #8c8c8c; font-size: 12px; margin-top: 12px; }
+.threshold-control { display:flex; align-items:center; gap:16px; min-width:180px; }
+.threshold-control > span { min-width:32px; font-variant-numeric:tabular-nums; }
+.tip { color: var(--text-secondary); font-size: 12px; margin-top: 12px; }
 .runtime-form { max-width: 1320px; }
-.switch-tip { margin-left: 12px; color: #595959; }
+.switch-tip { margin-left: 12px; color: var(--text-secondary); }
 .service-card { margin-bottom: 18px; }
 .path-input { display: flex; }
 .path-input :deep(.ant-input-affix-wrapper) { flex: 1; width: auto; }
 .component-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
 .component-item { display: flex; align-items: center; justify-content: space-between; gap: 18px; padding: 14px 16px; border: 1px solid var(--border-color); border-radius: 8px; background: var(--surface-muted); }
-.component-item p { margin: 5px 0 0; color: #8c8c8c; font-size: 12px; }
+.component-item p { margin: 5px 0 0; color: var(--text-secondary); font-size: 12px; }
 .component-actions { display: flex; align-items: center; gap: 10px; flex: none; }
-.autostart-row { display: flex; align-items: center; gap: 10px; margin-top: 14px; color: #595959; }
+.autostart-row { display: flex; align-items: center; gap: 10px; margin-top: 14px; color: var(--text-secondary); }
 .knowledge-hits { margin-top: 16px; }
 @media (max-width: 800px) {
   .component-grid { grid-template-columns: 1fr; }

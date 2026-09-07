@@ -2,6 +2,8 @@
 ## SiteSafe-Sentinel 嘉然今天也在守护工地
 An open-risk visual detection and multi-agent safety management platform for construction sites.
 
+当前桌面版 **v1.3.0**：雾白／石墨蓝双主题，统一青绿操作色与风险语义配色，保留全部展示案例与嘉然动画。[新版使用与视觉说明](./combine/ZNT/docs/桌面版v1.3视觉升级与使用指南.md)。
+
 <p align="center">
   <a href="./combine/ZNT/video/%E5%80%99%E6%9C%BA%E5%8A%A8%E7%94%BB.mp4" title="点击观看原始高清视频">
     <img src="./assets/readme/sitesafe-sentinel-intro.gif" width="720" alt="嘉然正在检查工地安全系统各模块" />

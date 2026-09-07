@@ -1,6 +1,6 @@
 {
   "schema_version": 3,
-  "delivery_version": "2026-09-07-desktop-1.2.0",
+  "delivery_version": "2026-09-07-desktop-1.3.0",
   "desktop": {
     "entry": "SiteSafe-Sentinel.exe",
     "webview": "Microsoft Edge WebView2 Runtime",

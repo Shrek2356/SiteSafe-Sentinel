@@ -174,9 +174,10 @@ function drawPoster(content) {
 
   // 背景
   const g = ctx.createLinearGradient(0, 0, 0, h)
-  g.addColorStop(0, '#4e2c27')
-  g.addColorStop(0.45, '#8a3a30')
-  g.addColorStop(1, '#f26a57')
+  // Printed artwork uses fixed, high-contrast colors independent of screen mode.
+  g.addColorStop(0, '#122c3a')
+  g.addColorStop(0.45, '#1e4d58')
+  g.addColorStop(1, '#087f78')
   ctx.fillStyle = g
   ctx.fillRect(0, 0, w, h)
 
@@ -190,7 +191,7 @@ function drawPoster(content) {
   ctx.textAlign = 'center'
   ctx.fillText(content.headline || '工地安全警示', w / 2, 78)
 
-  ctx.fillStyle = '#8a3a30'
+  ctx.fillStyle = '#203544'
   ctx.font = 'bold 32px Microsoft YaHei, sans-serif'
   ctx.textAlign = 'left'
   let y = wrapText(ctx, content.title, 80, 190, w - 160, 42)
@@ -200,7 +201,7 @@ function drawPoster(content) {
   y = wrapText(ctx, content.summary, 80, y + 36, w - 160, 34)
 
   y += 48
-  ctx.fillStyle = '#c85a43'
+  ctx.fillStyle = '#08766f'
   ctx.font = 'bold 24px Microsoft YaHei, sans-serif'
   ctx.fillText('安全提示', 80, y)
   ctx.fillStyle = '#434343'
@@ -315,13 +316,13 @@ onMounted(async () => {
 <style scoped>
 .filter { margin-bottom: 16px; }
 .meta { display: flex; flex-wrap: wrap; gap: 4px; align-items: center; margin-bottom: 4px; }
-.date { margin-left: auto; color: #8c8c8c; font-size: 12px; }
+.date { margin-left: auto; color: var(--text-secondary); font-size: 12px; }
 .result-box {
   margin-top: 24px;
-  border: 1px solid #e8e8e8;
+  border: 1px solid var(--border-color);
   border-radius: 10px;
   padding: 16px;
-  background: #fafafa;
+  background: var(--surface-2);
 }
 .result-head {
   display: flex;
@@ -332,7 +333,7 @@ onMounted(async () => {
   flex-wrap: wrap;
 }
 .result-title { font-weight: 650; font-size: 15px; }
-.poster-wrap { display: flex; justify-content: center; background: #fff; border-radius: 8px; padding: 12px; }
+.poster-wrap { display: flex; justify-content: center; background: var(--surface); border-radius: 8px; padding: 12px; }
 .poster-canvas {
   width: min(360px, 100%);
   height: auto;
@@ -343,13 +344,13 @@ onMounted(async () => {
   margin: 0;
   white-space: pre-wrap;
   word-break: break-word;
-  background: #fff;
-  border: 1px solid #f0f0f0;
+  background: var(--surface);
+  border: 1px solid var(--border-color);
   border-radius: 8px;
   padding: 14px 16px;
   font-size: 13px;
   line-height: 1.7;
-  color: #434343;
+  color: var(--text-secondary);
   max-height: 480px;
   overflow: auto;
 }

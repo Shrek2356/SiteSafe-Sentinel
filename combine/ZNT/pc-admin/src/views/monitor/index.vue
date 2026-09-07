@@ -273,8 +273,8 @@ onMounted(loadData)
   font-weight: 600;
   margin-right: 6px;
 }
-.lv-red { color: #ff4d4f; }
-.lv-orange { color: #fa8c16; }
-.lv-yellow { color: #d4b106; }
+.lv-red { color: var(--danger); }
+.lv-orange { color: var(--warning); }
+.lv-yellow { color: var(--caution); }
 .source-log { max-height: 560px; overflow: auto; white-space: pre-wrap; background: #101820; color: #dbe6ec; padding: 14px; border-radius: 6px; }
 </style>

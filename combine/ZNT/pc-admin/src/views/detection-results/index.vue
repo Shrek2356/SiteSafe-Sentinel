@@ -298,7 +298,7 @@ async function scrollToCase(caseId) {
 .hero-actions { margin-top: auto; }
 .hero-stats {
   display: grid;
-  grid-template-columns: repeat(2, 140px);
+  grid-template-columns: repeat(2, 118px);
   gap: 12px;
   align-content: center;
   flex-shrink: 0;
@@ -307,11 +307,11 @@ async function scrollToCase(caseId) {
   background: var(--surface-muted);
   border: 1px solid var(--border-color);
   border-radius: 10px;
-  padding: 14px 12px;
+  padding: 10px 12px;
   text-align: center;
   cursor: pointer;
   transition: border-color 0.15s, background 0.15s;
-  min-height: 96px;
+  min-height: 78px;
   display: flex;
   flex-direction: column;
   justify-content: center;
@@ -320,7 +320,7 @@ async function scrollToCase(caseId) {
   background: var(--surface-2);
   border-color: var(--primary);
 }
-.stat .num { font-size: 34px; font-weight: 700; line-height: 1.1; color: var(--text-primary); }
+.stat .num { font-size: 28px; font-weight: 600; line-height: 1.1; color: var(--text-primary); font-variant-numeric:tabular-nums; }
 .stat .lab { font-size: 13px; color: var(--text-secondary); margin-top: 4px; }
 .stat .hint { font-size: 12px; color: var(--text-muted); margin-top: 4px; }
 
@@ -403,7 +403,7 @@ async function scrollToCase(caseId) {
   color: var(--text-secondary);
 }
 .flow-step .no {
-  width: 22px; height: 22px; border-radius: 50%; background: #595959; color: #fff;
+  width: 22px; height: 22px; border-radius: 50%; background: var(--text-secondary); color: #fff;
   display: inline-flex; align-items: center; justify-content: center; font-size: 12px;
 }
 .flow-step .arrow { color: #bfbfbf; }

@@ -13,21 +13,26 @@
     <div v-if="provider === 'static'" class="cad-bg">
       <svg class="cad-svg" viewBox="0 0 100 100" preserveAspectRatio="none">
         <!-- 简化工地平面示意 -->
-        <rect x="5" y="5" width="90" height="90" fill="none" stroke="#f0a14d" stroke-width="0.4" />
-        <rect x="10" y="15" width="30" height="25" fill="rgba(242,106,87,0.08)" stroke="#f26a57" stroke-width="0.3" />
-        <text x="15" y="28" font-size="3" fill="#f26a57">主体结构</text>
-        <rect x="50" y="20" width="35" height="30" fill="rgba(82,196,26,0.08)" stroke="#95de64" stroke-width="0.3" />
-        <text x="58" y="35" font-size="3" fill="#95de64">材料区</text>
-        <rect x="20" y="55" width="40" height="28" fill="rgba(250,140,22,0.08)" stroke="#ffc069" stroke-width="0.3" />
-        <text x="30" y="70" font-size="3" fill="#ffc069">基坑区</text>
-        <line x1="5" y1="50" x2="95" y2="50" stroke="#d9d9d9" stroke-width="0.2" stroke-dasharray="1,1" />
-        <line x1="50" y1="5" x2="50" y2="95" stroke="#d9d9d9" stroke-width="0.2" stroke-dasharray="1,1" />
+        <rect x="5" y="5" width="90" height="90" fill="none" stroke="var(--text-muted)" stroke-width="0.4" />
+        <rect x="10" y="15" width="30" height="25" fill="var(--surface-muted)" stroke="var(--border-color)" stroke-width="0.3" />
+        <text x="15" y="28" font-size="3" fill="var(--text-secondary)">主体结构</text>
+        <rect x="50" y="20" width="35" height="30" fill="var(--primary-soft)" stroke="var(--primary)" stroke-width="0.3" />
+        <text x="58" y="35" font-size="3" fill="var(--link)">材料区</text>
+        <rect x="20" y="55" width="40" height="28" fill="var(--surface-muted)" stroke="var(--text-muted)" stroke-width="0.3" />
+        <text x="30" y="70" font-size="3" fill="var(--text-secondary)">基坑区</text>
+        <line x1="5" y1="50" x2="95" y2="50" stroke="var(--border-color)" stroke-width="0.2" stroke-dasharray="1,1" />
+        <line x1="50" y1="5" x2="50" y2="95" stroke="var(--border-color)" stroke-width="0.2" stroke-dasharray="1,1" />
       </svg>
       <!-- 风险点位 -->
       <div
         v-for="p in points"
         :key="p.id"
         class="point"
+        role="button"
+        tabindex="0"
+        :aria-label="`${p.name}，隐患${p.riskCount}件，查看监控`"
+        @keydown.enter="$emit('point-click', p)"
+        @keydown.space.prevent="$emit('point-click', p)"
         :class="'risk-' + p.riskLevel"
         :style="{ left: p.x + '%', top: p.y + '%' }"
         @click="$emit('point-click', p)"
@@ -120,19 +125,19 @@ defineExpose({ initAmap, initBaidu })
   width: 14px;
   height: 14px;
   border-radius: 50%;
-  border: 2px solid #fff;
-  box-shadow: 0 0 0 2px currentColor, 0 0 12px currentColor;
-  animation: pulse 1.8s ease-in-out infinite;
+  border: 2px solid var(--surface);
+  background: currentColor;
+  box-shadow: 0 0 0 2px currentColor, 0 0 0 6px color-mix(in srgb,currentColor 12%,transparent);
+
 }
-.risk-red { color: #ff4d4f; }
-.risk-orange { color: #fa8c16; }
-.risk-yellow { color: #d4b106; }
-.risk-green { color: #8fb85a; }
+.risk-red { color: var(--danger); }
+.risk-orange { color: var(--warning); }
+.risk-yellow { color: var(--caution); }
+.risk-green { color: var(--success); }
 .point-name {
   display: block;
   margin-top: 2px;
   font-size: 11px;
-  color: #595959;
   white-space: nowrap;
   background: color-mix(in srgb, var(--surface) 88%, transparent);
   color: var(--text-primary);

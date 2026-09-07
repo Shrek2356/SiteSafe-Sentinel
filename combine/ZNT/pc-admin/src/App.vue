@@ -1,5 +1,5 @@
 <template>
-  <!-- 全局暖色主题：覆盖 Ant Design 默认蓝色主色/链接色/信息色 -->
+  <!-- Components and custom surfaces share one semantic palette. -->
   <a-config-provider :theme="activeTheme" :locale="zhCN">
     <router-view />
   </a-config-provider>
@@ -14,35 +14,15 @@
 import { computed } from 'vue'
 import { theme as antTheme } from 'ant-design-vue'
 import { colorTheme } from '@/utils/theme'
-import { workspaceStyle } from '@/utils/preferences'
+import { antTokens, paletteFor } from '@/utils/designTokens'
 import zhCN from 'ant-design-vue/es/locale/zh_CN'
-
-const warmTokens = {
-  colorPrimary: '#f26a57',
-  colorInfo: '#f26a57',
-  colorLink: '#c85a43',
-  colorLinkHover: '#e85447',
-  colorLinkActive: '#c44932',
-  colorPrimaryHover: '#e85447',
-  colorPrimaryActive: '#d4483a',
-  colorPrimaryBorder: '#f2b29f',
-  colorPrimaryBorderHover: '#f0a14d',
-  controlOutline: 'rgba(242, 106, 87, 0.2)',
-  colorPrimaryBg: '#fff1ea',
-  colorPrimaryBgHover: '#ffe1d4',
-}
 
 const activeTheme = computed(() => ({
   algorithm: colorTheme.value === 'dark' ? antTheme.darkAlgorithm : antTheme.defaultAlgorithm,
-  token: {
-    ...warmTokens,
-    ...(workspaceStyle.value === 'professional' ? {
-      colorPrimary:'#b95542', colorLink:colorTheme.value === 'dark' ? '#efae93' : '#a34b39',
-      colorInfo:'#658b83', colorSuccess:'#31836c', colorWarning:'#ba8034',
-      borderRadius:8, fontFamily:'"Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif',
-    } : {}),
-    colorBgBase: colorTheme.value === 'dark' ? '#14232b' : '#ffffff',
-    colorTextBase: colorTheme.value === 'dark' ? '#edf2f5' : '#263731',
+  token: antTokens(colorTheme.value),
+  components: {
+    Slider: { colorPrimaryBorder: paletteFor(colorTheme.value).primary, colorPrimaryBorderHover: paletteFor(colorTheme.value)['primary-strong'] },
+    Tooltip: { colorBgDefault: '#122c3a', colorTextLightSolid: '#f1f8fb' },
   },
 }))
 </script>

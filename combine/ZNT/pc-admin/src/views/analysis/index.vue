@@ -70,6 +70,7 @@ import dayjs from 'dayjs'
 import { message } from 'ant-design-vue'
 import { exportAnalysisReport, fetchAnalysisData } from '@/api/analysis'
 import { colorTheme } from '@/utils/theme'
+import { chartTheme } from '@/utils/designTokens'
 import { useUserStore } from '@/stores/user'
 
 const dateRange = ref([dayjs().subtract(6, 'day'), dayjs()])
@@ -133,10 +134,10 @@ async function loadData() {
     charts.forEach((c) => c.dispose())
     charts = []
 
-    const dark = colorTheme.value === 'dark'
-    const chartText = dark ? '#dbe6ec' : '#595959'
-    const chartGrid = dark ? '#33434f' : '#e8e8e8'
-    const titleStyle = { color: chartText }
+    const visual = chartTheme(colorTheme.value)
+    const chartText = visual.text
+    const chartGrid = visual.grid
+    const titleStyle = { color: chartText, fontSize: 14, fontWeight: 600 }
     const axisLine = { lineStyle: { color: chartGrid } }
     const axisLabel = { color: chartText }
 
@@ -144,15 +145,15 @@ async function loadData() {
     t.setOption({
       backgroundColor: 'transparent',
       title: { text: `隐患趋势（${rangeMeta.value.days || trend.dates.length}天）`, textStyle: titleStyle },
-      tooltip: { trigger: 'axis' },
+      tooltip: { ...visual.tooltip, trigger: 'axis' },
       legend: { data: ['高危', '中危', '低危'], textStyle: { color: chartText } },
       grid: { left: 40, right: 16, top: 48, bottom: 28 },
       xAxis: { type: 'category', data: trend.dates, axisLine, axisLabel },
       yAxis: { type: 'value', minInterval: 1, axisLine, axisLabel, splitLine: { lineStyle: { color: chartGrid } } },
       series: [
-        { name: '高危', type: 'line', data: trend.red, itemStyle: { color: '#ff4d4f' } },
-        { name: '中危', type: 'line', data: trend.orange, itemStyle: { color: '#fa8c16' } },
-        { name: '低危', type: 'line', data: trend.yellow, itemStyle: { color: '#fadb14' } },
+        { name: '高危', type: 'line', data: trend.red, itemStyle: { color: visual.danger } },
+        { name: '中危', type: 'line', data: trend.orange, itemStyle: { color: visual.warning } },
+        { name: '低危', type: 'line', data: trend.yellow, itemStyle: { color: visual.caution } },
       ],
     })
 
@@ -160,7 +161,7 @@ async function loadData() {
     h.setOption({
       backgroundColor: 'transparent',
       title: { text: '区域隐患热力', textStyle: titleStyle },
-      tooltip: {},
+      tooltip: visual.tooltip,
       grid: { left: 48, right: 72, top: 48, bottom: 56 },
       xAxis: { type: 'category', data: areaHeat.map((i) => i.name), axisLine, axisLabel: { ...axisLabel, rotate: 30 } },
       yAxis: { type: 'value', axisLine, axisLabel, splitLine: { lineStyle: { color: chartGrid } } },
@@ -176,7 +177,7 @@ async function loadData() {
         text: ['高', '低'],
         textGap: 8,
         textStyle: { color: chartText },
-        inRange: { color: ['#fadb14', '#fa8c16', '#ff4d4f'] },
+        inRange: { color: [visual.caution, visual.warning, visual.danger] },
       },
       series: [{
         type: 'bar',
@@ -184,9 +185,9 @@ async function loadData() {
         itemStyle: {
           color: (p) => {
             const v = p.value
-            if (v >= 12) return '#ff4d4f'
-            if (v >= 6) return '#fa8c16'
-            return '#fadb14'
+            if (v >= 12) return visual.danger
+            if (v >= 6) return visual.warning
+            return visual.caution
           },
         },
       }],
@@ -196,11 +197,11 @@ async function loadData() {
     tm.setOption({
       backgroundColor: 'transparent',
       title: { text: '班组违规统计', textStyle: titleStyle },
-      tooltip: {},
+      tooltip: visual.tooltip,
       grid: { left: 80, right: 24, top: 48, bottom: 28 },
       xAxis: { type: 'value', axisLine, axisLabel, splitLine: { lineStyle: { color: chartGrid } } },
       yAxis: { type: 'category', data: teamViolation.map((i) => i.name), axisLine, axisLabel },
-      series: [{ type: 'bar', data: teamViolation.map((i) => i.count), itemStyle: { color: '#f26a57' } }],
+      series: [{ type: 'bar', data: teamViolation.map((i) => i.count), barMaxWidth: 24, itemStyle: { color: visual.primary, borderRadius: [0, 4, 4, 0] } }],
     })
 
     charts = [t, h, tm]
