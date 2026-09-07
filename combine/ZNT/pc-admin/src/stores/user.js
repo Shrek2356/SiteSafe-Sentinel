@@ -33,7 +33,10 @@ export const useUserStore = defineStore('user', {
     },
     async setProject(projectId) {
       const res = await switchProjectApi({ projectId })
-      this.project = res.data
+      this.updateProjectMetadata(res.data)
+    },
+    updateProjectMetadata(project) {
+      this.project = project
       localStorage.setItem('znt_project', JSON.stringify(this.project))
       return res.data
     },

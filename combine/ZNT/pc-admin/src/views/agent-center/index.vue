@@ -54,6 +54,7 @@
 
 <script setup>
 import { computed, onMounted, ref } from 'vue'
+import { useRouteTab } from '@/composables/useRouteTab'
 import { message } from 'ant-design-vue'
 import { useUserStore } from '@/stores/user'
 import { decideConfirmation, decideProposal, fetchBriefing, fetchConfirmations, fetchNotifications, fetchOverrides, fetchProposals } from '@/api/agentCenter'
@@ -61,7 +62,7 @@ import { decideConfirmation, decideProposal, fetchBriefing, fetchConfirmations, 
 const store = useUserStore()
 const isAdmin = computed(() => store.role === 'admin')
 const canReview = computed(() => ['admin', 'safety'].includes(store.role))
-const tab = ref('review'), loading = ref(false)
+const tab = useRouteTab(['review','learning','briefing','system'], 'review'), loading = ref(false)
 const confirmations = ref([]), proposals = ref([]), overrides = ref({}), notifications = ref([]), briefing = ref('')
 const reviewOpen = ref(false), reviewTarget = ref(null), reviewVerdict = ref('confirmed'), reviewComment = ref('')
 const reviewColumns = [{ title: '风险', dataIndex: 'risk_name_zh', key: 'risk_name_zh' }, { title: '模型疑问/判断', dataIndex: 'model_judgment', key: 'model_judgment' }, { title: '转人工原因', dataIndex: 'reason', key: 'reason' }, { title: '置信度', key: 'confidence', width: 100 }, { title: '状态', key: 'status', width: 100 }, { title: '操作', key: 'action', width: 180 }]

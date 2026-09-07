@@ -1,13 +1,14 @@
 <template>
   <div class="page-card">
     <div class="task-heading"><div><h2>检测任务中心</h2><p>后台任务独立执行，离开页面不会停止检测。历史记录从检测桥读取，重启后仍可查询。</p></div><a-button type="primary" @click="router.push('/realtime-detect')">新建检测</a-button></div>
-    <a-alert v-if="error" type="warning" show-icon :message="error" style="margin-bottom:16px" />
+    <a-alert v-if="error" type="warning" show-icon :message="error" style="margin-bottom:16px"><template #description>列表暂时无法更新，原任务不会因为刷新失败而取消。<router-link to="/help-center?tab=diagnostics">查看连接诊断 →</router-link></template></a-alert>
     <a-space wrap style="margin-bottom:16px">
       <a-select v-model:value="status" style="width:140px" :disabled="loading" @change="resetPage"><a-select-option value="">全部状态</a-select-option><a-select-option v-for="(label, key) in labels" :key="key" :value="key">{{ label }}</a-select-option></a-select>
       <a-button :loading="loading" @click="load">刷新列表</a-button>
       <span>每 5 秒自动刷新 · 只取消尚未开始的任务</span>
     </a-space>
     <a-table :data-source="items" :columns="columns" row-key="job_id" :loading="loading" :pagination="false" :scroll="{ x: 950 }">
+      <template #emptyText><a-empty :description="error ? '暂时无法读取任务，请先恢复连接' : status ? '这个状态下还没有任务' : '还没有检测任务，从一张图片开始吧'"><a-button v-if="!error && !status" @click="router.push('/realtime-detect')">新建检测</a-button><a-button v-else-if="status && !error" @click="status='';resetPage()">查看全部状态</a-button></a-empty></template>
       <template #bodyCell="{ column, record }">
         <template v-if="column.key === 'status'"><a-tag :color="colors[record.status]">{{ labels[record.status] || record.status }}</a-tag></template>
         <template v-else-if="column.key === 'profile'">{{ { demo:'演示', offline:'本地离线', standard:'云端' }[record.profile] || record.profile }}</template>

@@ -14,6 +14,7 @@
 import { computed } from 'vue'
 import { theme as antTheme } from 'ant-design-vue'
 import { colorTheme } from '@/utils/theme'
+import { workspaceStyle } from '@/utils/preferences'
 import zhCN from 'ant-design-vue/es/locale/zh_CN'
 
 const warmTokens = {
@@ -35,8 +36,13 @@ const activeTheme = computed(() => ({
   algorithm: colorTheme.value === 'dark' ? antTheme.darkAlgorithm : antTheme.defaultAlgorithm,
   token: {
     ...warmTokens,
-    colorBgBase: colorTheme.value === 'dark' ? '#111820' : '#ffffff',
-    colorTextBase: colorTheme.value === 'dark' ? '#edf2f5' : '#1f1f1f',
+    ...(workspaceStyle.value === 'professional' ? {
+      colorPrimary:'#b95542', colorLink:colorTheme.value === 'dark' ? '#efae93' : '#a34b39',
+      colorInfo:'#658b83', colorSuccess:'#31836c', colorWarning:'#ba8034',
+      borderRadius:8, fontFamily:'"Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif',
+    } : {}),
+    colorBgBase: colorTheme.value === 'dark' ? '#14232b' : '#ffffff',
+    colorTextBase: colorTheme.value === 'dark' ? '#edf2f5' : '#263731',
   },
 }))
 </script>

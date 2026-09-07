@@ -1,5 +1,6 @@
 import { ref } from 'vue'
 const assetsBundled = import.meta.env.VITE_ENABLE_PRESENTATION_ASSETS !== 'false'
+export const presentationAvailable = assetsBundled
 export const workspaceStyle = ref(localStorage.getItem('znt_workspace_style') || 'professional')
 export const presentationAssets = ref(assetsBundled && localStorage.getItem('znt_presentation_assets') !== 'false')
 export const presentationEnabled = () => presentationAssets.value

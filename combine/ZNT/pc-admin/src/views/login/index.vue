@@ -17,7 +17,7 @@
         <div class="animation-stage">
           <!--
             动画接入口：把最终文件放入 public/media/login/ 即可自动启用。
-            WebM 优先，MP4 作为兼容回退；视频须静音、6秒循环、16:9。
+            WebM 优先，MP4 作为兼容回退；静音播放并在 5.5 秒停帧，16:9。
           -->
           <video
             v-show="animationReady"
@@ -118,7 +118,7 @@
 
         <div class="endpoint-box">
           <button type="button" class="endpoint-toggle" @click="endpointOpen = !endpointOpen">
-            <span>网页版连接设置</span>
+            <span>连接设置与排查</span>
             <span>{{ endpointOpen ? '收起' : '配置业务与检测接口' }} {{ endpointOpen ? '⌃' : '⌄' }}</span>
           </button>
           <div v-if="endpointOpen" class="endpoint-content">
@@ -138,13 +138,13 @@
             <div v-if="endpointStatus.text" class="endpoint-status" :class="endpointStatus.type">
               {{ endpointStatus.text }}
             </div>
-            <p class="endpoint-help">配置保存在当前浏览器；无需填写 Qwen 或 SAM3 地址，它们由检测服务统一管理。</p>
+            <p class="endpoint-help">配置保存在当前窗口。通常保持默认即可；连接失败时先测试并恢复默认，再检查后台。这里不是模型 API Key 输入框。</p>
           </div>
         </div>
 
         <a-form :model="form" layout="vertical" @finish="onSubmit">
           <a-form-item label="账号" name="username" :rules="[{ required: true, message: '请输入账号' }]">
-            <a-input v-model:value="form.username" placeholder="admin / safety / director" size="large" />
+            <a-input v-model:value="form.username" placeholder="工作账号，或选择下方示例账号" size="large" autocomplete="username" />
           </a-form-item>
           <a-form-item label="密码" name="password" :rules="[{ required: true, message: '请输入密码' }]">
             <a-input-password v-model:value="form.password" placeholder="默认：admin123" size="large" />
@@ -162,7 +162,7 @@
         </a-form>
 
         <div class="login-foot">
-          <span><i class="status-dot"></i>本地演示环境</span>
+          <span>登录后可查看真实服务状态</span>
           <span>YOLO · Qwen · SAM3 · Agent</span>
         </div>
       </section>
@@ -317,9 +317,11 @@ function applyEndpointValues(values) {
 }
 
 function saveEndpoints() {
+  try {
   applyEndpointValues(saveEndpointSettings(endpointForm))
   endpointStatus.type = 'success'
   endpointStatus.text = '接口配置已保存，登录及后续请求将立即使用新地址。'
+  } catch(e) { endpointStatus.type = 'error'; endpointStatus.text = e.message }
 }
 
 function resetEndpoints() {

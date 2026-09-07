@@ -1,6 +1,6 @@
 # SiteSafe-Sentinel 独立桌面版
 
-当前版本 **1.1.0**。桌面界面新增任务中心、系统设置与服务状态栏；修复接口转发、规范覆盖、历史恢复与共享进程误停。完整变更与边界见 `../docs/桌面版v1.1更新与验收.md`。
+当前版本 **1.2.0**。新增欢迎引导、功能搜索、本页指南、使用与支持中心、连接诊断与统一产品视觉。完整变更与边界见 `../docs/桌面版v1.2产品体验与使用指南.md`。
 
 ## 用户启动
 
@@ -46,4 +46,4 @@ desktop\.venv\Scripts\python.exe desktop\desktop_app.py --profile demo
 
 ## 生成便携交付包
 
-构建前端与 EXE 后，执行 `desktop/pack-release.ps1 -Destination <输出目录>`；脚本拒绝覆盖已有交付目录，并生成 SHA256 文件清单。包内包含源码，但为减小体积不重复放置前端公共图片。若要在交付目录重建前端，先在 `pc-admin` 执行 `restore-frontend-assets.ps1` 恢复 `public`，再安装开发依赖构建；普通使用者无需这些操作。
+构建前端与 EXE 后，执行 `desktop/pack-release.ps1 -Destination <输出目录>`；脚本拒绝覆盖已有交付目录，并生成 SHA256 文件清单。本版包含源码、完整 `public` 素材及 `dist` 构建产物，不再以压缩包大小为优先约束。修改前端时在 `pc-admin` 安装开发依赖后构建；普通使用者无需这些操作。旧版精简包仍可用 `restore-frontend-assets.ps1` 恢复公共素材。

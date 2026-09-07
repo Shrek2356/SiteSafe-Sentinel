@@ -4,8 +4,13 @@
     业务：指标总览 + 平面点位 + 高危视频轮播 + 右侧图表看板 + 底部快捷操作
   -->
   <div class="dashboard">
+    <a-alert v-if="dashboardError" type="warning" show-icon :message="dashboardError" style="margin-bottom:16px"><template #description><a-button size="small" :loading="dashboardLoading" @click="loadDashboard()">重新加载</a-button> <router-link to="/help-center?tab=diagnostics">查看连接诊断</router-link></template></a-alert>
+    <section v-if="workspaceStyle === 'professional'" class="workspace-hero">
+      <div class="workspace-copy"><span class="workspace-eyebrow">SITESAFE SENTINEL / 安全工作空间</span><h1>让风险被看见，<br/><em>让处置有着落。</em></h1><p>{{ projectTitle }}<span v-if="projectAddress"> · {{ projectAddress }}</span></p><div class="workspace-actions"><a-button type="primary" size="large" @click="router.push('/realtime-detect')"><PlusOutlined /> 新建图片检测</a-button><a-button size="large" @click="router.push('/help-center')">开始使用指南 <ArrowRightOutlined /></a-button></div></div>
+      <div class="workspace-art" aria-hidden="true"><div class="art-orbit"></div><svg viewBox="0 0 360 180" fill="none"><path d="M24 157H342M76 157V70H162V157M92 70V31H126V70M196 157V95H294V157M212 95V53H280V95M39 157V116H76M137 31H247M187 17V157M119 31L187 17L247 31M247 31V70" stroke="currentColor" stroke-width="1.3"/><path d="M90 86H147M90 107H147M90 128H147M209 110H282M209 131H282" stroke="currentColor" stroke-opacity=".4"/><circle cx="249" cy="70" r="4" fill="#e1ab85" stroke="none"/></svg><div class="art-note"><span></span> 感知 · 研判 · 处置 · 复盘</div></div>
+    </section>
     <!-- 队形象横幅：嘉然今天也在守护工地 -->
-    <div class="team-banner" :key="projectKey">
+    <div v-else class="team-banner" :key="projectKey">
       <img class="mascot left" :src="JR.mascot1" alt="嘉然" />
       <div class="team-copy">
         <div class="team-name">{{ TEAM_NAME }}</div>
@@ -31,7 +36,7 @@
           <div class="metric-card clickable" :class="'t-' + m.type" @click="onMetricClick(m)">
             <div class="metric-label">
               <span class="label-with-mood">
-                <img v-if="metricMood(m.key)" class="mood-mini" :src="metricMood(m.key).src" :alt="metricMood(m.key).tip" />
+                <img v-if="workspaceStyle === 'showcase' && metricMood(m.key)" class="mood-mini" :src="metricMood(m.key).src" :alt="metricMood(m.key).tip" />
                 {{ m.label }}
               </span>
               <span class="link-hint">查看 ›</span>
@@ -47,7 +52,7 @@
 
     <a-row :gutter="12" class="main-row">
       <!-- 左侧：工地 2D 平面点位图 -->
-      <a-col :span="7">
+      <a-col :xs="24" :lg="12" :xl="7">
         <div class="panel">
           <div class="panel-title">
             工地点位风险分布 · {{ projectShort }}
@@ -58,7 +63,7 @@
       </a-col>
 
       <!-- 中间：高风险轮播（成果图占位，streamUrl 预留） -->
-      <a-col :span="9">
+      <a-col :xs="24" :lg="12" :xl="9">
         <div class="panel">
           <div class="panel-title">
             高风险视频轮播
@@ -91,7 +96,7 @@
       </a-col>
 
       <!-- 右侧：数据看板 -->
-      <a-col :span="8">
+      <a-col :xs="24" :lg="24" :xl="8">
         <div class="panel charts-panel">
           <div class="panel-title">
             数据看板
@@ -131,7 +136,7 @@
         <a-button type="primary" @click="$router.push('/monitor')">打开实时监控</a-button>
         <a-button @click="$router.push('/realtime-detect')">实时检测</a-button>
         <a-button @click="$router.push({ path: '/workorder', query: { status: 'pending' } })">处置待办工单</a-button>
-        <a-button @click="$router.push('/analysis')">查看复盘报告</a-button>
+        <a-button v-if="canVisit('/analysis', userStore.role)" @click="$router.push('/analysis')">查看复盘报告</a-button>
         <a-button @click="$router.push('/detection-results')">检测结果汇总</a-button>
         <a-button @click="$router.push('/realtime-detect')">启动真实 AI 检测</a-button>
       </a-space>
@@ -152,6 +157,9 @@ import { useUserStore } from '@/stores/user'
 import { JR, TEAM_NAME, metricMood } from '@/utils/jr'
 import { subscribeModules } from '@/utils/moduleBus'
 import { colorTheme } from '@/utils/theme'
+import { workspaceStyle } from '@/utils/preferences'
+import { canVisit } from '@/utils/guidance'
+import { PlusOutlined, ArrowRightOutlined } from '@ant-design/icons-vue'
 
 const router = useRouter()
 const userStore = useUserStore()
@@ -169,7 +177,7 @@ let flashTimer = null
 
 const projectKey = computed(() => userStore.project?.id || 'proj-001')
 const projectTitle = computed(() => userStore.project?.name || projectMeta.value.shortName || '未选择项目')
-const projectShort = computed(() => projectMeta.value.shortName || userStore.project?.name || '当前项目')
+const projectShort = computed(() => userStore.project?.name || projectMeta.value.shortName || '当前项目')
 const projectAddress = computed(() => userStore.project?.address || projectMeta.value.address || '')
 const hasPresentationCharts = computed(() => (
   ['riskTrendHours', 'hazardTypes', 'teamRank', 'topHazards']
@@ -265,9 +273,16 @@ watch(colorTheme, async () => {
   renderCharts()
 })
 
+const dashboardError = ref(''), dashboardLoading = ref(false)
+let dashboardGeneration = 0, dashboardDisposed = false
 async function loadDashboard({ flash = false } = {}) {
+  const generation = ++dashboardGeneration
+  dashboardLoading.value = true
+  try {
   const projectId = userStore.project?.id || 'SITE-DEFAULT'
   const res = await fetchDashboardData({ projectId })
+  if (dashboardDisposed || generation !== dashboardGeneration) return
+  dashboardError.value = ''
   const d = res.data
   projectMeta.value = {
     id: d.projectId || projectId,
@@ -293,6 +308,8 @@ async function loadDashboard({ flash = false } = {}) {
       dataFlash.value = false
     }, 700)
   }
+  } catch { if (!dashboardDisposed && generation === dashboardGeneration) dashboardError.value = '工作台数据暂未更新，保留上次内容。请检查业务连接后重试。' }
+  finally { if (generation === dashboardGeneration) dashboardLoading.value = false }
 }
 
 watch(
@@ -304,12 +321,10 @@ watch(
 )
 
 onMounted(async () => {
+  window.addEventListener('resize', resizeCharts)
   await loadDashboard()
-  window.addEventListener('resize', () => {
-    trendChart?.resize()
-    pieChart?.resize()
-  })
 })
+function resizeCharts() { trendChart?.resize(); pieChart?.resize() }
 
 const unsubModules = subscribeModules(async (detail) => {
   if (detail?.type === 'workorders' || detail?.type === 'detect-results') {
@@ -318,6 +333,8 @@ const unsubModules = subscribeModules(async (detail) => {
 })
 
 onBeforeUnmount(() => {
+  dashboardDisposed = true; dashboardGeneration++
+  window.removeEventListener('resize', resizeCharts)
   clearTimeout(flashTimer)
   unsubModules()
   trendChart?.dispose()
@@ -526,4 +543,6 @@ onBeforeUnmount(() => {
   margin-top: 16px;
   text-align: right;
 }
+.workspace-hero{position:relative;overflow:hidden;display:flex;justify-content:space-between;min-height:238px;padding:30px 34px;background:var(--product-ink);border-radius:18px;color:#f2f5f4;margin-bottom:22px}.workspace-copy{z-index:1;min-width:0}.workspace-eyebrow{font-size:10px;letter-spacing:2px;color:#a6bec1}.workspace-copy h1{font-size:30px;line-height:1.4;letter-spacing:.5px;margin:14px 0 12px;color:#f8faf9;font-weight:600}.workspace-copy h1 em{font-style:normal;color:#eac1a4}.workspace-copy p{color:#afc3c6;font-size:12px;margin:0 0 22px;max-width:600px}.workspace-actions{display:flex;gap:12px}.workspace-actions :deep(.ant-btn){font-size:12px;height:36px;border-radius:8px}.workspace-actions :deep(.ant-btn-default){background:#ffffff0b;border-color:#ffffff30;color:#e4eeec}.workspace-art{position:relative;align-self:center;width:35%;min-width:260px;max-width:400px;margin-right:10px;color:#91b6b8}.workspace-art svg{position:relative;z-index:1;width:100%;height:auto}.art-orbit{position:absolute;width:240px;height:240px;right:0;top:-60px;border-radius:50%;border:1px solid #b5d5cc16;box-shadow:0 0 0 26px #b5d5cc06,0 0 0 54px #b5d5cc04}.art-note{position:relative;font-size:10px;letter-spacing:3px;text-align:right;color:#a6bdbd;margin-top:15px}.art-note span{display:inline-block;width:5px;height:5px;border-radius:50%;background:#deb492;margin-right:8px}.main-row{row-gap:16px}@media(max-width:1150px){.workspace-art{min-width:200px;width:28%;opacity:.65}.workspace-hero{padding:26px}.workspace-copy h1{font-size:27px}}
+.dashboard{min-width:0;width:100%;padding:0 6px}.quick-bar :deep(.ant-space){flex-wrap:wrap}.quick-bar{gap:10px;flex-wrap:wrap}
 </style>

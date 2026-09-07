@@ -22,6 +22,10 @@ const routes = [
     redirect: '/dashboard',
     children: [
       {
+        path: 'help-center', name: 'HelpCenter', component: () => import('@/views/help-center/index.vue'),
+        meta: { title: '使用与支持', icon: 'QuestionCircleOutlined', roles: [] },
+      },
+      {
         path: 'task-center', name: 'TaskCenter', component: () => import('@/views/task-center/index.vue'),
         meta: { title: '检测任务中心', icon: 'RadarChartOutlined', roles: [] },
       },
@@ -33,7 +37,7 @@ const routes = [
         path: 'dashboard',
         name: 'Dashboard',
         component: () => import('@/views/dashboard/index.vue'),
-        meta: { title: '首页数字驾驶舱', icon: 'DashboardOutlined', roles: [] },
+        meta: { title: '首页工作台', icon: 'DashboardOutlined', roles: [] },
       },
       {
         path: 'monitor',
@@ -121,7 +125,7 @@ const router = createRouter({
 
 /** 全局守卫：登录校验 + 角色权限 */
 router.beforeEach((to, _from, next) => {
-  document.title = `${to.meta.title || '工地安全'} - 工地安全智能检测系统`
+  document.title = `${to.meta.title || '工地安全'} · 筑安智巡 SiteSafe-Sentinel`
 
   if (to.meta.public) {
     next()

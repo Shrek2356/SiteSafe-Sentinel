@@ -98,6 +98,25 @@ def test_stopping_shared_services_never_stops_qwen():
     call.assert_not_called()
 
 
+def test_support_folder_is_allowlisted_and_does_not_open_arbitrary_paths(tmp_path):
+    runtime = DesktopRuntime(dict(DEFAULT_CONFIG))
+    with patch('desktop_app.LOG_DIR', tmp_path / 'logs'), patch('desktop_app.os.startfile', create=True) as opened:
+        assert runtime.open_support_folder('logs') == {'opened': True}
+        opened.assert_called_once_with(str(tmp_path / 'logs'))
+        with pytest.raises(ValueError): runtime.open_support_folder('https://example.com')
+        with pytest.raises(ValueError): runtime.open_support_folder('../../private')
+        assert opened.call_count == 1
+
+
+def test_startup_error_is_escaped_and_has_recovery_actions():
+    from desktop_app import error_html
+    page = error_html('<script>unsafe</script>')
+    assert '&lt;script&gt;unsafe&lt;/script&gt;' in page
+    assert '<script>unsafe</script>' not in page
+    assert '打开运行日志文件夹' in page
+    assert '完整解压' in page
+
+
 def test_spawn_is_rejected_after_stop():
     runtime = DesktopRuntime(dict(DEFAULT_CONFIG))
     runtime.stop()

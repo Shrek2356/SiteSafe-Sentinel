@@ -8,7 +8,7 @@
     <header class="head">
       <div class="head-text">
         <h1 class="page-title">实时检测</h1>
-        <p class="desc">上传图片或截帧后开始检测；完成后自动同步到结果汇总与待办工单。</p>
+        <p class="desc">选择模式 → 上传图片 → 查看证据。真实风险按规则流转至结果与工单。</p>
       </div>
       <div class="head-actions">
         <a-tag :color="bridgeChecking ? 'processing' : bridgeOnline ? 'success' : 'error'">
@@ -22,7 +22,7 @@
     <section class="panel profile-panel">
       <div class="panel-title-row">
         <h2 class="panel-title">检测模式</h2>
-        <span class="panel-sub">MLLM + VLM + SAM</span>
+        <span class="panel-sub">语义识别 · 空间定位 · 人工判断</span>
       </div>
       <div class="profile-group">
         <button
@@ -31,6 +31,8 @@
           type="button"
           class="mode-card"
           :class="{ on: profile === item.id }"
+          :aria-pressed="profile === item.id"
+          :disabled="submitting"
           @click="profile = item.id"
         >
           <div class="mode-title">{{ item.label }}</div>
@@ -40,7 +42,8 @@
           </div>
         </button>
       </div>
-      <p v-if="setupTip" class="profile-miss">{{ setupTip }}</p>
+      <a-alert v-if="setupTip && profile !== 'demo'" class="mode-guidance" type="warning" show-icon :message="setupTip"><template #description><a-space wrap><router-link to="/help-center?tab=diagnostics">检查连接与处理方法 →</router-link><router-link v-if="user.role === 'admin'" to="/model-config?tab=runtime">前往配置模型 →</router-link></a-space></template></a-alert>
+      <a-alert v-if="profile === 'demo'" class="mode-guidance" type="info" show-icon message="当前为演示模式：不会调用真实模型，也不能作为现场安全结论。" />
 
       <div v-if="profile === 'standard'" class="cloud-box">
         <div class="cloud-title">云端检测服务</div>
@@ -76,12 +79,12 @@
               <a-upload-dragger
                 :before-upload="onBeforeUpload"
                 :show-upload-list="false"
-                accept="image/*"
+                accept="image/jpeg,image/png,image/webp"
                 class="upload-area"
               >
                 <p class="ant-upload-drag-icon">📷</p>
                 <p class="ant-upload-text">点击或拖拽图片到此处</p>
-                <p class="ant-upload-hint">支持 jpg / png；也可点下方测试图一键试跑</p>
+                <p class="ant-upload-hint">JPG / PNG / WebP，单张不超过 20 MB；也可选择下方示例</p>
               </a-upload-dragger>
 
               <div class="sample-block">
@@ -92,6 +95,11 @@
                     :key="ex.id"
                     class="sample-card"
                     :class="{ active: selectedExampleId === ex.id }"
+                    role="button"
+                    tabindex="0"
+                    :aria-label="`选择示例：${ex.title}`"
+                    @keydown.enter="pickExample(ex)"
+                    @keydown.space.prevent="pickExample(ex)"
                     @click="pickExample(ex)"
                   >
                     <img :src="ex.src" :alt="ex.title" />
@@ -157,7 +165,7 @@
         <div class="right-stack">
           <div class="panel recent-panel">
             <h2 class="panel-title">最近任务</h2>
-            <div v-if="!recent.length" class="empty compact">暂无任务</div>
+            <div v-if="!recent.length" class="empty compact">还没有任务。先从左侧选择图片，或<router-link to="/detection-results">查看已有展示案例</router-link>。</div>
             <div v-else class="recent-list">
               <div
                 v-for="item in recent"
@@ -337,6 +345,8 @@ python detect_bridge.py --port 8810</pre>
  */
 import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import { useRoute } from 'vue-router'
+import { useUserStore } from '@/stores/user'
+import { normalizeDetectionProfile, detectionBlockReason } from '@/utils/detectionIntent'
 import { message } from 'ant-design-vue'
 import {
   advanceMockJob,
@@ -354,6 +364,7 @@ import { syncDetectJobToWorkOrders } from '@/utils/detectWorkOrders'
 import { syncDetectJobToResults } from '@/utils/detectResults'
 
 const route = useRoute()
+const user = useUserStore()
 watch(() => route.query.job, id => { if (id) loadJob(String(id)) })
 const FALLBACK_PROFILES = [
   { id: 'standard', ready: false, missing: ['cloud_api'] },
@@ -362,16 +373,16 @@ const FALLBACK_PROFILES = [
 ]
 
 const modeOptions = [
-  { id: 'standard', label: '云端检测', hint: '云端调用 Qwen API，能力更强' },
+  { id: 'standard', label: '云端检测', hint: '云端视觉 API + 本地定位，需要网络与密钥' },
   { id: 'offline', label: '本地离线', hint: '本地部署，适合离线场景' },
   { id: 'demo', label: '演示模式', hint: '仅做前端 Mock 演示' },
 ]
 
 const SETUP_HINTS = {
   cloud_api: '请在下方填写 DASHSCOPE_API_KEY 并保存',
-  sam3_weights: '检查 E:\\SAM3_MAIN 下的 SAM3 代码与权重',
-  clip_weights: '检查用户缓存中的 ViT-L-14.pt',
-  yolo_weights: '检查 combine/yolo_site_workspace_portable/weights',
+  sam3_weights: '在模型配置中选择 SAM3 代码目录与权重',
+  clip_weights: '选择 CLIP 权重，或按需求关闭该可选组件',
+  yolo_weights: '在模型配置中选择 YOLO 权重',
   local_qwen_config: '请在「模型规则配置 - 模型部件与运行时」选择 Qwen 与 mmproj 路径',
 }
 
@@ -379,7 +390,8 @@ const tab = ref('upload')
 const bridgeOnline = ref(false)
 const bridgeChecking = ref(true)
 const profiles = ref([...FALLBACK_PROFILES])
-const profile = ref('offline')
+const profile = ref(normalizeDetectionProfile(route.query.profile))
+watch(() => route.query.profile, value => { if (value) profile.value = normalizeDetectionProfile(value) })
 const submitting = ref(false)
 const cloudKey = ref('')
 const savingKey = ref(false)
@@ -387,7 +399,7 @@ const currentProfile = computed(() => profiles.value.find((p) => p.id === profil
 
 const setupTip = computed(() => {
   if (bridgeChecking.value) return '正在读取检测桥状态与模型运行配置…'
-  if (!bridgeOnline.value) return '检测服务未连接时，将使用浏览器演示。请先启动检测服务。'
+  if (!bridgeOnline.value) return '检测桥未连接。先恢复连接再提交真实检测；不会自动切换成演示模式。'
   const p = currentProfile.value
   if (p?.id === 'offline' && p.ready && p.runtime_ready === false) {
     return '模型文件已配置，但本地 Qwen 尚未在线；请在「模型部件与运行时」启动并等待连接成功。'
@@ -483,12 +495,8 @@ async function refreshHealth() {
     bridgeOnline.value = !!h.online
     if (h.online && Array.isArray(h.profiles) && h.profiles.length) {
       profiles.value = h.profiles
-      if (!h.profiles.some((p) => p.id === profile.value)) {
-        profile.value = h.default_profile || h.profiles.find((p) => p.ready)?.id || 'demo'
-      }
     } else if (!h.online) {
       profiles.value = FALLBACK_PROFILES
-      profile.value = 'demo'
     }
   } finally {
     bridgeChecking.value = false
@@ -522,6 +530,10 @@ async function saveCloudKey() {
 }
 
 function onBeforeUpload(file) {
+  if (!['image/jpeg','image/png','image/webp'].includes(file.type) || file.size > 20 * 1024 * 1024) {
+    message.warning('请选择 JPG、PNG 或 WebP 图片，单张不超过 20 MB。'); return false
+  }
+  releasePreview()
   selectedExampleId.value = null
   pendingFile.value = file
   previewUrl.value = URL.createObjectURL(file)
@@ -531,8 +543,10 @@ function onBeforeUpload(file) {
 async function pickExample(ex) {
   try {
     const resp = await fetch(ex.src)
+    if (!resp.ok || !resp.headers.get('content-type')?.startsWith('image/')) throw new Error('示例图片未找到')
     const blob = await resp.blob()
     const file = new File([blob], `example-case${ex.id}.png`, { type: blob.type || 'image/png' })
+    releasePreview()
     selectedExampleId.value = ex.id
     pendingFile.value = file
     previewUrl.value = ex.src
@@ -550,7 +564,7 @@ async function startUploadDetect() {
   submitting.value = true
   try {
     await refreshHealth()
-    if (profile.value !== 'demo' && !modeReady(profile.value)) {
+    if (detectionBlockReason(profile.value, { online:bridgeOnline.value, profiles:profiles.value })) {
       message.warning(setupTip.value || '当前检测模式尚未配置完整')
       return
     }
@@ -567,7 +581,7 @@ async function startUploadDetect() {
       })
       job.value = { ...res.data, profile: 'demo' }
       startMockPoll()
-      message.warning('检测服务离线，当前为浏览器演示')
+      message.info('已按你选择的演示模式运行，不会调用真实模型')
     }
     recent.value = await fetchRecentJobs()
   } catch (e) {
@@ -605,6 +619,7 @@ function captureCameraFrame() {
   const ctx = canvas.getContext('2d')
   ctx.drawImage(video, 0, 0, canvas.width, canvas.height)
   const dataUrl = canvas.toDataURL('image/jpeg', 0.92)
+  releasePreview()
   previewUrl.value = dataUrl
   return dataUrl
 }
@@ -751,11 +766,14 @@ function closePreview() {
 onMounted(async () => {
   await refreshHealth()
   recent.value = await fetchRecentJobs()
+  if (route.query.job) await loadJob(String(route.query.job))
 })
 
+function releasePreview() { if (previewUrl.value.startsWith('blob:')) URL.revokeObjectURL(previewUrl.value) }
 onBeforeUnmount(() => {
   stopPoll()
   stopCamera()
+  releasePreview()
 })
 </script>
 
@@ -1281,4 +1299,5 @@ onBeforeUnmount(() => {
     justify-content: center;
   }
 }
+.mode-guidance{margin-top:16px}.profile-group button:disabled{cursor:wait;opacity:.7}.sample-card{border-radius:12px}.sample-card:focus-visible{outline:2px solid var(--primary);outline-offset:3px}
 </style>

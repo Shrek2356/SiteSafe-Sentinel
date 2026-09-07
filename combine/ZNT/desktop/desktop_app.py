@@ -104,7 +104,7 @@ def http_ready(url: str, timeout: float = 1.5, *, service: str = "") -> bool:
 
 
 class SpaHandler(GatewayMixin, SimpleHTTPRequestHandler):
-    server_version = "SiteSafeDesktop/1.0"
+    server_version = "SiteSafeDesktop/1.2"
     MIME_OVERRIDES = {
         ".css": "text/css; charset=utf-8",
         ".js": "text/javascript; charset=utf-8",
@@ -326,6 +326,15 @@ class DesktopRuntime:
         saved = load_config()
         return {**saved, "app_root": str(ROOT), "restart_required": saved != self.config}
 
+    def open_support_folder(self, kind: str) -> dict:
+        folders = {"logs": LOG_DIR, "application": ROOT}
+        if kind not in folders:
+            raise ValueError("只能打开应用目录或本平台日志目录")
+        target = folders[kind]
+        target.mkdir(parents=True, exist_ok=True)
+        os.startfile(str(target))
+        return {"opened": True}
+
     def save_desktop_settings(self, values: dict) -> dict:
         allowed = {"profile", "backend_python", "business_port", "bridge_port", "frontend_port"}
         updated = {**load_config(), **{k: v for k, v in values.items() if k in allowed}}
@@ -347,8 +356,8 @@ h1{font-size:28px;letter-spacing:2px;margin:22px 0 8px}.sub{color:#83aabe;font-s
 .bar:after{content:"";display:block;height:100%;width:45%;background:linear-gradient(90deg,#31d9e7,#52dfa7);animation:run 1.25s ease-in-out infinite}
 @keyframes run{0%{transform:translateX(-110%)}100%{transform:translateX(330%)}}
 </style></head><body><div class="panel"><div class="mark">🛡</div><h1>SiteSafe-Sentinel</h1>
-<div class="sub">正在启动安全检测、Agent与业务服务…</div><div class="bar"></div>
-<div class="sub">嘉然今天也在守护工地</div></div></body></html>
+<div class="sub">正在连接工作空间、业务后台与检测桥…</div><div class="bar"></div>
+<div class="sub">模型是否自动启动取决于你的配置；首次打开可能需要稍候。</div></div></body></html>
 """
 
 
@@ -359,7 +368,13 @@ body{{margin:0;padding:64px;background:#101923;color:#e7edf3;font-family:'Micros
 .box{{max-width:900px;margin:auto;padding:32px;border:1px solid #8d4550;border-radius:16px;background:#1a2530}}
 h1{{color:#ff8794}}pre{{white-space:pre-wrap;line-height:1.7;color:#cbd7e0}}
 </style></head><body><div class="box"><h1>桌面平台启动失败</h1>
-<pre>{html.escape(message)}</pre><p>关闭窗口后根据日志修正配置再重试。</p></div></body></html>
+<p>你的项目文件仍在。请按下列步骤检查，再关闭并重新打开软件。</p>
+<ol style="line-height:2;color:#bdcec9"><li>提示文件缺失：确认完整解压了交付包，没有只复制 EXE。</li><li>提示依赖或 Python 问题：检查 desktop-settings.json 中的后台环境；演示可使用随包 Python。</li><li>提示端口冲突：关闭重复的平台窗口，或在桌面配置中选择不同端口。</li></ol>
+<details><summary style="cursor:pointer;padding:16px 0">展开具体错误信息</summary><pre>{html.escape(message)}</pre></details>
+<p><button onclick="openFolder('logs')">打开运行日志文件夹</button> <button onclick="openFolder('application')">打开软件与配置文件夹</button></p>
+<p id="support-status" aria-live="polite"></p></div>
+<style>button{{padding:12px 20px;border:1px solid #76958b;border-radius:8px;background:#26403e;color:#f0f7f4;cursor:pointer}}button:hover{{background:#36534f}}button:focus-visible{{outline:2px solid #edb69c;outline-offset:3px}}</style>
+<script>async function openFolder(kind){{try{{if(!window.pywebview?.api)throw new Error('窗口接口尚未就绪，请稍后再试');await window.pywebview.api.open_support_folder(kind);document.getElementById('support-status').textContent='文件夹已打开。请勿在分享日志时附带密钥或敏感现场信息。'}}catch(e){{document.getElementById('support-status').textContent=e.message||'打开失败，请从软件所在目录查看配置与日志。'}}}}</script></body></html>
 """
 
 
@@ -413,6 +428,7 @@ def main() -> int:
         js_api=type("DesktopSettingsAPI", (), {
             "get_desktop_settings": lambda _self: runtime.get_desktop_settings(),
             "save_desktop_settings": lambda _self, values: runtime.save_desktop_settings(values),
+            "open_support_folder": lambda _self, kind: runtime.open_support_folder(kind),
             "choose_backend_python": lambda _self: (webview.windows[0].create_file_dialog(
                 webview.FileDialog.OPEN, allow_multiple=False, file_types=("Python (*.exe)",)
             ) or [""])[0],

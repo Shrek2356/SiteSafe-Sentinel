@@ -1,3 +1,4 @@
+import { validateEndpoint } from './endpointValidation.js'
 const BUSINESS_KEY = 'znt_business_api'
 const DETECT_KEY = 'znt_detect_api'
 
@@ -35,6 +36,8 @@ export function saveEndpointSettings({ businessApi, detectApi }) {
     businessApi: normalizeBusinessApi(businessApi),
     detectApi: normalizeDetectApi(detectApi),
   }
+  validateEndpoint(normalized.businessApi)
+  validateEndpoint(normalized.detectApi)
   localStorage.setItem(BUSINESS_KEY, normalized.businessApi)
   localStorage.setItem(DETECT_KEY, normalized.detectApi)
   return normalized

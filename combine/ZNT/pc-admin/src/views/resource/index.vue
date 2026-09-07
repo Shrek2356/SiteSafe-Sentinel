@@ -53,12 +53,13 @@
 
 <script setup>
 import { onMounted, ref } from 'vue'
+import { useRouteTab } from '@/composables/useRouteTab'
 import { message } from 'ant-design-vue'
 import { fetchDevices, fetchOrgTree, fetchProjects } from '@/api/resource'
 import { useUserStore } from '@/stores/user'
 
 const userStore = useUserStore()
-const tab = ref('device')
+const tab = useRouteTab(['device','org','project'], 'device')
 const devices = ref([])
 const orgTree = ref([])
 const projects = ref([])

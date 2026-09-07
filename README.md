@@ -23,7 +23,7 @@ An open-risk visual detection and multi-agent safety management platform for con
 
 桌面端运行模式和模型路径由 `combine/ZNT/desktop-settings.json` 配置；模型权重仍采用外置路径，便于不同设备按显卡能力安装或更换。构建方法见 `combine/ZNT/desktop/README.md`。
 
-**1.1.0 更新**：桌面同源网关、任务中心、运行状态栏、专业/展示视图、模型推理引擎路径选择、规范导入保护和持久化配置。可直接在“系统设置”里修改桌面环境。保留动画和八个关键案例，详见 [更新与验收](./combine/ZNT/docs/桌面版v1.1更新与验收.md)。
+**1.2.0 更新**：引导式工作台、功能搜索（Ctrl + K）、覆盖全部模块的本页指南、使用与支持中心、可操作的连接诊断和统一明暗主题。原有嘉然动画与八个关键案例保留，真实检测断线不会自动切成演示。详见 [产品体验与使用指南](./combine/ZNT/docs/桌面版v1.2产品体验与使用指南.md)。本版不再以压缩包体积为优先约束，保留完整前端素材用于继续开发。
 
 ### 兼容启动方式
 
