@@ -18,6 +18,8 @@
 
 ## 推荐
 
+桌面版 1.1：优先双击交付包根目录 `SiteSafe-Sentinel.exe`，无需 Node 或另装基础 Python。展示素材开关位于“系统设置 → 工作台与展示”。下文 `npm` 与浏览器启动步骤只针对源代码开发，不是桌面展示的必需步骤。
+
 > Windows 建议把交付包解压到短目录（如 `E:\ZNT_Submission`）。两层同名长目录可能使 `lxml` 安装或运行时掩码写入超过传统路径长度限制。
 
 1. 只做Demo展示时，直接双击 **`start-platform.bat`** 并选择模式1；随包的 `python-runtime/` 已包含基础环境

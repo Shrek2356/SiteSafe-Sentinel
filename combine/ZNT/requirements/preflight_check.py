@@ -116,6 +116,7 @@ def resolve_model_path(value: str) -> Path:
 def collect(mode: str) -> dict[str, Any]:
     manifest = load_json(MANIFEST_PATH, {})
     settings = load_json(SETTINGS_PATH, {})
+    settings.update(load_json(DETECT_ROOT / "outputs" / "runtime" / "runtime_settings.json", {}))
     gpu = gpu_info()
     torch = torch_info() if mode in {"offline", "cloud"} else {
         "installed": importlib.util.find_spec("torch") is not None,
@@ -165,7 +166,9 @@ def collect(mode: str) -> dict[str, Any]:
     # Demo 交付包固定使用已验证的 Python 3.12 便携运行时；完整 GPU 环境仍推荐 3.10。
     python_ok = sys.version_info[:2] in {(3, 10), (3, 12)}
     node_ok = bool(node_text) and version_tuple(node_text)[:1] in {(20,), (22,), (24,)}
-    llama_server = shutil.which("llama-server") or shutil.which("llama-server.exe")
+    configured_llama = str(settings.get("llama_server_path") or "").strip()
+    llama_server = (configured_llama if Path(configured_llama).is_file() else None) if configured_llama else (shutil.which("llama-server") or shutil.which("llama-server.exe"))
+    static_desktop = (ROOT / "pc-admin" / "dist" / "index.html").is_file()
     issues: list[dict[str, str]] = []
 
     if dependencies["missing"]:
@@ -177,9 +180,9 @@ def collect(mode: str) -> dict[str, Any]:
 
     if not python_ok:
         issues.append({"level": "warning", "message": "请使用完整检测环境的 Python 3.10，或随包 Demo 的 Python 3.12 便携运行时。"})
-    if not node_ok:
+    if not node_ok and not static_desktop:
         issues.append({"level": "error", "message": "未找到可用 Node.js；推荐安装 Node.js 20/22 LTS。"})
-    elif not npm_text:
+    elif node_ok and not npm_text and not static_desktop:
         issues.append({"level": "error", "message": "Node.js 可用但 npm 不可用；请修复 Node.js 安装或 PATH。"})
     if mode in {"offline", "cloud"} and not torch.get("cuda_available"):
         issues.append({"level": "error", "message": "完整检测需要 CUDA 版 PyTorch，当前 Python 未检测到可用 CUDA。"})
@@ -211,6 +214,7 @@ def collect(mode: str) -> dict[str, Any]:
             "python": sys.version.split()[0],
             "python_executable": sys.executable,
             "node": node_text or None,
+            "prebuilt_frontend": static_desktop,
             "npm": npm_text or None,
             "ram_gb": physical_ram_gb,
             "disk_free_gb": round(disk.free / 1024**3, 1),

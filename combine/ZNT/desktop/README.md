@@ -1,5 +1,7 @@
 # SiteSafe-Sentinel 独立桌面版
 
+当前版本 **1.1.0**。桌面界面新增任务中心、系统设置与服务状态栏；修复接口转发、规范覆盖、历史恢复与共享进程误停。完整变更与边界见 `../docs/桌面版v1.1更新与验收.md`。
+
 ## 用户启动
 
 `desktop-dist/SiteSafe-Sentinel.exe` 是独立窗口入口。它会：
@@ -8,6 +10,8 @@
 2. 启动内嵌PC前端、8800业务后台和8810检测桥。
 3. 默认使用Demo档，不需大模型权重。
 4. 关闭窗口时停止由EXE启动的子服务和本地Qwen。
+
+不会接管或关闭原先已运行的共享服务。修改 Python、模式或端口可在“系统设置 → 桌面与连接”完成，保存后重启。普通模型路径与 Qwen 启停仍在“模型规则配置”。
 
 EXE不内置大模型、数据库和可变配置，必须与以下目录同级分发：
 
@@ -39,3 +43,7 @@ desktop\.venv\Scripts\python.exe desktop\desktop_app.py --profile demo
 双击`desktop/build-desktop-exe.bat`。构建环境与业务运行环境分离，生成文件位于`desktop-dist/SiteSafe-Sentinel.exe`。构建会写入产品名称、版本号和应用图标；对外正式分发时如需消除 Windows SmartScreen 的“未知发布者”提示，还需要使用团队自己的代码签名证书签名。
 
 先验证便携目录版，再考虑将所有资源压入单文件安装包。模型权重应始终外置，便于更新和不同GPU配置。
+
+## 生成便携交付包
+
+构建前端与 EXE 后，执行 `desktop/pack-release.ps1 -Destination <输出目录>`；脚本拒绝覆盖已有交付目录，并生成 SHA256 文件清单。包内包含源码，但为减小体积不重复放置前端公共图片。若要在交付目录重建前端，先在 `pc-admin` 执行 `restore-frontend-assets.ps1` 恢复 `public`，再安装开发依赖构建；普通使用者无需这些操作。

@@ -103,3 +103,23 @@ def test_spawn_is_rejected_after_stop():
     runtime.stop()
     with pytest.raises(RuntimeError, match='关闭'):
         runtime._spawn('test', ['never-launch'], Path.cwd())
+
+
+def test_frontend_cannot_start_after_window_closed():
+    runtime = DesktopRuntime(dict(DEFAULT_CONFIG))
+    runtime.stop()
+    with pytest.raises(RuntimeError, match='取消'):
+        runtime.start_frontend()
+
+
+def test_desktop_settings_persist_without_starting_services(tmp_path, monkeypatch):
+    import desktop_app
+    target = tmp_path / 'desktop-settings.json'
+    monkeypatch.setattr(desktop_app, 'CONFIG_PATH', target)
+    monkeypatch.setattr(DesktopRuntime, 'validate', lambda self: None)
+    runtime = DesktopRuntime(dict(DEFAULT_CONFIG))
+    runtime.save_desktop_settings({'frontend_port': 55173})
+    assert runtime.get_desktop_settings()['frontend_port'] == 55173
+    assert runtime.frontend_port == 5173
+    assert runtime.get_desktop_settings()['restart_required'] is True
+    assert runtime.processes == []

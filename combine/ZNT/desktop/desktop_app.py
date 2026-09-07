@@ -323,11 +323,12 @@ class DesktopRuntime:
             item.log_handle.close()
 
     def get_desktop_settings(self) -> dict:
-        return {**self.config, "app_root": str(ROOT), "restart_required": False}
+        saved = load_config()
+        return {**saved, "app_root": str(ROOT), "restart_required": saved != self.config}
 
     def save_desktop_settings(self, values: dict) -> dict:
         allowed = {"profile", "backend_python", "business_port", "bridge_port", "frontend_port"}
-        updated = {**self.config, **{k: v for k, v in values.items() if k in allowed}}
+        updated = {**load_config(), **{k: v for k, v in values.items() if k in allowed}}
         candidate = DesktopRuntime(updated)
         candidate.validate()
         temporary = CONFIG_PATH.with_suffix(".tmp")

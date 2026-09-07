@@ -1,6 +1,14 @@
 {
   "schema_version": 3,
-  "delivery_version": "2026-08-16-audit-fixed",
+  "delivery_version": "2026-09-07-desktop-1.1.0",
+  "desktop": {
+    "entry": "SiteSafe-Sentinel.exe",
+    "webview": "Microsoft Edge WebView2 Runtime",
+    "demo_python": "bundled Python 3.12",
+    "node_required_for_prebuilt_desktop": false,
+    "settings_ui": "系统设置 → 桌面与连接",
+    "model_runtime_ui": "模型规则配置 → llama-server.exe / 模型部件路径"
+  },
   "artifact_policy": {
     "code_package_contains_model_weights": false,
     "model_weights_delivery": "separate-model-bundle",

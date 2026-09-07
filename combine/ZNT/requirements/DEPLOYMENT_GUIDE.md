@@ -1,6 +1,6 @@
 # ZNT 新部署者智能引导与 Requirement
 
-只做比赛展示时可直接运行 **`start-platform.bat`** 并选择 Demo：包内已经带好便携 Python、Node.js 和基础依赖，不需要安装软件或联网下载。只有配置 Offline/Cloud 真实检测时，才先运行 **`部署助手.bat`**；助手会检查 GPU、CUDA PyTorch、`llama-server` 和各模型路径。
+桌面交付包直接运行 **`SiteSafe-Sentinel.exe`**（根目录 `start-platform.bat` 也指向该入口）。默认 Demo，已带便携 Python、基础依赖和构建好的前端，**不需要 Node.js**；Windows 须具备 WebView2 Runtime。源代码仓库的浏览器开发入口仍需 Node。配置 Offline/Cloud 真实检测时再运行 **`部署助手.bat`**，检查 GPU、CUDA PyTorch、`llama-server` 与模型路径；桌面内的“系统设置 → 桌面与连接”可选择完整 Python 环境，保存后重启。
 
 ## 1. 三种部署模式
 

@@ -23,6 +23,8 @@ An open-risk visual detection and multi-agent safety management platform for con
 
 桌面端运行模式和模型路径由 `combine/ZNT/desktop-settings.json` 配置；模型权重仍采用外置路径，便于不同设备按显卡能力安装或更换。构建方法见 `combine/ZNT/desktop/README.md`。
 
+**1.1.0 更新**：桌面同源网关、任务中心、运行状态栏、专业/展示视图、模型推理引擎路径选择、规范导入保护和持久化配置。可直接在“系统设置”里修改桌面环境。保留动画和八个关键案例，详见 [更新与验收](./combine/ZNT/docs/桌面版v1.1更新与验收.md)。
+
 ### 兼容启动方式
 
 根目录启动文件：
@@ -36,7 +38,7 @@ An open-risk visual detection and multi-agent safety management platform for con
    - **3 标准检测**：YOLO 初筛 + Qwen 云端 API + 本地 SAM3/CLIP  
 3. **不要关闭**弹出的黑色窗口  
 4. 浏览器打开 http://localhost:5173  
-5. 登录选「管理员」，密码随便填  
+5. 默认管理员 `admin / admin123`；安全员 `safety / safety123`；只读总监 `viewer / viewer123`。真实账号必须使用对应密码。
 
 体验检测：菜单 **「实时检测」** → 点测试图片 → **开始检测**
 
