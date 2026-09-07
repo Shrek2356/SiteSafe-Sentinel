@@ -53,6 +53,14 @@ export async function fetchRuntimeSettings() {
   return data
 }
 
+export async function fetchDeploymentGuide() {
+  return (await detectHttp.get('/api/detect/deployment', { timeout: 10000 })).data
+}
+
+export async function checkDeploymentEnvironment(mode) {
+  return (await detectHttp.post('/api/detect/deployment/check', null, { params: { mode }, timeout: 100000 })).data
+}
+
 /** 让后端在已知便携目录和本机模型目录中查找模型部件。 */
 export async function discoverRuntimeSettings(settings = {}) {
   const { data } = await detectHttp.post('/api/detect/runtime-settings/discover', { settings })

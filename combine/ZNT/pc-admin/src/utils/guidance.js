@@ -20,7 +20,7 @@ export const HELP_PAGES = [
   { path:'/case-library', title:'安全案例库', group:'知识与分析', description:'检索已有案例，整理培训与交底素材。', keywords:'培训 素材 生成 归档 案例',
     steps:['按类型或关键词检索案例。','查看案例内容，按需使用素材生成工具。','到历史归档查看已有材料，区分生成素材与实拍证据。'], result:'用于培训、展示和复盘的案例材料。', caution:'生成素材不应作为真实事故证据；素材来源与授权需保留。', next:'/help-center' },
   { path:'/model-config', title:'模型与规则', group:'系统配置', roles:['admin'], description:'接入本地模型或云端服务，导入规范并管理检测规则。', keywords:'Qwen SAM3 CLIP YOLO 权重 阈值 RAG 规范 知识库 模型',
-    steps:['在“模型部件与运行时”选择代码、权重及推理引擎路径。','校验并保存；启动本地 Qwen，等待连接成功。SAM3/YOLO/CLIP 按任务加载。','在知识库导入规范，再用检索测试确认条款可查。'], result:'持久化模型配置、可检索规范和可管理的规则。', caution:'开关已启用不等于模型已加载；扫描 PDF 需要先 OCR，导入文件不等于重新训练模型。', next:'/realtime-detect' },
+    steps:['新设备先打开“新设备部署”，按目标模式准备环境和组件，再在运行时页选择路径。','校验并保存；启动本地 Qwen，等待连接成功。SAM3/YOLO/CLIP 按任务加载。','在知识库导入规范，再用检索测试确认条款可查。'], result:'持久化模型配置、可检索规范和可管理的规则。', caution:'开关已启用不等于模型已加载；扫描 PDF 需要先 OCR，导入文件不等于重新训练模型。', next:'/realtime-detect' },
   { path:'/resource', title:'项目与设备', group:'系统配置', roles:['admin','director'], description:'维护摄像头、组织和项目，让检测对上真实场景。', keywords:'设备 地址 项目 班组 组织 资源',
     steps:['新增或核对项目基本信息。','登记设备，区分预览流与检测流地址。','维护组织与负责人，再检查监控和工单是否对应。'], result:'项目、设备、组织与后续任务的关联。', caution:'设备已登记不等于视频已连通；需到视频监控验证。', next:'/monitor' },
   { path:'/system-settings', title:'系统设置', group:'系统配置', roles:['admin'], description:'管理桌面环境、连接、视觉偏好、账号与业务备份。', keywords:'Python 端口 启动 主题 明暗 备份 用户 桌面',
@@ -30,6 +30,7 @@ export const HELP_PAGES = [
 ]
 
 export const QUICK_ACTIONS = [
+  { id:'deployment', title:'新设备模型部署', description:'选模式、准备环境、取得组件、配置路径与图片验收', target:'/model-config?tab=deployment', keywords:'新电脑 迁移 部署 下载 安装 模型 Python CUDA' },
   { id:'examples', title:'查看八个展示案例', description:'已有报告与掩码，无需重新推理', target:'/detection-results', keywords:'示例 展示 演示' },
   { id:'detect', title:'开始图片检测', description:'选择模式、图片，再提交任务', target:'/realtime-detect', keywords:'上传 风险' },
   { id:'models', title:'配置本地模型', description:'直接进入模型部件与运行时', target:'/model-config?tab=runtime', keywords:'qwen sam3 clip yolo 路径 权重 本地' },
@@ -66,6 +67,6 @@ export const FAQS = [
 
 export const JOURNEYS = [
   { id:'showcase', title:'先看作品', tag:'无需模型', description:'从八个关键案例理解风险识别与处置流程。', steps:[{title:'查看预置案例与掩码',target:'/detection-results'},{title:'了解人工判断与工单',target:'/workorder'},{title:'查看功能全景与使用边界',target:'/help-center?tab=library'}] },
-  { id:'local', title:'接入真实检测', tag:'管理员配置', description:'配置环境和模型后，再用图片验证完整链路。', steps:[{title:'配置后台环境',target:'/system-settings?tab=desktop'},{title:'选择权重并启动 Qwen',target:'/model-config?tab=runtime'},{title:'提交图片验证',target:'/realtime-detect'},{title:'核对报告与证据',target:'/detection-results'}] },
+  { id:'local', title:'接入真实检测', tag:'管理员配置', description:'配置环境和模型后，再用图片验证完整链路。', steps:[{title:'按新设备向导准备模型',target:'/model-config?tab=deployment'},{title:'配置后台环境',target:'/system-settings?tab=desktop'},{title:'选择权重并启动 Qwen',target:'/model-config?tab=runtime'},{title:'提交图片验证',target:'/realtime-detect'},{title:'核对报告与证据',target:'/detection-results'}] },
   { id:'daily', title:'开始日常巡检', tag:'人员参与闭环', description:'从监测到复核，把风险落实为可追踪的工作。', steps:[{title:'查看现场画面',target:'/monitor'},{title:'追踪检测任务',target:'/task-center'},{title:'处理风险工单',target:'/workorder'},{title:'整理案例用于培训',target:'/case-library'}] },
 ]

@@ -2,7 +2,7 @@
 ## SiteSafe-Sentinel 嘉然今天也在守护工地
 An open-risk visual detection and multi-agent safety management platform for construction sites.
 
-当前源码版本 **v1.4.0**：修复桌面导出、配置保存与复盘请求边界，新增完整工作空间备份恢复；保留双主题、全部展示案例与嘉然动画。[v1.4 使用说明](./combine/ZNT/docs/桌面版v1.4可靠性与备份说明.md)。此前 v1.3 正式压缩包不会自动包含这些更新。
+当前源码版本 **v1.4.1**：新增前端五步模型部署引导，统一新机路径和 Python 检查，预留项目权重下载地址；保留工作空间备份、双主题、全部展示案例与嘉然动画。[新设备模型部署说明](./combine/ZNT/docs/桌面版v1.4.1模型部署说明.md)。旧版压缩包不会自动包含这些更新。
 
 <p align="center">
   <a href="./combine/ZNT/video/%E5%80%99%E6%9C%BA%E5%8A%A8%E7%94%BB.mp4" title="点击观看原始高清视频">
@@ -28,7 +28,7 @@ An open-risk visual detection and multi-agent safety management platform for con
 
 ### 直接体验：完整桌面交付包
 
-使用项目方提供的 `SiteSafe-Sentinel_Desktop_v1.3.0_visual_final.zip`，完整解压后双击根目录 **`SiteSafe-Sentinel.exe`**。若旧版仍在运行，请先正常退出旧版。
+使用项目方提供的 `SiteSafe-Sentinel_Desktop_v1.4.1_deployment_final.zip`，完整解压后双击根目录 **`SiteSafe-Sentinel.exe`**。若旧版仍在运行，请先正常退出旧版。接入模型请从“模型与规则 → 新设备部署”开始；项目 YOLO 下载地址暂留空，不影响通过选择文件配置已有权重。
 
 - 环境：Windows 10/11 64 位，Microsoft Edge WebView2 Runtime。
 - 随包提供基础 Python 与已构建前端；演示不要求系统 Node、GPU、API 密钥或大模型权重。

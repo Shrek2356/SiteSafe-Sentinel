@@ -1,6 +1,6 @@
 param(
     [string]$Destination = 'E:\work\competition\FINAL_DELIVERABLES_20260907',
-    [string]$Name = 'SiteSafe-Sentinel_Desktop_v1.4.0_reliability'
+    [string]$Name = 'SiteSafe-Sentinel_Desktop_v1.4.1_deployment'
 )
 $ErrorActionPreference = 'Stop'
 $appSource = [IO.Path]::GetFullPath((Join-Path $PSScriptRoot '..'))
@@ -50,7 +50,19 @@ foreach ($file in @('package.json','package-lock.json','vite.config.js','index.h
     Copy-Item -LiteralPath (Join-Path $appSource "pc-admin\$file") -Destination (Join-Path $releaseRoot "pc-admin\$file")
 }
 Copy-Item -LiteralPath (Join-Path $appSource 'desktop-dist\SiteSafe-Sentinel.exe') -Destination (Join-Path $releaseRoot 'SiteSafe-Sentinel.exe')
-Copy-Item -LiteralPath (Join-Path $appSource 'docs\桌面版v1.4可靠性与备份说明.md') -Destination (Join-Path $releaseRoot 'README.md')
+Copy-Item -LiteralPath (Join-Path $appSource 'docs\桌面版v1.4.1模型部署说明.md') -Destination (Join-Path $releaseRoot 'README.md')
+# A fresh delivery uses only documented in-package locations, never the developer's model paths.
+[ordered]@{
+    qwen_enabled=$true; qwen_autostart=$false; yolo_enabled=$true; sam3_enabled=$true; clip_enabled=$false
+    llama_server_path='../../third_party/llama.cpp/llama-server.exe'
+    qwen_model_path='../../models/qwen/Qwen3-VL-8B-Instruct-Q4_K_M.gguf'
+    qwen_mmproj_path='../../models/qwen/mmproj-BF16.gguf'
+    qwen_base_url='http://127.0.0.1:8080/v1/chat/completions'
+    sam3_repo_path='../../third_party/sam3-main'; sam3_checkpoint_path='../../models/sam3/sam3.pt'
+    clip_checkpoint_path='../../models/clip/ViT-L-14.pt'
+    yolo_css_weights_path='../../models/yolo/yolo26m_css_v28_baseline_best.pt'
+    yolo_construction_weights_path='../../models/yolo/yolo26m_construction_site_best.pt'
+} | ConvertTo-Json | Set-Content -LiteralPath (Join-Path $releaseRoot 'detectmodel\Site_Safety_OpenRisk\configs\runtime_initial_settings.json') -Encoding utf8
 Copy-Item -LiteralPath (Join-Path $appSource 'desktop\start-desktop.bat') -Destination (Join-Path $releaseRoot 'start-platform.bat')
 # Retain source public/ assets alongside the compiled app for full development handoff.
 Copy-Item -LiteralPath (Join-Path $appSource 'desktop\restore-frontend-assets.ps1') -Destination (Join-Path $releaseRoot 'pc-admin\restore-frontend-assets.ps1')

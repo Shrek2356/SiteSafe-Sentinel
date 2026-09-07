@@ -8,6 +8,7 @@
     <div class="page-title">模型规则配置</div>
 
     <a-tabs v-model:activeKey="tab">
+      <a-tab-pane key="deployment" tab="新设备部署"><ModelDeploymentGuide /></a-tab-pane>
       <!-- 检测阈值 -->
       <a-tab-pane key="threshold" tab="检测阈值配置">
         <a-table :columns="thCols" :data-source="thresholds" row-key="key" :pagination="false">
@@ -224,6 +225,7 @@
 
 <script setup>
 import { onMounted, ref } from 'vue'
+import ModelDeploymentGuide from '@/components/ModelDeploymentGuide.vue'
 import { useRouteTab } from '@/composables/useRouteTab'
 import { message } from 'ant-design-vue'
 import { fetchModelConfig, updatePushRule, updateThreshold } from '@/api/modelConfig'
@@ -243,7 +245,7 @@ import {
   uploadKnowledgeDocument,
 } from '@/api/detect'
 
-const tab = useRouteTab(['threshold','kb','push','runtime','train'], 'threshold')
+const tab = useRouteTab(['deployment','threshold','kb','push','runtime','train'], 'deployment')
 const thresholds = ref([])
 const knowledge = ref([])
 const knowledgeSummary = ref({})

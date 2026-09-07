@@ -2,13 +2,17 @@
 from __future__ import annotations
 
 import argparse
+import contextlib
+import importlib
 import importlib.util
+import io
 import json
 import os
 import platform
 import shutil
 import subprocess
 import sys
+import struct
 from datetime import datetime
 from pathlib import Path
 from typing import Any
@@ -38,6 +42,8 @@ BASE_DEPENDENCIES = {
 FULL_DEPENDENCIES = {
     "cv2": "OpenCV",
     "ultralytics": "Ultralytics/YOLO",
+    "torchvision": "torchvision (must match PyTorch)",
+    "sam3.model_builder": "SAM3 model builder",
 }
 
 
@@ -46,7 +52,8 @@ def command_output(command: list[str]) -> str:
     if executable:
         command = [executable, *command[1:]]
     try:
-        result = subprocess.run(command, capture_output=True, text=True, timeout=8, check=False)
+        result = subprocess.run(command, capture_output=True, text=True, timeout=8, check=False,
+                                creationflags=getattr(subprocess, "CREATE_NO_WINDOW", 0))
         return (result.stdout or result.stderr or "").strip()
     except (OSError, subprocess.SubprocessError):
         return ""
@@ -66,8 +73,14 @@ def dependency_info(mode: str) -> dict[str, Any]:
     expected = dict(BASE_DEPENDENCIES)
     if mode in {"offline", "cloud"}:
         expected.update(FULL_DEPENDENCIES)
-    missing = [label for module, label in expected.items() if importlib.util.find_spec(module) is None]
-    return {"ready": not missing, "missing": missing, "checked": list(expected.values())}
+    missing, failures = [], {}
+    for module, label in expected.items():
+        try:
+            importlib.import_module(module)
+        except Exception as exc:
+            missing.append(label)
+            failures[label] = f"{type(exc).__name__}: {exc}"
+    return {"ready": not missing, "missing": missing, "failures": failures, "checked": list(expected.values())}
 
 
 def gpu_info() -> dict[str, Any]:
@@ -80,9 +93,10 @@ def gpu_info() -> dict[str, Any]:
     for line in query.splitlines():
         parts = [item.strip() for item in line.split(",")]
         if len(parts) >= 3:
-            devices.append(
-                {"name": parts[0], "vram_mb": int(float(parts[1])), "driver": parts[2]}
-            )
+            try:
+                devices.append({"name": parts[0], "vram_mb": int(float(parts[1])), "driver": parts[2]})
+            except ValueError:
+                continue
     return {"available": bool(devices), "devices": devices}
 
 
@@ -102,7 +116,7 @@ def torch_info() -> dict[str, Any]:
 
 def load_json(path: Path, default: dict[str, Any]) -> dict[str, Any]:
     try:
-        value = json.loads(path.read_text(encoding="utf-8"))
+        value = json.loads(path.read_text(encoding="utf-8-sig"))
         return value if isinstance(value, dict) else default
     except (OSError, ValueError, json.JSONDecodeError):
         return default
@@ -110,7 +124,56 @@ def load_json(path: Path, default: dict[str, Any]) -> dict[str, Any]:
 
 def resolve_model_path(value: str) -> Path:
     path = Path(os.path.expandvars(os.path.expanduser(value)))
-    return path if path.is_absolute() else DETECT_ROOT / path
+    return (path if path.is_absolute() else DETECT_ROOT / path).resolve()
+
+
+def desktop_python(root: Path = ROOT) -> Path:
+    """A configured desktop interpreter is authoritative, even when it is broken."""
+    config_path = root / "desktop-settings.json"
+    if config_path.is_file():
+        try:
+            config = json.loads(config_path.read_text(encoding="utf-8-sig"))
+            value = str(config.get("backend_python") or "python-runtime/python.exe")
+        except (OSError, ValueError, AttributeError) as exc:
+            raise RuntimeError("desktop-settings.json 无法读取，请修复桌面 Python 配置。") from exc
+        path = Path(os.path.expandvars(value)).expanduser()
+        return (path if path.is_absolute() else root / path).resolve()
+    for relative in ("env/Scripts/python.exe", "env/python.exe", "python-runtime/python.exe"):
+        path = root / relative
+        if path.is_file():
+            return path.resolve()
+    return Path(sys.executable).resolve()
+
+
+def run_probe(python: Path, mode: str, *, runner=None) -> dict[str, Any]:
+    """Bounded child check; never accepts shell commands, installs packages or starts models."""
+    if mode not in {"demo", "offline", "cloud"}:
+        raise ValueError("未知检测模式")
+    if not python.is_file():
+        raise RuntimeError(f"所选 Python 不存在：{python}。请在系统设置 → 桌面与连接重新选择。")
+    clean_env = {k: v for k, v in os.environ.items() if k.upper() not in {"PYTHONPATH", "PYTHONHOME"}}
+    try:
+        result = (runner or subprocess.run)(
+            [str(python), "-I", "-X", "utf8", str(Path(__file__).resolve()), "--mode", mode, "--json"],
+            cwd=str(ROOT), env=clean_env, capture_output=True, text=True, encoding="utf-8",
+            errors="replace", timeout=90, check=False,
+            creationflags=getattr(subprocess, "CREATE_NO_WINDOW", 0),
+        )
+    except subprocess.TimeoutExpired as exc:
+        raise RuntimeError("环境检查超过 90 秒，已停止本次检查；请查看环境是否存在损坏的依赖。模型未启动。") from exc
+    except OSError as exc:
+        raise RuntimeError(f"无法执行所选 Python：{python}") from exc
+    try:
+        report = json.loads(result.stdout)
+        if not isinstance(report, dict) or not isinstance(report.get("ready"), bool) or report.get("mode") != mode or result.returncode not in {0, 2}:
+            raise ValueError("unexpected report")
+        if report.get("error"):
+            raise RuntimeError(f"环境检查未完成：{report['error']}")
+        if not isinstance(report.get("system"), dict):
+            raise ValueError("missing system information")
+    except (ValueError, TypeError) as exc:
+        raise RuntimeError("所选 Python 未返回有效诊断报告；请检查 Python 安装和 requirements 目录是否完整。") from exc
+    return report
 
 
 def collect(mode: str) -> dict[str, Any]:
@@ -167,19 +230,37 @@ def collect(mode: str) -> dict[str, Any]:
     python_ok = sys.version_info[:2] in {(3, 10), (3, 12)}
     node_ok = bool(node_text) and version_tuple(node_text)[:1] in {(20,), (22,), (24,)}
     configured_llama = str(settings.get("llama_server_path") or "").strip()
-    llama_server = (configured_llama if Path(configured_llama).is_file() else None) if configured_llama else (shutil.which("llama-server") or shutil.which("llama-server.exe"))
+    llama_path = resolve_model_path(configured_llama) if configured_llama else None
+    llama_server = (str(llama_path) if llama_path.is_file() else None) if llama_path else (shutil.which("llama-server") or shutil.which("llama-server.exe"))
+    model_checks["llama_server_path"] = {
+        "label": "llama.cpp 推理引擎", "configured": configured_llama,
+        "resolved": llama_server or (str(llama_path) if llama_path else ""),
+        "exists": bool(llama_server), "required": mode == "offline",
+        "source": "https://github.com/ggml-org/llama.cpp/releases",
+    }
+    if mode != "demo" and settings.get("clip_enabled"):
+        model_checks["clip_checkpoint_path"]["required"] = True
+        try:
+            importlib.import_module("open_clip")
+        except Exception as exc:
+            dependencies["missing"].append("OpenCLIP（当前已启用）")
+            dependencies["failures"]["OpenCLIP"] = f"{type(exc).__name__}: {exc}"
+            dependencies["ready"] = False
     static_desktop = (ROOT / "pc-admin" / "dist" / "index.html").is_file()
     issues: list[dict[str, str]] = []
+
+    if struct.calcsize("P") != 8:
+        issues.append({"level": "error", "message": "需要 64 位 Python；请重新选择 x64 环境。"})
 
     if dependencies["missing"]:
         issues.append({
             "level": "error",
             "message": "当前 Python 缺少依赖：" + ", ".join(dependencies["missing"])
-            + "。请运行 requirements\\setup_env.bat 并选择对应模式。",
+            + "。请对下方显示的【当前检测 Python】安装 requirements/detect-full.txt（Demo 使用 detect-bridge.txt）；SAM3 另行安装。不要对另一个 Python 安装。",
         })
 
-    if not python_ok:
-        issues.append({"level": "warning", "message": "请使用完整检测环境的 Python 3.10，或随包 Demo 的 Python 3.12 便携运行时。"})
+    if not python_ok or (mode != "demo" and sys.version_info < (3, 12)):
+        issues.append({"level": "warning", "message": "新建官方 SAM3 环境使用 Python 3.12（当前上游要求 3.12+）。3.10 仅对应历史适配环境，不要直接混装最新 SAM3。"})
     if not node_ok and not static_desktop:
         issues.append({"level": "error", "message": "未找到可用 Node.js；推荐安装 Node.js 20/22 LTS。"})
     elif node_ok and not npm_text and not static_desktop:
@@ -192,6 +273,17 @@ def collect(mode: str) -> dict[str, Any]:
         issues.append({"level": "warning", "message": "云端视觉模式仍需本地运行 YOLO/SAM3，建议至少 8 GB 显存。"})
     if mode == "offline" and not llama_server:
         issues.append({"level": "error", "message": "未找到 llama-server.exe；本地 Qwen 无法由平台自动启动。"})
+    for flag, label in (("qwen_enabled", "Qwen"), ("sam3_enabled", "SAM3"), ("yolo_enabled", "YOLO")):
+        required = mode != "demo" and (flag != "qwen_enabled" or mode == "offline")
+        if required and settings.get(flag) is False:
+            issues.append({"level": "error", "message": f"{label} 组件尚未激活，请在模型部件与运行时开启。"})
+    try:
+        selected_python = desktop_python()
+        if selected_python != Path(sys.executable).resolve():
+            issues.append({"level": "error", "message": "当前检测桥仍在旧 Python 运行，与桌面保存的环境不同；请关闭并重新打开软件，再检查。"})
+    except RuntimeError as exc:
+        selected_python = None
+        issues.append({"level": "error", "message": str(exc)})
     if disk.free / 1024**3 < 20:
         issues.append({"level": "warning", "message": "剩余磁盘不足 20 GB；模型、环境和结果文件可能无法完整落盘。"})
     for check in model_checks.values():
@@ -208,11 +300,14 @@ def collect(mode: str) -> dict[str, Any]:
     return {
         "generated_at": datetime.now().astimezone().isoformat(timespec="seconds"),
         "mode": mode,
+        "scope": "仅环境、组件导入和文件存在性检查；不下载权重、不启动模型、不发送云端请求，不代表真实推理验收。",
+        "next_step": "保存模型路径并启动对应服务，再到实时检测提交一张新图片；成功后完成八图回归。",
         "recommendation": recommendation,
         "system": {
             "os": platform.platform(),
             "python": sys.version.split()[0],
             "python_executable": sys.executable,
+            "desktop_python": str(selected_python) if selected_python else None,
             "node": node_text or None,
             "prebuilt_frontend": static_desktop,
             "npm": npm_text or None,
@@ -234,7 +329,7 @@ def print_report(report: dict[str, Any]) -> None:
     print("\n=== ZNT 新部署智能引导 ===")
     print(f"模式: {report['mode']}  |  {'可继续部署' if report['ready'] else '存在阻断项'}")
     print(report["recommendation"])
-    print(f"Python: {system['python']}  ({system['python_executable']})")
+    print(f"当前检测 Python: {system['python']}  ({system['python_executable']})")
     print(f"Node/npm: {system['node'] or '未安装'} / {system['npm'] or '未安装'}")
     print(f"内存/磁盘: {system['ram_gb'] or '未知'} GB / 剩余 {system['disk_free_gb']} GB")
     devices = system["gpu"]["devices"]
@@ -263,19 +358,39 @@ def print_report(report: dict[str, Any]) -> None:
     else:
         print("  未发现问题。可运行 start-platform.bat。")
     print("\n详细步骤: requirements\\DEPLOYMENT_GUIDE.md")
+    print(report.get("scope", ""))
+    print("云端模式还须在前端填写并测试 API；本检查不验证密钥、访问权限、模型配对或实际推理结果。")
 
 
 def main() -> int:
     parser = argparse.ArgumentParser(description="ZNT deployment preflight")
     parser.add_argument("--mode", choices=["demo", "offline", "cloud"], default="offline")
     parser.add_argument("--save", action="store_true", help="save machine-readable report")
+    parser.add_argument("--json", action="store_true", help="output JSON only")
+    parser.add_argument("--use-desktop-python", action="store_true", help="check the desktop-selected interpreter")
     args = parser.parse_args()
-    report = collect(args.mode)
-    print_report(report)
+    try:
+        if args.use_desktop_python:
+            report = run_probe(desktop_python(), args.mode)
+        else:
+            # Third-party import banners must not corrupt the machine-readable response.
+            with contextlib.redirect_stdout(io.StringIO()), contextlib.redirect_stderr(io.StringIO()):
+                report = collect(args.mode)
+    except Exception as exc:
+        if args.json:
+            print(json.dumps({"ready": False, "mode": args.mode, "error": str(exc)}, ensure_ascii=False))
+        else:
+            print(f"[错误] {exc}")
+        return 2
+    if args.json:
+        print(json.dumps(report, ensure_ascii=False))
+    else:
+        print_report(report)
     if args.save:
         REPORT_PATH.parent.mkdir(parents=True, exist_ok=True)
         REPORT_PATH.write_text(json.dumps(report, ensure_ascii=False, indent=2), encoding="utf-8")
-        print(f"\n报告已保存: {REPORT_PATH}")
+        if not args.json:
+            print(f"\n报告已保存: {REPORT_PATH}")
     return 0 if report["ready"] else 2
 
 

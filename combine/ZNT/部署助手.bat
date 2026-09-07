@@ -1,45 +1,34 @@
 @echo off
 chcp 65001 >nul
+setlocal
 cd /d "%~dp0"
-title ZNT 新部署智能引导
+title SiteSafe 新设备模型部署引导
 
-if exist "%~dp0node-runtime\node.exe" set "PATH=%~dp0node-runtime;%PATH%"
+rem The bootstrap Python only reads desktop-settings and starts the selected checker.
+set "GUIDE_PY=%~dp0python-runtime\python.exe"
+if not exist "%GUIDE_PY%" set "GUIDE_PY=%~dp0env\Scripts\python.exe"
+if not exist "%GUIDE_PY%" set "GUIDE_PY=%~dp0env\python.exe"
+if not exist "%GUIDE_PY%" set "GUIDE_PY=python"
 
-set "PY="
-if exist "%~dp0env\Scripts\python.exe" set "PY=%~dp0env\Scripts\python.exe"
-if not defined PY if exist "%~dp0env\python.exe" set "PY=%~dp0env\python.exe"
-if not defined PY if exist "%~dp0python-runtime\python.exe" set "PY=%~dp0python-runtime\python.exe"
-if not defined PY if exist "%~dp0..\env\python.exe" set "PY=%~dp0..\env\python.exe"
-if not defined PY if exist "D:\Anaconda\envs\torch\python.exe" set "PY=D:\Anaconda\envs\torch\python.exe"
-if not defined PY for /f "delims=" %%i in ('where python 2^>nul') do if not defined PY set "PY=%%i"
-
-if not defined PY (
-  echo [错误] 未找到 Python；标准展示包应当包含 python-runtime。
-  echo 若要启用本地大模型，请按完整部署说明准备 Python 3.10 环境。
-  echo 详见 requirements\DEPLOYMENT_GUIDE.md
-  pause
-  exit /b 1
-)
-
-echo 请选择准备部署的模式：
-echo   [1] 演示 Mock（不需要模型权重）
-echo   [2] 本地离线（Qwen + YOLO + SAM3，推荐）
-echo   [3] 云端视觉 API + 本地 YOLO/SAM3
-set /p MODE="输入 1 / 2 / 3（回车默认 2）："
-if "%MODE%"=="" set MODE=2
-if "%MODE%"=="1" set "PROFILE=demo"
-if "%MODE%"=="2" set "PROFILE=offline"
-if "%MODE%"=="3" set "PROFILE=cloud"
-if not defined PROFILE set "PROFILE=offline"
-
-"%PY%" "%~dp0requirements\preflight_check.py" --mode %PROFILE% --save
-set "RESULT=%ERRORLEVEL%"
 echo.
-if "%RESULT%"=="0" (
-  echo [完成] 当前环境满足该模式的基础条件。
-) else (
-  echo [需要处理] 请按照上方 ERROR 项补齐环境或模型路径。
-)
-echo 可在前端「模型规则配置 - 模型部件与运行时」修改所有模型路径。
+echo  新设备可先打开 SiteSafe-Sentinel.exe 查看八个案例，无需下载模型。
+echo  本助手按桌面设置中的 Python 检查，不下载文件、不安装依赖、不启动模型。
+echo  新建官方 SAM3 环境请按 requirements\DEPLOYMENT_GUIDE.md 使用 Python 3.12。
+echo.
+echo  [1] 演示 Demo（默认，无 GPU 和权重要求）
+echo  [2] 本地离线 Qwen + YOLO + SAM3
+echo  [3] 云端视觉 API + 本地 YOLO / SAM3
+set "GUIDE_MODE=1"
+set /p GUIDE_MODE="输入 1 / 2 / 3（回车默认 1）："
+set "GUIDE_PROFILE=demo"
+if "%GUIDE_MODE%"=="2" set "GUIDE_PROFILE=offline"
+if "%GUIDE_MODE%"=="3" set "GUIDE_PROFILE=cloud"
+
+"%GUIDE_PY%" -I -X utf8 "%~dp0requirements\preflight_check.py" --mode %GUIDE_PROFILE% --use-desktop-python --save
+set "GUIDE_RESULT=%ERRORLEVEL%"
+echo.
+echo  下一步：前端「模型与规则 - 新设备部署」查看逐步引导。
+echo  Python 在「系统设置 - 桌面与连接」选择；模型在「模型部件与运行时」选择。
+echo  检查通过不等于模型已运行；配置完成后仍需提交一张真实图片验收。
 pause
-exit /b %RESULT%
+exit /b %GUIDE_RESULT%

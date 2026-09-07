@@ -41,7 +41,7 @@ import uuid
 import shutil
 from datetime import datetime
 from pathlib import Path
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List, Optional, Literal
 
 from PIL import Image, UnidentifiedImageError
 
@@ -1039,6 +1039,22 @@ def create_app(bridge: DetectBridge) -> FastAPI:
     @app.get("/api/detect/health")
     def health() -> dict:
         return bridge.health()
+
+    @app.get("/api/detect/deployment")
+    def get_deployment_guide() -> dict:
+        from site_safety.deployment_service import deployment_manifest
+        try:
+            return deployment_manifest()
+        except RuntimeError as exc:
+            raise HTTPException(503, str(exc)) from exc
+
+    @app.post("/api/detect/deployment/check")
+    def check_deployment(mode: Literal["demo", "offline", "cloud"] = "demo") -> dict:
+        from site_safety.deployment_service import check_environment
+        try:
+            return check_environment(mode)
+        except RuntimeError as exc:
+            raise HTTPException(409, str(exc)) from exc
 
     @app.get("/api/detect/runtime-settings")
     def get_runtime_settings() -> dict:

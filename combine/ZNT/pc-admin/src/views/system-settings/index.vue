@@ -23,7 +23,7 @@
       </a-tab-pane>
       <a-tab-pane key="users" tab="用户与工作空间备份"><SystemAdministration /></a-tab-pane>
       <a-tab-pane key="about" tab="关于与部署">
-        <a-descriptions title="筑安智巡 · SiteSafe-Sentinel" bordered :column="1"><a-descriptions-item label="产品版本">1.4.0 · 可靠性与工作空间维护</a-descriptions-item><a-descriptions-item label="软件结构">独立桌面窗口 → 同源网关 → 业务后台 / 检测桥 → 按需加载模型</a-descriptions-item><a-descriptions-item label="模型">YOLO 初筛、Qwen 视觉与报告、SAM3 定位、可选 CLIP；本次未新增模型审核调用。</a-descriptions-item><a-descriptions-item label="首次部署">Windows 10/11 64位，WebView2；展示使用包内 Python，无需 Node。离线检测需按 requirements 部署完整 GPU 环境和模型权重。</a-descriptions-item><a-descriptions-item label="使用边界">展示/试点版本。模型结论须经安全人员判断；本版本的软件链路回归不等同于新一轮模型准确率评测。</a-descriptions-item></a-descriptions>
+        <a-descriptions title="筑安智巡 · SiteSafe-Sentinel" bordered :column="1"><a-descriptions-item label="产品版本">1.4.1 · 模型部署引导与工作空间维护</a-descriptions-item><a-descriptions-item label="软件结构">独立桌面窗口 → 同源网关 → 业务后台 / 检测桥 → 按需加载模型</a-descriptions-item><a-descriptions-item label="模型">YOLO 初筛、Qwen 视觉与报告、SAM3 定位、可选 CLIP；本次未新增模型审核调用。</a-descriptions-item><a-descriptions-item label="首次部署">Windows 10/11 64位，WebView2；展示使用包内 Python，无需 Node。离线检测先打开“模型与规则 → 新设备部署”，按五步引导准备 GPU 环境和组件。</a-descriptions-item><a-descriptions-item label="使用边界">展示/试点版本。模型结论须经安全人员判断；本版本的软件链路回归不等同于新一轮模型准确率评测。</a-descriptions-item></a-descriptions>
       </a-tab-pane>
     </a-tabs>
   </div>
