@@ -19,6 +19,7 @@ import asyncio
 from contextlib import asynccontextmanager
 import hashlib
 import json
+import math
 import os
 import secrets
 import shutil
@@ -50,6 +51,7 @@ from fastapi.responses import FileResponse, JSONResponse
 from fastapi.middleware.cors import CORSMiddleware
 
 from site_safety.agents.knowledge_base import KnowledgeBase
+from site_safety.utils.json_store import read_json, update_json
 from site_safety.agents.notify_gateway import NotificationGateway
 from site_safety.agents.response import (
     ALLOWED_TRANSITIONS,
@@ -520,9 +522,7 @@ class AppState:
     # ---- 阈值审批 ----
 
     def load_overrides(self) -> dict:
-        if THRESHOLD_OVERRIDES_PATH.is_file():
-            return json.loads(THRESHOLD_OVERRIDES_PATH.read_text(encoding="utf-8"))
-        return {"risk_overrides": {}, "history": []}
+        return read_json(THRESHOLD_OVERRIDES_PATH, {"risk_overrides": {}, "history": []})
 
     def proposals(self) -> List[dict]:
         stored = self.db.list("proposal")
@@ -549,19 +549,17 @@ class AppState:
         proposal.decision_note = payload.get("note", "")
         self.db.upsert("proposal", proposal_id, proposal.model_dump(), status=proposal.status)
         if decision == "approve":
-            overrides = self.load_overrides()
-            overrides.setdefault("risk_overrides", {})[proposal.risk_id] = {
-                "min_verified_confidence": proposal.proposed_min_verified_confidence,
-                "proposal_id": proposal_id, "approved_by": by, "approved_at": proposal.decided_at,
-            }
-            overrides.setdefault("history", []).append(
-                {"at": proposal.decided_at, "action": "approve", "proposal_id": proposal_id,
-                 "risk_id": proposal.risk_id,
-                 "min_verified_confidence": proposal.proposed_min_verified_confidence, "by": by}
-            )
-            THRESHOLD_OVERRIDES_PATH.parent.mkdir(parents=True, exist_ok=True)
-            THRESHOLD_OVERRIDES_PATH.write_text(
-                json.dumps(overrides, ensure_ascii=False, indent=2), encoding="utf-8")
+            def approve(overrides):
+                overrides.setdefault("risk_overrides", {})[proposal.risk_id] = {
+                    "min_verified_confidence": proposal.proposed_min_verified_confidence,
+                    "proposal_id": proposal_id, "approved_by": by, "approved_at": proposal.decided_at,
+                }
+                overrides.setdefault("history", []).append(
+                    {"at": proposal.decided_at, "action": "approve", "proposal_id": proposal_id,
+                     "risk_id": proposal.risk_id,
+                     "min_verified_confidence": proposal.proposed_min_verified_confidence, "by": by}
+                )
+            update_json(THRESHOLD_OVERRIDES_PATH, approve, {"risk_overrides": {}, "history": []})
         self.broadcast({"type": "proposal", "proposal_id": proposal_id, "status": proposal.status})
         return {"proposal_id": proposal_id, "status": proposal.status}
 
@@ -1655,7 +1653,7 @@ def frontend_model_config(user: dict = Depends(auth_viewer)) -> dict:
             "name": operator_names.get(key, key),
             "desc": "复盘学习已批准的风险专属阈值" if approved else "风险算子默认确认阈值；调整后持久保存为专属覆盖",
             "value": value,
-            "source": "approved_override" if approved else "operator_default",
+            "source": "manual_override" if override.get("source") == "manual" else "approved_override" if approved else "operator_default",
             "approved": approved,
         })
     return {"thresholds": thresholds,
@@ -1668,10 +1666,20 @@ def frontend_model_config(user: dict = Depends(auth_viewer)) -> dict:
 
 @app.put("/api/model/threshold")
 def frontend_threshold(payload: dict, user: dict = Depends(auth_admin)) -> dict:
-    overrides = STATE.load_overrides(); key = payload.get("key", "global")
-    overrides.setdefault("risk_overrides", {}).setdefault(key, {})["min_verified_confidence"] = float(payload.get("value", .5))
-    THRESHOLD_OVERRIDES_PATH.write_text(json.dumps(overrides, ensure_ascii=False, indent=2), encoding="utf-8")
-    return {"success": True, **payload}
+    key = payload.get("key")
+    try:
+        value = float(payload["value"])
+        if not isinstance(key, str) or not key.strip() or len(key) > 100 or not math.isfinite(value) or not 0 <= value <= 1:
+            raise ValueError()
+    except (KeyError, TypeError, ValueError, OverflowError):
+        raise HTTPException(422, "请提供风险标识和 0–1 之间的有限阈值")
+    def save(overrides):
+        overrides.setdefault("risk_overrides", {})[key] = {
+            "min_verified_confidence": value, "source": "manual",
+            "updated_by": user.get("username", "admin"), "updated_at": _now_iso(),
+        }
+    update_json(THRESHOLD_OVERRIDES_PATH, save, {"risk_overrides": {}, "history": []})
+    return {"success": True, "key": key, "value": value}
 
 
 @app.put("/api/model/push-rule")

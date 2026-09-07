@@ -2,7 +2,7 @@
 ## SiteSafe-Sentinel 嘉然今天也在守护工地
 An open-risk visual detection and multi-agent safety management platform for construction sites.
 
-当前桌面版 **v1.3.0**：雾白／石墨蓝双主题，统一青绿操作色与风险语义配色，保留全部展示案例与嘉然动画。[新版使用与视觉说明](./combine/ZNT/docs/桌面版v1.3视觉升级与使用指南.md)。
+当前源码版本 **v1.4.0**：修复桌面导出、配置保存与复盘请求边界，新增完整工作空间备份恢复；保留双主题、全部展示案例与嘉然动画。[v1.4 使用说明](./combine/ZNT/docs/桌面版v1.4可靠性与备份说明.md)。此前 v1.3 正式压缩包不会自动包含这些更新。
 
 <p align="center">
   <a href="./combine/ZNT/video/%E5%80%99%E6%9C%BA%E5%8A%A8%E7%94%BB.mp4" title="点击观看原始高清视频">

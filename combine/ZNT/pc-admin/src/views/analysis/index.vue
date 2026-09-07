@@ -14,9 +14,10 @@
           :presets="rangePresets"
         />
         <a-button type="primary" :loading="loading" @click="loadData">查询</a-button>
-        <a-button :loading="exporting" :disabled="analysisEmpty" @click="onExport">导出报告</a-button>
+        <a-button :loading="exporting" :disabled="loading || !!loadError || analysisEmpty || !rangeLabel" @click="onExport">导出报告</a-button>
       </a-space>
     </div>
+    <a-alert v-if="loadError" type="error" show-icon :message="loadError" description="保留的图表不是本次查询结果，请重新查询；恢复前暂停报告导出。" style="margin-bottom:16px" />
     <div v-if="rangeLabel" class="range-tip">
       当前统计区间：{{ rangeLabel }}（共 {{ rangeDays }} 天）
       <a-tag v-if="analysisPresentation" color="cyan">演示复盘数据</a-tag>
@@ -72,9 +73,13 @@ import { exportAnalysisReport, fetchAnalysisData } from '@/api/analysis'
 import { colorTheme } from '@/utils/theme'
 import { chartTheme } from '@/utils/designTokens'
 import { useUserStore } from '@/stores/user'
+import { createRequestGate } from '@/utils/requestGate'
+import { saveFile } from '@/utils/saveFile'
 
 const dateRange = ref([dayjs().subtract(6, 'day'), dayjs()])
 const loading = ref(false)
+const loadError = ref('')
+const requests = createRequestGate()
 const exporting = ref(false)
 const rangeMeta = ref({ start: '', end: '', days: 7 })
 const analysisEmpty = ref(false)
@@ -110,9 +115,13 @@ function queryParams() {
 }
 
 async function loadData() {
+  const ticket = requests.begin()
+  const params = queryParams()
   loading.value = true
+  loadError.value = ''
   try {
-    const res = await fetchAnalysisData(queryParams())
+    const res = await fetchAnalysisData(params)
+    if (!requests.current(ticket)) return
     const { trend, areaHeat, teamViolation, range } = res.data
     lastData = res.data
     analysisPresentation.value = Boolean(res.data.presentationAsset)
@@ -126,11 +135,22 @@ async function loadData() {
     ].reduce((sum, value) => sum + (Number(value) || 0), 0)
     analysisEmpty.value = total === 0
     rangeMeta.value = range || {
-      start: queryParams().startDate || '',
-      end: queryParams().endDate || '',
+      start: params.startDate || '',
+      end: params.endDate || '',
       days: trend?.dates?.length || 0,
     }
     await nextTick()
+    if (requests.current(ticket)) renderCharts()
+  } catch (error) {
+    if (requests.current(ticket)) loadError.value = error?.response?.data?.detail || '复盘数据读取失败，请检查连接后重试'
+  } finally {
+    if (requests.current(ticket)) loading.value = false
+  }
+}
+
+function renderCharts() {
+    if (!lastData || !trendRef.value || !heatRef.value || !teamRef.value) return
+    const { trend, areaHeat, teamViolation } = lastData
     charts.forEach((c) => c.dispose())
     charts = []
 
@@ -142,6 +162,7 @@ async function loadData() {
     const axisLabel = { color: chartText }
 
     const t = echarts.init(trendRef.value)
+    charts.push(t)
     t.setOption({
       backgroundColor: 'transparent',
       title: { text: `隐患趋势（${rangeMeta.value.days || trend.dates.length}天）`, textStyle: titleStyle },
@@ -158,6 +179,7 @@ async function loadData() {
     })
 
     const h = echarts.init(heatRef.value)
+    charts.push(h)
     h.setOption({
       backgroundColor: 'transparent',
       title: { text: '区域隐患热力', textStyle: titleStyle },
@@ -194,6 +216,7 @@ async function loadData() {
     })
 
     const tm = echarts.init(teamRef.value)
+    charts.push(tm)
     tm.setOption({
       backgroundColor: 'transparent',
       title: { text: '班组违规统计', textStyle: titleStyle },
@@ -204,19 +227,15 @@ async function loadData() {
       series: [{ type: 'bar', data: teamViolation.map((i) => i.count), barMaxWidth: 24, itemStyle: { color: visual.primary, borderRadius: [0, 4, 4, 0] } }],
     })
 
-    charts = [t, h, tm]
-    message.success('查询完成')
-  } finally {
-    loading.value = false
-  }
 }
 
 async function onExport() {
-  if (!lastData) {
+  if (!lastData || loading.value || loadError.value || exporting.value) {
     message.warning('请先查询数据')
     return
   }
   exporting.value = true
+  const snapshot = lastData
   try {
     if (!analysisPresentation.value) {
       await exportAnalysisReport({ format: 'pdf', ...queryParams() })
@@ -230,6 +249,7 @@ async function onExport() {
       backgroundColor: '#ffffff',
       useCORS: true,
     })
+    if (snapshot !== lastData || loading.value || loadError.value) throw new Error('统计内容已变化，请查询完成后重新导出')
     const img = canvas.toDataURL('image/png')
     const pdf = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' })
     const pageW = pdf.internal.pageSize.getWidth()
@@ -317,22 +337,28 @@ async function onExport() {
 
     const prefix = analysisPresentation.value ? '演示复盘报告' : '复盘分析报告'
     const filename = `${prefix}_${rangeMeta.value.start || 'all'}_${rangeMeta.value.end || 'all'}.pdf`
-    pdf.save(filename)
-    message.success('PDF 报告已下载')
+    await saveFile(pdf.output('blob'), filename)
   } catch (e) {
     console.error(e)
-    message.error('导出失败，请重试')
+    message.error(e.message || '导出失败，请重试')
   } finally {
     exporting.value = false
   }
 }
 
-onMounted(loadData)
+let resizeObserver
+onMounted(() => {
+  loadData()
+  if (typeof ResizeObserver !== 'undefined' && reportRef.value) {
+    resizeObserver = new ResizeObserver(() => charts.forEach(c => c.resize()))
+    resizeObserver.observe(reportRef.value)
+  }
+})
 watch(colorTheme, () => {
-  if (lastData) loadData()
+  renderCharts()
 })
 watch(() => userStore.project?.id, () => loadData())
-onBeforeUnmount(() => charts.forEach((c) => c.dispose()))
+onBeforeUnmount(() => { requests.dispose(); resizeObserver?.disconnect(); charts.forEach(c => c.dispose()); charts = [] })
 </script>
 
 <style scoped>

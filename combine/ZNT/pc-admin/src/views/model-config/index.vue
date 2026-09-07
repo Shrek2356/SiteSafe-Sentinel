@@ -20,14 +20,15 @@
                 :max="0.99"
                 :step="0.01"
                 style="flex: 1; min-width: 100px"
-                @change="(v) => onThreshold(record.key, v)"
+                :disabled="thresholdSaving[record.key]"
+                @afterChange="(v) => onThreshold(record.key, v)"
               />
               <span>{{ record.value }}</span>
               </div>
             </template>
             <template v-else-if="column.key === 'source'">
               <a-tag :color="record.approved ? 'green' : 'blue'">
-                {{ record.approved ? '复盘批准覆盖' : '风险算子默认' }}
+                {{ record.source === 'manual_override' ? '人工配置覆盖' : record.approved ? '复盘批准覆盖' : '风险算子默认' }}
               </a-tag>
             </template>
           </template>
@@ -336,9 +337,22 @@ async function activateComponent(component) {
   }
 }
 
+const thresholdSaving = ref({})
+const savedThresholds = new Map()
 async function onThreshold(key, value) {
-  await updateThreshold({ key, value })
-  message.success('阈值已保存并立即生效')
+  if (thresholdSaving.value[key]) return
+  thresholdSaving.value[key] = true
+  const row = thresholds.value.find(item => item.key === key)
+  try {
+    const response = await updateThreshold({ key, value })
+    const accepted = response.data.value ?? value
+    savedThresholds.set(key, accepted)
+    if (row) Object.assign(row, { value: accepted, approved: true, source: 'manual_override' })
+    message.success('阈值已保存，将用于新检测任务')
+  } catch (error) {
+    if (row) row.value = savedThresholds.get(key) ?? row.value
+    message.error(error?.response?.data?.detail || '保存失败，已恢复上次保存的阈值')
+  } finally { thresholdSaving.value[key] = false }
 }
 
 async function loadKnowledge() {
@@ -402,6 +416,7 @@ async function savePushRule() {
 async function load() {
   const res = await fetchModelConfig()
   thresholds.value = res.data.thresholds.map((t) => ({ ...t }))
+  for (const item of thresholds.value) savedThresholds.set(item.key, item.value)
   pushRules.value = res.data.pushRules
   train.value = res.data.trainProgress
 }

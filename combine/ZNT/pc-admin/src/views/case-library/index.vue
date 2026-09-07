@@ -105,6 +105,7 @@
 import { nextTick, onMounted, reactive, ref } from 'vue'
 import { message } from 'ant-design-vue'
 import { fetchCases, fetchMaterials, generateMaterial } from '@/api/caseLibrary'
+import { saveFile } from '@/utils/saveFile'
 
 const tab = ref('cases')
 const cases = ref([])
@@ -224,42 +225,33 @@ function roundRect(ctx, x, y, w, h, r) {
   ctx.closePath()
 }
 
-function downloadBlob(filename, blob) {
-  const url = URL.createObjectURL(blob)
-  const a = document.createElement('a')
-  a.href = url
-  a.download = filename
-  a.click()
-  URL.revokeObjectURL(url)
+function canvasBlob(canvas) {
+  return new Promise((resolve, reject) => canvas.toBlob(blob => blob ? resolve(blob) : reject(new Error('海报图像导出失败'))))
 }
 
-function downloadPosterPng(content, filename) {
+function posterBlob(content) {
   const canvas = document.createElement('canvas')
   canvas.width = 720
   canvas.height = 960
   const prev = posterCanvas.value
   posterCanvas.value = canvas
   drawPoster(content)
-  canvas.toBlob((blob) => {
-    if (blob) downloadBlob(filename, blob)
-  })
   posterCanvas.value = prev
   if (prev && lastResult.value?.content) {
     nextTick(() => drawPoster(lastResult.value.content))
   }
+  return canvasBlob(canvas)
 }
 
-function downloadResult(item) {
+async function downloadResult(item) {
   if (!item) return
+  try {
   if (item.format === 'poster' && item.content) {
     if (lastResult.value?.id === item.id && posterCanvas.value) {
-      posterCanvas.value.toBlob((blob) => {
-        if (blob) downloadBlob(`${item.title}.png`, blob)
-      })
+      await saveFile(await canvasBlob(posterCanvas.value), `${item.title}.png`)
     } else {
-      downloadPosterPng(item.content, `${item.title}.png`)
+      await saveFile(await posterBlob(item.content), `${item.title}.png`)
     }
-    message.success('海报已下载')
     return
   }
   if (!item.content) {
@@ -268,8 +260,8 @@ function downloadResult(item) {
   }
   const text = typeof item.content === 'string' ? item.content : JSON.stringify(item.content, null, 2)
   const ext = item.format === 'doc' ? 'md' : 'txt'
-  downloadBlob(`${item.title}.${ext}`, new Blob([text], { type: 'text/plain;charset=utf-8' }))
-  message.success('文件已下载')
+  await saveFile(new Blob([text], { type: 'text/plain;charset=utf-8' }), `${item.title}.${ext}`)
+  } catch (error) { message.error(error.message || '素材导出失败') }
 }
 
 async function previewMaterial(record) {

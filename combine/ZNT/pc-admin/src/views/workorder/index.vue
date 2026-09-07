@@ -401,8 +401,10 @@ function pickEvidence() {
 }
 
 async function onExport() {
+  try {
   const res = await exportWorkOrders({ ids: selectedRowKeys.value })
-  exportCsv(res.data, '风险工单', [
+  if (!res.data?.length) { message.info('没有可导出的工单'); return }
+  await exportCsv(res.data, '风险工单', [
     { key: 'id', title: '工单号' },
     { key: 'title', title: '标题' },
     { key: 'level', title: '等级' },
@@ -412,7 +414,7 @@ async function onExport() {
     { key: 'status', title: '状态' },
     { key: 'createTime', title: '创建时间' },
   ])
-  message.success('已导出 CSV')
+  } catch (error) { message.error(error.message || '工单导出失败') }
 }
 
 onMounted(() => {

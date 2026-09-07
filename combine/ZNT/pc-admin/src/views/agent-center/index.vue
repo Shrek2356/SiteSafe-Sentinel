@@ -57,6 +57,7 @@ import { computed, onMounted, ref } from 'vue'
 import { useRouteTab } from '@/composables/useRouteTab'
 import { message } from 'ant-design-vue'
 import { useUserStore } from '@/stores/user'
+import { saveFile } from '@/utils/saveFile'
 import { decideConfirmation, decideProposal, fetchBriefing, fetchConfirmations, fetchNotifications, fetchOverrides, fetchProposals } from '@/api/agentCenter'
 
 const store = useUserStore()
@@ -79,7 +80,11 @@ async function loadAll() {
 function openReview(record, verdict) { reviewTarget.value = record; reviewVerdict.value = verdict; reviewComment.value = ''; reviewOpen.value = true }
 async function submitReview() { await decideConfirmation(reviewTarget.value.request_id, { verdict: reviewVerdict.value, comment: reviewComment.value }); message.success('人工判断已回写并进入复盘链路'); reviewOpen.value = false; await loadAll() }
 async function reviewProposal(record, decision) { await decideProposal(record.proposal_id, { decision, note: '由管理端人工审批' }); message.success('学习建议已处理'); await loadAll() }
-function downloadBriefing() { const blob = new Blob([briefing.value], { type: 'text/markdown;charset=utf-8' }); const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = '安全交底.md'; a.click(); URL.revokeObjectURL(a.href) }
+async function downloadBriefing() {
+  if (!briefing.value) { message.info('暂无交底内容'); return }
+  try { await saveFile(new Blob([briefing.value], { type: 'text/markdown;charset=utf-8' }), '安全交底.md') }
+  catch (error) { message.error(error.message || '交底导出失败') }
+}
 onMounted(loadAll)
 </script>
 

@@ -38,7 +38,7 @@ export const useUserStore = defineStore('user', {
     updateProjectMetadata(project) {
       this.project = project
       localStorage.setItem('znt_project', JSON.stringify(this.project))
-      return res.data
+      return project
     },
   },
 })

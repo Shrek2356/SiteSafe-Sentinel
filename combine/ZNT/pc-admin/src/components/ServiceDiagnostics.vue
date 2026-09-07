@@ -25,6 +25,7 @@ import { useServiceHealth } from '@/composables/useServiceHealth'
 import { healthCards, diagnosticSnapshot } from '@/utils/healthPresentation'
 import { canVisit } from '@/utils/guidance'
 import { useUserStore } from '@/stores/user'
+import { saveFile } from '@/utils/saveFile'
 const { health, refresh } = useServiceHealth(), user = useUserStore()
 const nativeSupport = ref(false)
 function detectNative() { nativeSupport.value = Boolean(window.pywebview?.api?.open_support_folder) }
@@ -33,10 +34,9 @@ onBeforeUnmount(() => window.removeEventListener('pywebviewready', detectNative)
 async function openLogs() { try { await window.pywebview.api.open_support_folder('logs') } catch { message.error('未能打开日志目录，请到软件目录的 runtime/desktop/logs 查看。') } }
 const cards = computed(() => healthCards(health))
 const colors = { checking:'default', ready:'success', attention:'gold', error:'error' }
-function download() {
-  const url = URL.createObjectURL(new Blob([JSON.stringify(diagnosticSnapshot(health), null, 2)], { type:'application/json' }))
-  const link = document.createElement('a'); link.href = url; link.download = 'SiteSafe-连接诊断.json'; link.click()
-  setTimeout(() => URL.revokeObjectURL(url), 1000)
+async function download() {
+  try { await saveFile(new Blob([JSON.stringify(diagnosticSnapshot(health), null, 2)], { type:'application/json' }), 'SiteSafe-连接诊断.json') }
+  catch (error) { message.error(error.message || '诊断导出失败') }
 }
 </script>
 <style scoped>

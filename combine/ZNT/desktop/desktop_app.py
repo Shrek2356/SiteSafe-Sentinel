@@ -26,6 +26,9 @@ from urllib.parse import unquote, urlsplit
 
 import webview
 from gateway import GatewayMixin
+from environment_check import check_python, assert_data_services_stopped
+from export_service import save_export
+from workspace_archive import WorkspaceMaintenance
 
 
 APP_NAME = "SiteSafe-Sentinel"
@@ -68,7 +71,7 @@ def load_config() -> dict[str, Any]:
     config = dict(DEFAULT_CONFIG)
     if CONFIG_PATH.is_file():
         try:
-            user_config = json.loads(CONFIG_PATH.read_text(encoding="utf-8"))
+            user_config = json.loads(CONFIG_PATH.read_text(encoding="utf-8-sig"))
             if isinstance(user_config, dict):
                 config.update(user_config)
         except (OSError, json.JSONDecodeError) as exc:
@@ -104,7 +107,7 @@ def http_ready(url: str, timeout: float = 1.5, *, service: str = "") -> bool:
 
 
 class SpaHandler(GatewayMixin, SimpleHTTPRequestHandler):
-    server_version = "SiteSafeDesktop/1.3"
+    server_version = "SiteSafeDesktop/1.4"
     MIME_OVERRIDES = {
         ".css": "text/css; charset=utf-8",
         ".js": "text/javascript; charset=utf-8",
@@ -175,8 +178,11 @@ class DesktopRuntime:
         self.started_frontend = False
         self._stopped = False
         self._lifecycle_lock = threading.RLock()
+        self._maintenance_lock = threading.Lock()
+        self._export_lock = threading.Lock()
+        self.workspace = WorkspaceMaintenance(ROOT)
 
-    def validate(self) -> None:
+    def validate(self, *, check_environment: bool = True) -> None:
         ports = [self.frontend_port, self.business_port, self.bridge_port]
         if len(set(ports)) != 3 or any(not 1024 <= p <= 65535 for p in ports):
             raise RuntimeError("前端、业务与检测桥端口须互不相同且在1024–65535之间")
@@ -188,10 +194,12 @@ class DesktopRuntime:
             self.detect_root / "detect_bridge.py",
             self.detect_root / PROFILE_CONFIG[self.profile],
         ):
-            if not path.exists():
+            if not path.is_file():
                 missing.append(str(path))
         if missing:
             raise RuntimeError("桌面版文件不完整：\n" + "\n".join(missing))
+        if check_environment:
+            check_python(self.python)
 
     def _spawn(self, name: str, args: list[str], cwd: Path) -> None:
         with self._lifecycle_lock:
@@ -246,6 +254,7 @@ class DesktopRuntime:
 
     def start_services(self) -> None:
         self.validate()
+        self.workspace.run(self._assert_workspace_offline)
         self.start_frontend()
 
         if not port_is_open(self.business_port):
@@ -345,6 +354,62 @@ class DesktopRuntime:
         temporary.replace(CONFIG_PATH)
         return {"ok": True, "restart_required": True}
 
+    def save_export(self, filename: str, encoded: str) -> dict:
+        def choose(name, suffix):
+            selected = webview.windows[0].create_file_dialog(
+                webview.FileDialog.SAVE, save_filename=name,
+                file_types=(f"导出文件 (*{suffix})",))
+            return selected[0] if selected else None
+        if not self._export_lock.acquire(blocking=False): raise ValueError('已有文件保存窗口，请先完成或取消上一次保存')
+        try: return save_export(filename, encoded, choose)
+        finally: self._export_lock.release()
+
+    def _assert_workspace_offline(self):
+        # Also check standard ports when this copy uses custom ports. Never stop
+        # a pre-existing service just to perform maintenance.
+        for port in {self.business_port, self.bridge_port, 8800, 8810}:
+            if port_is_open(port):
+                raise RuntimeError('备份/恢复未执行：业务或检测服务仍在运行。请关闭其他平台后台后重新安排维护')
+        assert_data_services_stopped(self.python, self.detect_root)
+
+    def _require_workspace_admin(self, token: str):
+        if not isinstance(token, str) or not token or len(token) > 4096:
+            raise ValueError('请先使用本机管理员账号登录')
+        request = urllib.request.Request(f'http://127.0.0.1:{self.business_port}/api/whoami',
+                                         headers={'Authorization': f'Bearer {token}'})
+        try:
+            opener = urllib.request.build_opener(urllib.request.ProxyHandler({}))
+            with opener.open(request, timeout=5) as response:
+                if json.load(response).get('role') != 'admin': raise ValueError()
+        except Exception as exc:
+            raise ValueError('完整工作空间维护需要本机业务服务的管理员权限') from exc
+
+    def workspace_status(self, token: str):
+        self._require_workspace_admin(token)
+        return self.workspace.status()
+
+    def schedule_workspace(self, action: str, token: str):
+        self._require_workspace_admin(token)
+        if action not in {'backup', 'restore'}: raise ValueError('无效维护操作')
+        with self._maintenance_lock:
+            window = webview.windows[0]
+            selected = window.create_file_dialog(
+                webview.FileDialog.SAVE if action == 'backup' else webview.FileDialog.OPEN,
+                save_filename='SiteSafe-工作空间-' + datetime.now().strftime('%Y%m%d-%H%M%S') + '.zip',
+                file_types=('SiteSafe 工作空间 (*.zip)',))
+            if not selected: return {**self.workspace.status(), 'cancelled': True}
+            if action == 'restore' and not window.create_confirmation_dialog(
+                '确认安排工作空间恢复',
+                '仅恢复你信任的本软件备份。下次启动将替换当前业务库、规范、检测历史和用户模型设置，'
+                '先保留原工作空间以便回滚。此操作不会现在中断任务；模型权重和云端密钥不会导入。继续吗？'):
+                return {**self.workspace.status(), 'cancelled': True}
+            return self.workspace.schedule(action, Path(selected[0]))
+
+    def cancel_workspace(self, token: str):
+        self._require_workspace_admin(token)
+        with self._maintenance_lock:
+            return self.workspace.cancel()
+
 
 LOADING_HTML = """
 <!doctype html><html lang="zh-CN"><head><meta charset="utf-8">
@@ -416,6 +481,9 @@ def main() -> int:
         ctypes.windll.user32.MessageBoxW(None, str(exc), APP_TITLE, 0x10)
         return 1
 
+    # Native save_export is used by all platform exports. Permit other standard
+    # downloads as a fallback; WebView2 still presents its own Save dialog.
+    webview.settings['ALLOW_DOWNLOADS'] = True
     window = webview.create_window(
         APP_TITLE,
         html=LOADING_HTML,
@@ -429,6 +497,10 @@ def main() -> int:
             "get_desktop_settings": lambda _self: runtime.get_desktop_settings(),
             "save_desktop_settings": lambda _self, values: runtime.save_desktop_settings(values),
             "open_support_folder": lambda _self, kind: runtime.open_support_folder(kind),
+            "save_export": lambda _self, filename, encoded: runtime.save_export(filename, encoded),
+            "workspace_status": lambda _self, token: runtime.workspace_status(token),
+            "schedule_workspace": lambda _self, action, token: runtime.schedule_workspace(action, token),
+            "cancel_workspace": lambda _self, token: runtime.cancel_workspace(token),
             "choose_backend_python": lambda _self: (webview.windows[0].create_file_dialog(
                 webview.FileDialog.OPEN, allow_multiple=False, file_types=("Python (*.exe)",)
             ) or [""])[0],

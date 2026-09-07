@@ -1,5 +1,6 @@
 <template>
 <div>
+<WorkspaceBackup />
 <a-alert type="info" show-icon message="此处备份仅包含业务数据库。迁移完整业务资料时还需复制图片、规范库与检测任务目录，详见交付说明。" style="margin-bottom:16px" />
 
         <a-space style="margin-bottom: 12px"><a-button type="primary" @click="userOpen = true">新增用户</a-button><a-button @click="backup">立即备份业务库</a-button></a-space>
@@ -17,6 +18,7 @@
 import { h, onMounted, reactive, ref } from 'vue'
 import { Modal, message } from 'ant-design-vue'
 import { createBackup, createUser, fetchUsers, updateUserPassword, updateUserRole } from '@/api/agentCenter'
+import WorkspaceBackup from './WorkspaceBackup.vue'
 const users = ref([]), userOpen = ref(false), newUser = reactive({ username:'', password:'', role:'safety_officer' })
 const userColumns = [{ title: '用户名', dataIndex: 'username' }, { title: '角色', key: 'role' }, { title: '操作', key: 'action' }]
 async function loadUsers() { try { users.value = (await fetchUsers()).data } catch(e) { message.error(e.message || '用户列表读取失败') } }
@@ -26,4 +28,3 @@ function resetPassword(record) { let password = ''; Modal.confirm({ title: `重�
 async function backup() { const res = await createBackup(); message.success(`备份完成：${res.data.backup}`) }
 onMounted(loadUsers)
 </script>
-
