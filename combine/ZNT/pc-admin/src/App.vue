@@ -1,6 +1,6 @@
 <template>
   <!-- 全局暖色主题：覆盖 Ant Design 默认蓝色主色/链接色/信息色 -->
-  <a-config-provider :theme="activeTheme">
+  <a-config-provider :theme="activeTheme" :locale="zhCN">
     <router-view />
   </a-config-provider>
 </template>
@@ -14,6 +14,7 @@
 import { computed } from 'vue'
 import { theme as antTheme } from 'ant-design-vue'
 import { colorTheme } from '@/utils/theme'
+import zhCN from 'ant-design-vue/es/locale/zh_CN'
 
 const warmTokens = {
   colorPrimary: '#f26a57',

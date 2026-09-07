@@ -22,6 +22,14 @@ const routes = [
     redirect: '/dashboard',
     children: [
       {
+        path: 'task-center', name: 'TaskCenter', component: () => import('@/views/task-center/index.vue'),
+        meta: { title: '检测任务中心', icon: 'RadarChartOutlined', roles: [] },
+      },
+      {
+        path: 'system-settings', name: 'SystemSettings', component: () => import('@/views/system-settings/index.vue'),
+        meta: { title: '系统设置', icon: 'ClusterOutlined', roles: ['admin'] },
+      },
+      {
         path: 'dashboard',
         name: 'Dashboard',
         component: () => import('@/views/dashboard/index.vue'),

@@ -699,7 +699,13 @@ class TrainingFreeInspector:
         output_dir: str | Path,
         screening_trigger: ScreeningTrigger | Dict[str, Any] | str | Path | None = None,
         screening_mask_path: str | Path | None = None,
+        progress_callback=None,
     ) -> InspectionResult:
+        def progress(stage, status, detail=""):
+            if progress_callback is not None:
+                progress_callback(stage, status, detail)
+
+        progress("first_pass", "running", "模型正在发现风险并编译候选描述")
         image_path = Path(image_path)
         output_dir = Path(output_dir)
         output_dir.mkdir(parents=True, exist_ok=True)
@@ -986,6 +992,8 @@ class TrainingFreeInspector:
             json.dumps(first.model_dump(), ensure_ascii=False, indent=2), encoding="utf-8"
         )
 
+        progress("first_pass", "done", "候选风险描述已生成")
+        progress("segment", "running", "正在定位候选实体；无候选时不生成风险掩码")
         segment_statuses = set(self.config["pipeline"].get("segment_statuses", ["present", "uncertain"]))
         min_conf = float(self.config["pipeline"].get("min_mllm_candidate_confidence", 0.25))
         active_risks = [
@@ -1041,6 +1049,8 @@ class TrainingFreeInspector:
                 ]
             by_task[task.task_id] = items
 
+        progress("segment", "done", f"已处理 {len(tasks)} 个定位提示")
+        progress("verify", "running", "正在整理分割证据与空间关系")
         evidences: List[RiskEvidence] = []
         height, width = image.height, image.width
         for risk_index, risk in enumerate(active_risks, start=1):
@@ -1132,7 +1142,9 @@ class TrainingFreeInspector:
 
         final_report = None
         management_report = None
+        progress("verify", "done", f"已整理 {len(evidences)} 项风险证据")
         if self.config["pipeline"].get("run_second_pass", True):
+            progress("second_pass", "running", "正在核实候选视觉证据")
             if self.config["pipeline"].get("second_pass_per_risk", False):
                 final_report = self._run_per_risk_second_pass(image, output_dir, evidences)
             else:
@@ -1143,12 +1155,18 @@ class TrainingFreeInspector:
             (output_dir / "visual_verification.json").write_text(
                 json.dumps(final_report.model_dump(), ensure_ascii=False, indent=2), encoding="utf-8"
             )
+            progress("second_pass", "done", "视觉事实已锁定")
+            progress("management_report", "running", "正在生成模型处置报告")
             management_report = self._generate_management_report(output_dir, final_report)
             (output_dir / "final_report.json").write_text(
                 json.dumps(management_report.model_dump(), ensure_ascii=False, indent=2),
                 encoding="utf-8",
             )
             self._write_summary(output_dir, management_report)
+            progress("management_report", "done", "模型报告已写入")
+        else:
+            progress("second_pass", "skipped", "当前配置未启用二次视觉确认")
+            progress("management_report", "skipped", "当前配置未启用模型报告")
 
         screening_assessment = self._build_screening_assessment(
             trigger, first, final_report

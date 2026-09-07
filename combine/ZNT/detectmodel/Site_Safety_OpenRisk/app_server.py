@@ -662,17 +662,22 @@ class AppState:
         for media_root in self.media_roots:
             try:
                 path.relative_to(media_root.resolve())
-                return path if path.is_file() else None
+                if path.is_file():
+                    return path
             except ValueError:
                 continue
-        # 交付包移动后，历史事件可能保留旧绝对路径；按文件名在当前交付结果中安全重定位。
+        # Prefer the owning job/case directory; never select an arbitrary overlay.png.
         if path.name:
+            candidates = set()
             for media_root in self.media_roots:
                 if not media_root.is_dir():
                     continue
-                hit = next(media_root.rglob(path.name), None)
-                if hit and hit.is_file():
-                    return hit.resolve()
+                candidates.update(p.resolve() for p in media_root.rglob(path.name) if p.is_file())
+            owner_matches = {p for p in candidates if p.parent.name == path.parent.name}
+            if len(owner_matches) == 1:
+                return next(iter(owner_matches))
+            if len(candidates) == 1:
+                return next(iter(candidates))
         return None
 
     def stream_sources(self) -> List[dict]:
@@ -696,7 +701,11 @@ class AppState:
                "--profile", source.get("profile", "offline"), "--interval-seconds", str(source.get("interval_seconds", 2)),
                "--audit-minutes", str(source.get("audit_minutes", 30)),
                "--bridge", self.detect_api]
-        process = subprocess.Popen(cmd, cwd=ROOT, stdout=log, stderr=subprocess.STDOUT)  # noqa: S603
+        try:
+            process = subprocess.Popen(cmd, cwd=ROOT, stdout=log, stderr=subprocess.STDOUT,
+                                       creationflags=getattr(subprocess, "CREATE_NO_WINDOW", 0))
+        finally:
+            log.close()
         self.stream_workers[source_id] = process
         source["desired_running"] = True
         self.db.upsert("camera_source", source_id, source, status="running", site_id=source.get("site_id", ""))

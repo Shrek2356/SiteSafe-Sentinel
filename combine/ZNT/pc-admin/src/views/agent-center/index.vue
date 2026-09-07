@@ -45,38 +45,27 @@
         </a-row>
       </a-tab-pane>
 
-      <a-tab-pane v-if="isAdmin" key="system" tab="用户与备份">
-        <a-space style="margin-bottom: 12px"><a-button type="primary" @click="userOpen = true">新增用户</a-button><a-button @click="backup">立即备份业务库</a-button></a-space>
-        <a-table :columns="userColumns" :data-source="users" row-key="username" :pagination="false">
-          <template #bodyCell="{ column, record }">
-            <template v-if="column.key === 'role'"><a-select :value="record.role" style="width: 150px" @change="(role) => changeRole(record, role)"><a-select-option value="admin">管理员</a-select-option><a-select-option value="safety_officer">安全员</a-select-option><a-select-option value="viewer">只读总监</a-select-option></a-select></template>
-            <template v-if="column.key === 'action'"><a-button type="link" @click="resetPassword(record)">重置密码</a-button></template>
-          </template>
-        </a-table>
-      </a-tab-pane>
+      <a-tab-pane v-if="isAdmin" key="system" tab="系统管理"><router-link to="/system-settings">用户管理与备份已集中到系统设置 →</router-link></a-tab-pane>
     </a-tabs>
 
     <a-modal v-model:open="reviewOpen" title="提交人工判断" @ok="submitReview"><a-form layout="vertical"><a-form-item label="模型判断"><a-textarea :value="reviewTarget?.model_judgment || reviewTarget?.reason || reviewTarget?.risk_name_zh || reviewTarget?.risk_id" :rows="2" disabled /></a-form-item><a-form-item v-if="reviewTarget?.visible_evidence?.length" label="支持证据"><a-alert type="success" :message="reviewTarget.visible_evidence.join('；')" /></a-form-item><a-form-item v-if="reviewTarget?.counter_evidence?.length" label="反证/不确定项"><a-alert type="warning" :message="reviewTarget.counter_evidence.join('；')" /></a-form-item><a-form-item label="安全人员备注"><a-textarea v-model:value="reviewComment" :rows="3" placeholder="填写可见证据或排除依据" /></a-form-item></a-form></a-modal>
-    <a-modal v-model:open="userOpen" title="新增平台用户" @ok="addUser"><a-form layout="vertical"><a-form-item label="用户名"><a-input v-model:value="newUser.username" /></a-form-item><a-form-item label="初始密码（至少6位）"><a-input-password v-model:value="newUser.password" /></a-form-item><a-form-item label="角色"><a-select v-model:value="newUser.role"><a-select-option value="safety_officer">安全员</a-select-option><a-select-option value="viewer">只读总监</a-select-option><a-select-option value="admin">管理员</a-select-option></a-select></a-form-item></a-form></a-modal>
   </div>
 </template>
 
 <script setup>
-import { computed, h, onMounted, reactive, ref } from 'vue'
-import { Modal, message } from 'ant-design-vue'
+import { computed, onMounted, ref } from 'vue'
+import { message } from 'ant-design-vue'
 import { useUserStore } from '@/stores/user'
-import { createBackup, createUser, decideConfirmation, decideProposal, fetchBriefing, fetchConfirmations, fetchNotifications, fetchOverrides, fetchProposals, fetchUsers, updateUserPassword, updateUserRole } from '@/api/agentCenter'
+import { decideConfirmation, decideProposal, fetchBriefing, fetchConfirmations, fetchNotifications, fetchOverrides, fetchProposals } from '@/api/agentCenter'
 
 const store = useUserStore()
 const isAdmin = computed(() => store.role === 'admin')
 const canReview = computed(() => ['admin', 'safety'].includes(store.role))
 const tab = ref('review'), loading = ref(false)
-const confirmations = ref([]), proposals = ref([]), overrides = ref({}), notifications = ref([]), briefing = ref(''), users = ref([])
+const confirmations = ref([]), proposals = ref([]), overrides = ref({}), notifications = ref([]), briefing = ref('')
 const reviewOpen = ref(false), reviewTarget = ref(null), reviewVerdict = ref('confirmed'), reviewComment = ref('')
-const userOpen = ref(false), newUser = reactive({ username: '', password: '', role: 'safety_officer' })
 const reviewColumns = [{ title: '风险', dataIndex: 'risk_name_zh', key: 'risk_name_zh' }, { title: '模型疑问/判断', dataIndex: 'model_judgment', key: 'model_judgment' }, { title: '转人工原因', dataIndex: 'reason', key: 'reason' }, { title: '置信度', key: 'confidence', width: 100 }, { title: '状态', key: 'status', width: 100 }, { title: '操作', key: 'action', width: 180 }]
 const proposalColumns = [{ title: '风险类型', dataIndex: 'risk_id' }, { title: '样本数', dataIndex: 'sample_count' }, { title: '建议阈值', key: 'threshold' }, { title: '原因', dataIndex: 'reason' }, { title: '状态', key: 'status' }, { title: '操作', key: 'action' }]
-const userColumns = [{ title: '用户名', dataIndex: 'username' }, { title: '角色', key: 'role' }, { title: '操作', key: 'action' }]
 const statusText = (s) => ({ pending: '待处理', confirmed: '已确认', rejected: '已排除', approved: '已批准' }[s] || s)
 
 async function loadAll() {
@@ -84,16 +73,11 @@ async function loadAll() {
   try {
     const base = await Promise.all([fetchConfirmations(), fetchProposals(), fetchOverrides(), fetchNotifications(), fetchBriefing()])
     confirmations.value = base[0].data; proposals.value = base[1].data; overrides.value = base[2].data; notifications.value = base[3].data; briefing.value = base[4].data.markdown
-    if (isAdmin.value) users.value = (await fetchUsers()).data
   } finally { loading.value = false }
 }
 function openReview(record, verdict) { reviewTarget.value = record; reviewVerdict.value = verdict; reviewComment.value = ''; reviewOpen.value = true }
 async function submitReview() { await decideConfirmation(reviewTarget.value.request_id, { verdict: reviewVerdict.value, comment: reviewComment.value }); message.success('人工判断已回写并进入复盘链路'); reviewOpen.value = false; await loadAll() }
 async function reviewProposal(record, decision) { await decideProposal(record.proposal_id, { decision, note: '由管理端人工审批' }); message.success('学习建议已处理'); await loadAll() }
-async function addUser() { await createUser(newUser); message.success('用户已创建'); userOpen.value = false; Object.assign(newUser, { username: '', password: '', role: 'safety_officer' }); await loadAll() }
-async function changeRole(record, role) { await updateUserRole(record.username, role); message.success('角色已更新'); await loadAll() }
-function resetPassword(record) { let password = ''; Modal.confirm({ title: `重置 ${record.username} 的密码`, content: () => h('input', { class: 'ant-input', type: 'password', placeholder: '至少6位', onInput: (e) => { password = e.target.value } }), onOk: async () => { await updateUserPassword(record.username, password); message.success('密码已更新') } }) }
-async function backup() { const res = await createBackup(); message.success(`备份完成：${res.data.backup}`) }
 function downloadBriefing() { const blob = new Blob([briefing.value], { type: 'text/markdown;charset=utf-8' }); const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = '安全交底.md'; a.click(); URL.revokeObjectURL(a.href) }
 onMounted(loadAll)
 </script>

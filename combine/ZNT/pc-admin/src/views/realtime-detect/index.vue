@@ -335,7 +335,8 @@ python detect_bridge.py --port 8810</pre>
 /**
  * 实时检测：优先调用 detect_bridge；离线则本地 Mock 演示全流程
  */
-import { computed, onBeforeUnmount, onMounted, ref } from 'vue'
+import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue'
+import { useRoute } from 'vue-router'
 import { message } from 'ant-design-vue'
 import {
   advanceMockJob,
@@ -352,9 +353,11 @@ import { EXAMPLE_CASES } from '@/mock/examples'
 import { syncDetectJobToWorkOrders } from '@/utils/detectWorkOrders'
 import { syncDetectJobToResults } from '@/utils/detectResults'
 
+const route = useRoute()
+watch(() => route.query.job, id => { if (id) loadJob(String(id)) })
 const FALLBACK_PROFILES = [
   { id: 'standard', ready: false, missing: ['cloud_api'] },
-  { id: 'offline', ready: true, missing: [] },
+  { id: 'offline', ready: false, missing: ['service_unavailable'] },
   { id: 'demo', ready: true, missing: [] },
 ]
 
@@ -686,26 +689,29 @@ function ingestWorkOrders(currentJob) {
   }
 }
 
+let pollGeneration = 0
 async function loadJob(jobId) {
   stopPoll()
   if (String(jobId).startsWith('MOCK')) return
-  const data = await fetchDetectJob(jobId)
-  job.value = data
-  if (data.status === 'done') ingestWorkOrders(job.value)
-  if (data.status === 'queued' || data.status === 'running') {
-    pollTimer = setInterval(async () => {
-      try {
-        const latest = await fetchDetectJob(jobId)
-        job.value = latest
-        if (latest.status === 'done' || latest.status === 'error') {
-          stopPoll()
-          if (latest.status === 'done') ingestWorkOrders(job.value)
-        }
-      } catch {
-        stopPoll()
-      }
-    }, 800)
+  const generation = pollGeneration
+  let failures = 0
+  async function poll() {
+    try {
+      const data = await fetchDetectJob(jobId)
+      if (generation !== pollGeneration) return
+      failures = 0
+      job.value = data
+      if (data.status === 'done') ingestWorkOrders(data)
+      if (['done', 'error', 'cancelled'].includes(data.status)) return
+    } catch (error) {
+      if (generation !== pollGeneration) return
+      failures++
+      if (failures === 1) message.warning('任务连接暂时中断，正在自动重连；任务仍在后台执行')
+      if (error.response?.status === 404) { message.error('任务不存在或已按保留策略清理'); return }
+    }
+    if (generation === pollGeneration) pollTimer = setTimeout(poll, Math.min(15000, 1000 * 2 ** Math.min(failures, 4)))
   }
+  await poll()
 }
 
 function startMockPoll() {
@@ -726,6 +732,7 @@ function startMockPoll() {
 }
 
 function stopPoll() {
+  pollGeneration++
   if (pollTimer) {
     clearInterval(pollTimer)
     pollTimer = null

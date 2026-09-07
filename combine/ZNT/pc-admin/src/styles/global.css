@@ -3,6 +3,7 @@
  * 【后续修改入口】主题色、布局间距可在此统一调整
  */
 :root {
+  --bg-card: var(--surface);
   --primary: #f26a57;
   --primary-strong: #e85447;
   --primary-soft: #ffe1d4;
@@ -55,6 +56,27 @@
   --link: #ff9c82;
 }
 
+:root[data-workspace-style='professional']:not([data-theme='dark']) {
+  --bg: #f3f5f8;
+  --bg-2: #eef2f6;
+  --surface: #fff;
+  --surface-2: #f6f8fb;
+  --border-color: #e0e6ed;
+  --sider-bg: #162332;
+  --sider-gradient: linear-gradient(180deg,#182b3c,#13202d);
+  --sider-trigger: #172838;
+}
+:root[data-workspace-style='professional'] body,
+:root[data-workspace-style='professional'] #app { background-image:none; }
+:root[data-workspace-style='professional'] .dashboard .team-banner {
+  min-height:0; padding:20px 24px; background:var(--surface); border:1px solid var(--border-color); text-align:left;
+}
+:root[data-workspace-style='professional'] .dashboard .team-banner .mascot,
+:root[data-workspace-style='professional'] .dashboard .team-banner .mood-legend { display:none; }
+:root[data-workspace-style='professional'] .dashboard .team-copy { width:100%; text-align:left; }
+:root[data-workspace-style='professional'] .dashboard .team-name { font-size:22px; color:var(--text-primary); }
+:root[data-workspace-style='professional'] .dashboard .project-chip { justify-content:flex-start; margin:10px 0 0; }
+.ant-menu-dark .ant-menu-item-group-title { color:rgba(220,231,240,.56) !important; font-size:11px; letter-spacing:1px; }
 * {
   box-sizing: border-box;
 }

@@ -11,6 +11,18 @@ import axios from 'axios'
 import { mockDelay } from '@/utils/request'
 import { getDetectApiBase, resolveDetectMediaUrl } from '@/utils/endpoints'
 
+export async function fetchTaskPage(params = {}) {
+  const { data } = await detectHttp.get('/api/detect/recent', { params, timeout: 10000 })
+  if (!Array.isArray(data?.items)) throw new Error('任务接口返回格式错误')
+  return data.items
+}
+export async function cancelDetectJob(id) {
+  return (await detectHttp.post(`/api/detect/jobs/${encodeURIComponent(id)}/cancel`)).data
+}
+export async function retryDetectJob(id) {
+  return (await detectHttp.post(`/api/detect/jobs/${encodeURIComponent(id)}/retry`)).data
+}
+
 /** 检测桥接根地址 */
 const detectHttp = axios.create({
   timeout: 120000,
@@ -27,8 +39,9 @@ detectHttp.interceptors.request.use((config) => {
  */
 export async function checkDetectHealth() {
   try {
-    const { data } = await detectHttp.get('/api/detect/health')
-    return { online: true, ...data }
+    const { data } = await detectHttp.get('/api/detect/health', { timeout: 5000 })
+    if (data?.ok !== true || data?.service !== 'site-OpenRisk-detect-bridge') throw new Error('服务地址未返回有效的检测桥信息')
+    return { ...data, online: true }
   } catch {
     return { online: false, ok: false, profiles: [], default_profile: 'demo' }
   }

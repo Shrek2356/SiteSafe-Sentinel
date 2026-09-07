@@ -8,6 +8,9 @@
 from __future__ import annotations
 
 import re
+import tempfile
+import threading
+from functools import wraps
 from dataclasses import dataclass
 from pathlib import Path
 from typing import List, Optional, Tuple
@@ -19,6 +22,14 @@ _CLAUSE_PATTERN = re.compile(
 )
 _MAX_CHUNK_CHARS = 600
 _MIN_CHUNK_CHARS = 10
+
+
+def _locked(method):
+    @wraps(method)
+    def wrapped(self, *args, **kwargs):
+        with self._lock:
+            return method(self, *args, **kwargs)
+    return wrapped
 
 
 @dataclass
@@ -79,11 +90,48 @@ def _split_clauses(text: str) -> List[Tuple[str, str]]:
 
 class KnowledgeBase:
     def __init__(self, kb_dir: str | Path) -> None:
+        self._lock = threading.RLock()
         self.kb_dir = Path(kb_dir)
         self.chunks: List[KnowledgeChunk] = []
         self._fingerprint: Optional[tuple] = None
         self._retriever = None
         self.refresh()
+
+    @_locked
+    def import_document(self, filename: str, content: bytes) -> int:
+        """Validate staged content before atomically replacing an existing document."""
+        if Path(filename).name != filename or Path(filename).suffix.lower() not in {".txt", ".md", ".pdf", ".docx"}:
+            raise ValueError("规范文件名或格式无效")
+        self.kb_dir.mkdir(parents=True, exist_ok=True)
+        target = self.kb_dir / filename
+        previous = target.read_bytes() if target.is_file() else None
+        with tempfile.TemporaryDirectory(prefix=".import-", dir=self.kb_dir) as staging:
+            candidate = Path(staging) / filename
+            candidate.write_bytes(content)
+            if not _split_clauses(_read_document(candidate)):
+                raise ValueError("文件未解析出有效文本，请检查PDF是否为扫描件或文档内容是否为空；旧规范保持不变")
+            candidate.replace(target)
+            try:
+                self.refresh(force=True)
+                self.prepare_index()
+            except Exception:
+                if previous is None:
+                    target.unlink(missing_ok=True)
+                else:
+                    candidate.write_bytes(previous)
+                    candidate.replace(target)
+                self.refresh(force=True)
+                self.prepare_index()
+                raise
+        return sum(c.source_file == filename for c in self.chunks)
+
+    @_locked
+    def delete_document(self, filename: str) -> None:
+        if Path(filename).name != filename:
+            raise ValueError("文件名无效")
+        (self.kb_dir / filename).unlink()
+        self.refresh(force=True)
+        self.prepare_index()
 
     def _current_fingerprint(self) -> tuple:
         if not self.kb_dir.is_dir():
@@ -96,6 +144,7 @@ class KnowledgeBase:
             )
         )
 
+    @_locked
     def refresh(self, *, force: bool = False) -> bool:
         """目录有变化时重建索引；返回是否重建。"""
         fingerprint = self._current_fingerprint()
@@ -139,11 +188,13 @@ class KnowledgeBase:
                 self._retriever = "portable_tfidf_char_ngram"
         return self._retriever
 
+    @_locked
     def prepare_index(self) -> str:
         """Eagerly build the local index so the first detection is not delayed."""
         self.refresh()
         return self._ensure_retriever() or "empty"
 
+    @_locked
     def search(
         self, query: str, *, top_k: int = 5, min_score: float = 0.10
     ) -> List[dict]:
@@ -178,6 +229,7 @@ class KnowledgeBase:
             if score >= min_score
         ]
 
+    @_locked
     def summary(self) -> dict:
         self.refresh()
         documents = []

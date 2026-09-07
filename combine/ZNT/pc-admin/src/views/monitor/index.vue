@@ -83,7 +83,7 @@
           <a-col :span="8"><a-form-item label="全图审核"><a-select v-model:value="sourceForm.audit_minutes"><a-select-option :value="30">30分钟</a-select-option><a-select-option :value="120">2小时</a-select-option></a-select></a-form-item></a-col>
         </a-row>
         <a-form-item label="RTSP/视频文件地址"><a-input v-model:value="sourceForm.stream_url" placeholder="rtsp://... 或本地视频绝对路径" /></a-form-item>
-        <a-form-item label="浏览器预览地址（可选）"><a-input v-model:value="sourceForm.preview_url" placeholder="http(s)://...flv；仅用于前端播放，不参与检测" /></a-form-item>
+        <a-form-item label="窗口预览地址（可选）"><a-input v-model:value="sourceForm.preview_url" placeholder="http(s) FLV/MP4/WebM；RTSP需转预览流，预览不参与检测" /></a-form-item>
         <a-row :gutter="12"><a-col :span="8"><a-form-item label="现场ID"><a-input v-model:value="sourceForm.site_id" /></a-form-item></a-col><a-col :span="8"><a-form-item label="检测配置"><a-select v-model:value="sourceForm.profile"><a-select-option value="offline">本地离线</a-select-option><a-select-option value="standard">云端增强</a-select-option></a-select></a-form-item></a-col><a-col :span="8"><a-form-item label="初筛间隔（秒）"><a-input-number v-model:value="sourceForm.interval_seconds" :min="0.5" :max="300" style="width:100%" /></a-form-item></a-col></a-row>
         <a-space><a-button type="primary" @click="saveSource">保存配置</a-button><a-button @click="resetSourceForm">清空</a-button></a-space>
       </a-form>

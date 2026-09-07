@@ -12,11 +12,11 @@ import { getMergedWorkOrders } from '@/utils/workOrderStore'
 
 // 比赛展示默认保留预编辑视觉资产；换成真实摄像头后，后端返回的非空
 // 点位/视频会自动优先。可用 VITE_ENABLE_PRESENTATION_ASSETS=false 关闭。
-const ENABLE_PRESENTATION_ASSETS = import.meta.env.VITE_ENABLE_PRESENTATION_ASSETS !== 'false'
+import { presentationEnabled } from '@/utils/preferences'
 
 function withPresentationAssets(real, projectId) {
   const normalizedReal = { ...real, metrics: normalizeMetrics(real.metrics) }
-  if (!ENABLE_PRESENTATION_ASSETS) return normalizedReal
+  if (!presentationEnabled()) return normalizedReal
   const pack = getDashboardByProject(projectId)
   const visual = (items = []) => items.map((item) => ({ ...item, presentationAsset: true }))
   const presentationGroups = []
@@ -30,13 +30,13 @@ function withPresentationAssets(real, projectId) {
   const riskTrendHours = hasTrend
     ? real.riskTrendHours
     : (presentationGroups.push('riskTrendHours'), { ...pack.riskTrendHours, presentationAsset: true })
-  const hazardTypes = real.hazardTypes?.length >= 3
+  const hazardTypes = real.hazardTypes?.length > 0
     ? real.hazardTypes
     : (presentationGroups.push('hazardTypes'), visual(pack.hazardTypes))
-  const teamRank = real.teamRank?.length >= 2
+  const teamRank = real.teamRank?.length > 0
     ? real.teamRank
     : (presentationGroups.push('teamRank'), visual(pack.teamRank))
-  const topHazards = real.topHazards?.length >= 3
+  const topHazards = real.topHazards?.length > 0
     ? real.topHazards
     : (presentationGroups.push('topHazards'), visual(pack.topHazards))
   return {

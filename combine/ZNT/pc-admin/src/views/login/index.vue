@@ -4,7 +4,7 @@
     <div class="ambient ambient-two"></div>
 
     <main class="login-shell">
-      <section class="animation-side" aria-label="系统模块巡检动画">
+      <section class="animation-side" aria-label="系统功能导览动画">
         <div class="system-kicker">
           <span class="pulse-dot"></span>
           AI CONSTRUCTION SAFETY
@@ -49,9 +49,9 @@
 
         <div class="inspection-state">
           <div class="inspection-line">
-            <span class="inspection-label">模块巡检</span>
+            <span class="inspection-label">功能导览</span>
             <span class="inspection-name" :class="{ complete: inspectionComplete }">
-              {{ inspectionComplete ? '六个模块已开启，系统准备完成' : activeModule.label }}
+              {{ inspectionComplete ? '导览已完成 · 实际服务状态请登录后查看' : activeModule.label }}
             </span>
             <span class="inspection-count">{{ activeIndex + 1 }}/{{ modules.length }}</span>
           </div>
@@ -113,7 +113,7 @@
 
         <div class="login-heading">
           <h3>欢迎登录</h3>
-          <p>选择工作角色，进入智能安全管理平台</p>
+          <p>登录工作账号，进入智能安全管理平台</p>
         </div>
 
         <div class="endpoint-box">
@@ -149,8 +149,8 @@
           <a-form-item label="密码" name="password" :rules="[{ required: true, message: '请输入密码' }]">
             <a-input-password v-model:value="form.password" placeholder="默认：admin123" size="large" />
           </a-form-item>
-          <a-form-item label="登录角色">
-            <a-radio-group v-model:value="form.role" button-style="solid" class="role-group">
+          <a-form-item label="演示账号快速填入（真实权限由后台决定）">
+            <a-radio-group v-model:value="form.role" @change="fillDemoAccount" button-style="solid" class="role-group">
               <a-radio-button value="admin">管理员</a-radio-button>
               <a-radio-button value="safety">安全员</a-radio-button>
               <a-radio-button value="director">总监</a-radio-button>
@@ -206,14 +206,19 @@ const animationSources = {
 }
 
 const modules = [
-  { key: 'realtime', label: '正在连接实时感知与调度模块…', short: '实时感知', icon: '◉' },
-  { key: 'discovery', label: '正在加载开放异常识别能力…', short: '异常识别', icon: '◇' },
+  { key: 'realtime', label: '实时感知与调度模块介绍…', short: '实时感知', icon: '◉' },
+  { key: 'discovery', label: '开放异常识别模块介绍…', short: '异常识别', icon: '◇' },
   { key: 'evidence', label: '正在检查风险定位与证据模块…', short: '证据核验', icon: '⌖' },
   { key: 'reason', label: '正在初始化风险推理Agent…', short: '风险推理', icon: '◆' },
-  { key: 'response', label: '正在连接协同处置Agent…', short: '协同处置', icon: '▣' },
-  { key: 'learning', label: '正在加载复盘学习Agent…', short: '复盘学习', icon: '↻' },
+  { key: 'response', label: '协同处置 Agent 介绍…', short: '协同处置', icon: '▣' },
+  { key: 'learning', label: '复盘学习 Agent 介绍…', short: '复盘学习', icon: '↻' },
 ]
 const activeModule = computed(() => modules[activeIndex.value])
+
+function fillDemoAccount(e) {
+  const role = e.target.value
+  Object.assign(form, { username: { admin: 'admin', safety: 'safety', director: 'viewer' }[role], password: { admin: 'admin123', safety: 'safety123', director: 'viewer123' }[role] })
+}
 
 const form = reactive({
   username: 'admin',
@@ -333,8 +338,8 @@ async function testEndpoints() {
       axios.get(joinEndpoint(businessApi, 'health'), { timeout: 6000 }),
       axios.get(joinEndpoint(detectApi, 'api/detect/health'), { timeout: 6000 }),
     ])
-    const businessOk = business.status === 'fulfilled' && business.value.data?.ok !== false
-    const detectOk = detect.status === 'fulfilled' && detect.value.data?.ok !== false
+    const businessOk = business.status === 'fulfilled' && business.value.data?.ok === true && business.value.data?.service === 'znt-business-api'
+    const detectOk = detect.status === 'fulfilled' && detect.value.data?.ok === true && detect.value.data?.service === 'site-OpenRisk-detect-bridge'
     endpointStatus.type = businessOk && detectOk ? 'success' : 'error'
     endpointStatus.text = `业务服务：${businessOk ? '已连接' : '连接失败'}；检测服务：${detectOk ? '已连接' : '连接失败'}`
   } finally {

@@ -256,6 +256,7 @@ const runtimeValidation = ref({})
 const initialRuntime = ref({})
 const qwenStatus = ref({ running: false, reachable: false, managed: false, detail: '状态未知' })
 const runtimeFields = [
+  { key: 'llama_server_path', label: 'Qwen 推理引擎 llama-server.exe', placeholder: '可执行文件路径；留空时从 PATH 查找' },
   { key: 'qwen_model_path', label: '本地 Qwen GGUF', placeholder: 'Qwen3-VL 模型文件路径' },
   { key: 'qwen_mmproj_path', label: 'Qwen 视觉投影 mmproj', placeholder: 'mmproj GGUF 文件路径' },
   { key: 'qwen_base_url', label: '本地 Qwen 推理地址', placeholder: 'http://127.0.0.1:8080/v1/chat/completions', browsable: false },

@@ -68,8 +68,9 @@ STAGE_DEFS = [
     {"id": "segment", "name": "实体定位与风险掩码", "agent": "SAM3/分割"},
     {"id": "verify", "name": "证据核验与门控", "agent": "空间关系/规则门控"},
     {"id": "second_pass", "name": "二次视觉确认", "agent": "视觉大模型"},
+    {"id": "management_report", "name": "生成模型报告", "agent": "报告模型"},
     {"id": "reason", "name": "风险推理与规范映射", "agent": "推理智能体"},
-    {"id": "report", "name": "生成处置建议", "agent": "处置/报告"},
+    {"id": "report", "name": "结果归档与接口同步", "agent": "程序编排"},
 ]
 
 
@@ -342,6 +343,8 @@ class DetectBridge:
         return {"job_id": job_id, "status": "queued", "profile": profile_id}
 
     def get_job(self, job_id: str) -> dict:
+        if Path(job_id).name != job_id or not job_id.startswith("JOB-"):
+            raise KeyError(job_id)
         with self.lock:
             job = self.jobs.get(job_id)
         if not job:
@@ -353,9 +356,17 @@ class DetectBridge:
             raise KeyError(job_id)
         return job
 
-    def recent(self, limit: int = 20) -> list:
+    def recent(self, limit: int = 20, offset: int = 0, status: str = "") -> list:
         with self.lock:
-            items = list(self.jobs.values())
+            by_id = dict(self.jobs)
+        for summary in self.jobs_root.glob("JOB-*/bridge_summary.json"):
+            if summary.parent.name in by_id:
+                continue
+            try:
+                by_id[summary.parent.name] = json.loads(summary.read_text(encoding="utf-8"))
+            except (OSError, ValueError):
+                continue
+        items = [j for j in by_id.values() if not status or j.get("status") == status]
         items.sort(key=lambda x: x.get("created_at", ""), reverse=True)
         return [
             {
@@ -366,9 +377,39 @@ class DetectBridge:
                 "device_id": j["device_id"],
                 "created_at": j["created_at"],
                 "has_anomaly": (j.get("result") or {}).get("overall_has_anomaly"),
+                "error": j.get("error"),
+                "elapsed_ms": (j.get("timings_ms") or {}).get("total"),
+                "updated_at": j.get("updated_at"),
             }
-            for j in items[:limit]
+            for j in items[offset:offset + limit]
         ]
+
+    def cancel_job(self, job_id: str) -> dict:
+        with self.lock:
+            job = self.jobs.get(job_id)
+            if job is None:
+                raise KeyError(job_id)
+            if job["status"] == "cancelled":
+                return {"ok": True, "job_id": job_id, "status": "cancelled"}
+            if job["status"] != "queued":
+                raise HTTPException(409, "只能取消尚未开始的任务；正在推理的任务不会被强杀")
+            job.update(status="cancelled", updated_at=_now())
+            self._persist_job(job)
+        return {"ok": True, "job_id": job_id, "status": "cancelled"}
+
+    def retry_job(self, job_id: str) -> dict:
+        job = self.get_job(job_id)
+        if job["status"] not in {"error", "cancelled"}:
+            raise HTTPException(409, "仅失败或取消的任务支持重试；重试将产生新任务")
+        image = self.media_path(job_id, job["image_name"])
+        return self.create_job(
+            source=job["source"], device_id=job["device_id"], data_mode=job["data_mode"],
+            image_bytes=image.read_bytes(), filename=image.name, profile=job["profile"],
+            stream_ref=job.get("stream_ref", ""), site_id=job.get("site_id", "SITE-DEFAULT"),
+            screening=job.get("screening"), force_inspection=job.get("force_inspection", False),
+            force_full_audit=job.get("force_full_audit", False),
+            audit_interval_minutes=job.get("audit_interval_minutes"),
+        )
 
     def media_path(self, job_id: str, filename: str) -> Path:
         path = (self.jobs_root / job_id / filename).resolve()
@@ -385,9 +426,11 @@ class DetectBridge:
     def _persist_job(job: dict) -> None:
         out_dir = Path(job["output_dir"])
         out_dir.mkdir(parents=True, exist_ok=True)
-        (out_dir / "bridge_summary.json").write_text(
+        temporary = out_dir / f"bridge_summary.{threading.get_ident()}.tmp"
+        temporary.write_text(
             json.dumps(job, ensure_ascii=False, indent=2), encoding="utf-8"
         )
+        temporary.replace(out_dir / "bridge_summary.json")
 
     def _recover_interrupted_jobs(self) -> None:
         """Requeue jobs whose input was persisted before an unexpected bridge restart."""
@@ -396,14 +439,22 @@ class DetectBridge:
                 job = json.loads(summary.read_text(encoding="utf-8"))
                 if job.get("status") not in {"queued", "running"}:
                     continue
-                input_path = Path(job.get("output_dir", "")) / str(job.get("image_name", ""))
+                job["output_dir"] = str(summary.parent)
+                job["config_path"] = str(resolve_config(job.get("profile") or "demo", ROOT))
+                input_path = summary.parent / str(job.get("image_name", ""))
                 if not input_path.is_file():
+                    job.update(status="error", error="重启恢复失败：原始图片缺失", updated_at=_now())
+                    self._persist_job(job)
                     continue
                 job["status"] = "queued"
                 job["updated_at"] = _now()
                 with self.lock:
                     self.jobs[job["job_id"]] = job
-                self.job_queue.put_nowait(job["job_id"])
+                try:
+                    self.job_queue.put_nowait(job["job_id"])
+                except queue.Full:
+                    job.update(status="error", error="恢复队列已满，请从任务中心重试", updated_at=_now())
+                self._persist_job(job)
             except (OSError, ValueError, KeyError, queue.Full):
                 continue
 
@@ -626,6 +677,8 @@ class DetectBridge:
         total_started = time.perf_counter()
         with self.lock:
             job = self.jobs[job_id]
+            if job.get("status") == "cancelled":
+                return
             job["status"] = "running"
             job["timings_ms"] = {}
         self._persist_job(job)
@@ -635,7 +688,6 @@ class DetectBridge:
         try:
             ingest_started = time.perf_counter()
             self._mark_before(job, "ingest")
-            time.sleep(0.15)
             self._mark_done(job, "ingest", f"已接收 {image_path.name}")
             job["timings_ms"]["ingest"] = round((time.perf_counter() - ingest_started) * 1000, 1)
 
@@ -692,8 +744,6 @@ class DetectBridge:
 
             inspector = self._get_inspector(config_path, config)
 
-            self._mark_before(job, "first_pass")
-            self._mark_before(job, "segment")
             # 完整流水线（内部含初检/分割/核验/二检/报告）
             coarse_mask = out_dir / "screening_coarse_mask.png"
             screening_views = config.get("pipeline", {}).get("screening_region_views", {})
@@ -707,30 +757,10 @@ class DetectBridge:
                     screening_mask_path=coarse_mask
                     if coarse_mask.is_file() and include_mask_overlay
                     else None,
+                    progress_callback=lambda stage, status, detail="": self._set_stage(job, stage, status, detail),
                 )
             job["timings_ms"]["vlm_sam_pipeline"] = round(
                 (time.perf_counter() - pipeline_started) * 1000, 1
-            )
-
-            self._mark_done(job, "first_pass", "候选风险已产出")
-            self._mark_done(job, "segment", "掩码/叠加图已生成")
-
-            self._mark_before(job, "verify")
-            evidence_path = out_dir / "evidence.json"
-            self._mark_done(
-                job,
-                "verify",
-                ("CLIP语义一致性与证据门控完成" if job.get("clip_enabled") else "空间关系与规则证据门控完成")
-                if evidence_path.exists()
-                else "证据文件已写入",
-            )
-
-            self._mark_before(job, "second_pass")
-            vv = out_dir / "visual_verification.json"
-            self._mark_done(
-                job,
-                "second_pass",
-                "视觉事实已锁定" if vv.exists() else "二次核验完成",
             )
 
             # 推理智能体 + 事件契约
@@ -1034,20 +1064,14 @@ def create_app(bridge: DetectBridge) -> FastAPI:
         content = await file.read()
         if not content or len(content) > 30 * 1024 * 1024:
             raise HTTPException(400, "规范文件为空或超过30MB")
-        bridge.knowledge_base.kb_dir.mkdir(parents=True, exist_ok=True)
-        target = bridge.knowledge_base.kb_dir / filename
-        target.write_bytes(content)
-        bridge.knowledge_base.refresh(force=True)
-        bridge.knowledge_base.prepare_index()
-        chunks = [c for c in bridge.knowledge_base.chunks if c.source_file == filename]
-        if not chunks:
-            target.unlink(missing_ok=True)
-            bridge.knowledge_base.refresh(force=True)
-            raise HTTPException(422, "文件未解析出有效文本，请检查PDF是否为扫描件或文档内容是否为空")
+        try:
+            chunk_count = bridge.knowledge_base.import_document(filename, content)
+        except Exception as exc:
+            raise HTTPException(422, f"规范导入失败：{exc}") from exc
         return {
             "ok": True,
             "filename": filename,
-            "document_chunk_count": len(chunks),
+            "document_chunk_count": chunk_count,
             **bridge.knowledge_base.summary(),
         }
 
@@ -1059,9 +1083,7 @@ def create_app(bridge: DetectBridge) -> FastAPI:
         target = bridge.knowledge_base.kb_dir / safe_name
         if not target.is_file():
             raise HTTPException(404, "规范文件不存在")
-        target.unlink()
-        bridge.knowledge_base.refresh(force=True)
-        bridge.knowledge_base.prepare_index()
+        bridge.knowledge_base.delete_document(safe_name)
         return {"ok": True, **bridge.knowledge_base.summary()}
 
     @app.get("/api/detect/knowledge/search")
@@ -1218,10 +1240,26 @@ def create_app(bridge: DetectBridge) -> FastAPI:
         return {"ok": True, "persisted": payload.persist, **bridge.health()}
 
     @app.get("/api/detect/recent")
-    def recent(limit: int = 20) -> dict:
+    def recent(limit: int = 20, offset: int = 0, status: str = "") -> dict:
         if not 1 <= limit <= 100:
             raise HTTPException(400, "limit 必须在 1 到 100 之间")
-        return {"items": bridge.recent(limit)}
+        if offset < 0 or status not in {"", "queued", "running", "done", "error", "cancelled"}:
+            raise HTTPException(400, "分页或状态参数无效")
+        return {"items": bridge.recent(limit, offset, status)}
+
+    @app.post("/api/detect/jobs/{job_id}/cancel")
+    def cancel_job(job_id: str) -> dict:
+        try:
+            return bridge.cancel_job(job_id)
+        except KeyError:
+            raise HTTPException(404, "任务不存在") from None
+
+    @app.post("/api/detect/jobs/{job_id}/retry")
+    def retry_job(job_id: str) -> dict:
+        try:
+            return bridge.retry_job(job_id)
+        except KeyError:
+            raise HTTPException(404, "任务不存在") from None
 
     @app.post("/api/detect/business-sync/retry")
     def retry_business_sync() -> dict:

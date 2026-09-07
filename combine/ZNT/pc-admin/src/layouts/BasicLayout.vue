@@ -4,8 +4,8 @@
     <a-layout-sider v-model:collapsed="collapsed" collapsible theme="dark" width="240">
       <div class="logo">
         <span v-if="!collapsed" class="logo-full">
-          <span class="logo-title">工地安全智能检测系统</span>
-          <span class="logo-team">嘉然今天也在守护工地</span>
+          <span class="logo-title">筑安智巡</span>
+          <span class="logo-team">SiteSafe-Sentinel · 工地安全</span>
         </span>
         <span v-else>安全</span>
       </div>
@@ -15,10 +15,12 @@
         mode="inline"
         @click="onMenuClick"
       >
-        <a-menu-item v-for="item in visibleMenus" :key="item.path">
-          <component :is="iconMap[item.meta.icon]" />
-          <span>{{ item.meta.title }}</span>
-        </a-menu-item>
+        <a-menu-item-group v-for="group in menuGroups" :key="group.title" :title="collapsed ? '' : group.title">
+          <a-menu-item v-for="item in group.items" :key="item.path">
+            <component :is="iconMap[item.meta.icon]" />
+            <span>{{ item.meta.title }}</span>
+          </a-menu-item>
+        </a-menu-item-group>
       </a-menu>
     </a-layout-sider>
 
@@ -38,6 +40,10 @@
           </a-select>
         </div>
         <div class="header-right">
+          <a-radio-group :value="workspaceStyle" size="small" @change="e => setWorkspaceStyle(e.target.value)">
+            <a-radio-button value="professional">工作台</a-radio-button>
+            <a-radio-button value="showcase">展示视图</a-radio-button>
+          </a-radio-group>
           <a-tooltip :title="colorTheme === 'dark' ? '切换明亮模式' : '切换暗色模式'">
             <a-button class="theme-toggle" shape="circle" @click="toggleColorTheme">
               <BulbOutlined v-if="colorTheme === 'dark'" />
@@ -49,6 +55,7 @@
           <a-button type="link" @click="onLogout">退出</a-button>
         </div>
       </a-layout-header>
+      <RuntimeStatus />
 
       <!-- 内容区 -->
       <a-layout-content class="content">
@@ -85,6 +92,8 @@ import { fetchProjects } from '@/api/resource'
 import { message } from 'ant-design-vue'
 import { colorTheme, toggleColorTheme } from '@/utils/theme'
 import { startBusinessSocket, stopBusinessSocket } from '@/utils/businessSocket'
+import RuntimeStatus from '@/components/RuntimeStatus.vue'
+import { workspaceStyle, setWorkspaceStyle } from '@/utils/preferences'
 
 const iconMap = {
   DashboardOutlined,
@@ -116,6 +125,12 @@ const visibleMenus = computed(() => {
     return roles.includes(role)
   })
 })
+const menuGroups = computed(() => [
+  ['巡检工作台', ['dashboard','monitor','realtime-detect','task-center']],
+  ['风险与闭环', ['detection-results','workorder','agent-center']],
+  ['知识与复盘', ['analysis','case-library']],
+  ['配置与资源', ['model-config','resource','system-settings']],
+].map(([title, paths]) => ({ title, items:paths.map(path => visibleMenus.value.find(m => m.path === path)).filter(Boolean) })).filter(g => g.items.length))
 
 watch(
   () => route.path,

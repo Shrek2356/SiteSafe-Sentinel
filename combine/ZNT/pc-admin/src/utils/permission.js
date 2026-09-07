@@ -27,6 +27,7 @@ export const ROLE_LABELS = {
 export const ROLE_MENUS = {
   admin: [], // 全部
   safety: [
+    '/task-center',
     '/dashboard',
     '/monitor',
     '/realtime-detect',
@@ -36,6 +37,7 @@ export const ROLE_MENUS = {
     '/case-library',
   ],
   director: [
+    '/task-center',
     '/dashboard',
     '/monitor',
     '/realtime-detect',

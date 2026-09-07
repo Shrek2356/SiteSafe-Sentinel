@@ -6,7 +6,7 @@ import request from '@/utils/request'
 import { analysisTrend, areaHeat, teamViolation } from '@/mock'
 import dayjs from 'dayjs'
 
-const ENABLE_PRESENTATION_ASSETS = import.meta.env.VITE_ENABLE_PRESENTATION_ASSETS !== 'false'
+import { presentationEnabled } from '@/utils/preferences'
 
 function pad(n) {
   return String(n).padStart(2, '0')
@@ -87,7 +87,7 @@ export function fetchAnalysisData(params = {}) {
       ...(real.areaHeat || []).map((item) => item.value),
       ...(real.teamViolation || []).map((item) => item.count),
     ].reduce((sum, value) => sum + (Number(value) || 0), 0)
-    if (total > 0 || !ENABLE_PRESENTATION_ASSETS) {
+    if (total > 0 || !presentationEnabled()) {
       return { ...response, data: { ...real, presentationAsset: false } }
     }
     const presentation = buildAnalysisByRange(params.startDate, params.endDate)

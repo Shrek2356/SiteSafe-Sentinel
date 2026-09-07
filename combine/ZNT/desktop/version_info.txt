@@ -1,7 +1,7 @@
 VSVersionInfo(
   ffi=FixedFileInfo(
-    filevers=(1, 0, 0, 0),
-    prodvers=(1, 0, 0, 0),
+    filevers=(1, 1, 0, 0),
+    prodvers=(1, 1, 0, 0),
     mask=0x3f,
     flags=0x0,
     OS=0x40004,
@@ -16,12 +16,12 @@ VSVersionInfo(
         [
           StringStruct(u'CompanyName', u'SiteSafe-Sentinel Project Team'),
           StringStruct(u'FileDescription', u'SiteSafe-Sentinel 工地安全智能检测系统'),
-          StringStruct(u'FileVersion', u'1.0.0'),
+          StringStruct(u'FileVersion', u'1.1.0'),
           StringStruct(u'InternalName', u'SiteSafe-Sentinel'),
           StringStruct(u'LegalCopyright', u'Copyright (C) 2026. All rights reserved.'),
           StringStruct(u'OriginalFilename', u'SiteSafe-Sentinel.exe'),
           StringStruct(u'ProductName', u'SiteSafe-Sentinel 嘉然今天也在守护工地'),
-          StringStruct(u'ProductVersion', u'1.0.0')
+          StringStruct(u'ProductVersion', u'1.1.0')
         ]
       )
     ]),

@@ -26,12 +26,9 @@ export function login(data) {
       },
     })
   }
-  const username = { admin: 'admin', safety: 'safety', director: 'director' }[data.role] || data.username
-  const defaultPasswords = { admin: 'admin123', safety: 'safety123', director: 'viewer123' }
   return request.post('/auth/login', {
-    ...data,
-    username,
-    password: data.password === 'admin123' ? defaultPasswords[data.role] || data.password : data.password,
+    username: data.username.trim(),
+    password: data.password,
   })
 }
 

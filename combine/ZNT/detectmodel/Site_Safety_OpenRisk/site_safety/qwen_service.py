@@ -97,9 +97,12 @@ class QwenServiceManager:
                 return {"ok": True, **current, "detail": "平台管理的 Qwen 已在运行"}
             if current["reachable"]:
                 return {"ok": False, **current, "detail": "端口已有其他 Qwen 服务；平台不会重复启动或接管"}
-            server = shutil.which("llama-server") or shutil.which("llama-server.exe")
+            configured_server = str(settings.get("llama_server_path") or "").strip()
+            server = configured_server or shutil.which("llama-server") or shutil.which("llama-server.exe")
+            if configured_server and not Path(configured_server).is_file():
+                raise RuntimeError("llama-server 可执行文件路径无效，请在模型配置中修改")
             if not server:
-                raise RuntimeError("找不到 llama-server.exe，请先安装 llama.cpp 或加入 PATH")
+                raise RuntimeError("找不到 llama-server.exe，请在模型配置中选择程序路径，或加入 PATH")
             model = Path(str(settings.get("qwen_model_path") or ""))
             mmproj = Path(str(settings.get("qwen_mmproj_path") or ""))
             host, port = self._listen_address(settings)
@@ -185,7 +188,8 @@ def pick_runtime_path(field: str, kind: str, current: str = "") -> str:
             "if($d.ShowDialog() -eq 'OK'){[Console]::Write($d.SelectedPath)}"
         )
     else:
-        filter_text = "Model files (*.gguf;*.pt)|*.gguf;*.pt|All files (*.*)|*.*"
+        filter_text = ("Executable (*.exe)|*.exe|All files (*.*)|*.*" if field == "llama_server_path"
+                       else "Model files (*.gguf;*.pt)|*.gguf;*.pt|All files (*.*)|*.*")
         script = (
             "Add-Type -AssemblyName System.Windows.Forms; "
             "$d=New-Object System.Windows.Forms.OpenFileDialog; "

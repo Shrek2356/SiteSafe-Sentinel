@@ -4,6 +4,7 @@ from __future__ import annotations
 import copy
 import json
 import os
+import shutil
 import threading
 from pathlib import Path
 from typing import Any, Dict, Mapping
@@ -18,6 +19,7 @@ _SETTINGS_LOCK = threading.RLock()
 
 DEFAULTS: Dict[str, Any] = {
     "qwen_enabled": True,
+    "llama_server_path": "",
     "qwen_autostart": True,
     "yolo_enabled": True,
     "sam3_enabled": True,
@@ -33,6 +35,7 @@ DEFAULTS: Dict[str, Any] = {
 }
 
 PATH_KINDS = {
+    "llama_server_path": "file",
     "qwen_model_path": "file",
     "qwen_mmproj_path": "file",
     "sam3_repo_path": "directory",
@@ -103,7 +106,10 @@ def validate_runtime_settings(settings: Mapping[str, Any]) -> Dict[str, Dict[str
     data = _normalise(settings)
     result: Dict[str, Dict[str, Any]] = {}
     for key, kind in PATH_KINDS.items():
-        path = Path(str(data[key])).expanduser()
+        value = data[key]
+        if key == "llama_server_path" and not value:
+            value = shutil.which("llama-server") or shutil.which("llama-server.exe") or ""
+        path = Path(str(value)).expanduser()
         exists = path.is_dir() if kind == "directory" else path.is_file()
         result[key] = {"ok": exists, "kind": kind, "resolved": str(path.resolve())}
     base_url = str(data["qwen_base_url"])

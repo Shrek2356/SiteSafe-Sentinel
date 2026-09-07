@@ -5,7 +5,7 @@ import { USE_MOCK, mockDelay } from '@/utils/request'
 import request from '@/utils/request'
 import { deviceTree, cameraList, realtimeAlarms } from '@/mock'
 
-const ENABLE_PRESENTATION_ASSETS = import.meta.env.VITE_ENABLE_PRESENTATION_ASSETS !== 'false'
+import { presentationEnabled } from '@/utils/preferences'
 
 function presentationCameras() {
   return cameraList.map((camera) => ({ ...camera, presentationAsset: true }))
@@ -18,7 +18,7 @@ function presentationCameras() {
 export function fetchDeviceTree() {
   if (USE_MOCK) return mockDelay(deviceTree)
   return request.get('/monitor/device-tree').then((response) => {
-    if (!ENABLE_PRESENTATION_ASSETS) return response
+    if (!presentationEnabled()) return response
     const demoTree = deviceTree.map((root) => ({
       ...root,
       key: `presentation-${root.key}`,
@@ -47,7 +47,7 @@ export function fetchCameras(params = {}) {
     return mockDelay(list)
   }
   return request.get('/monitor/cameras', { params }).then((response) => {
-    if (!ENABLE_PRESENTATION_ASSETS) return response
+    if (!presentationEnabled()) return response
     const real = response.data || []
     const known = new Set(real.map((camera) => camera.id))
     const demo = presentationCameras().filter((camera) => !known.has(camera.id))

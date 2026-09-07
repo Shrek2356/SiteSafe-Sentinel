@@ -9,10 +9,10 @@ import { detectionSummary, detectionCases, resultOrigin } from '@/mock/detection
 import { loadDetectResultCases } from '@/utils/detectResults'
 import { resolveBusinessMediaUrl } from '@/utils/endpoints'
 
-const ENABLE_PRESENTATION_ASSETS = import.meta.env.VITE_ENABLE_PRESENTATION_ASSETS !== 'false'
+import { presentationEnabled } from '@/utils/preferences'
 
 function presentationCases() {
-  if (!ENABLE_PRESENTATION_ASSETS) return []
+  if (!presentationEnabled()) return []
   return detectionCases.map((item) => ({
     ...item,
     id: `example-${item.id}`,
@@ -71,7 +71,7 @@ export function fetchDetectionResults(params = {}) {
     const live = loadDetectResultCases()
     const seed = presentationCases()
     // 实时结果在前；若带 job 则优先置顶匹配项
-    let cases = [...live, ...seed]
+    let cases = [...live, ...seed].filter(c => presentationEnabled() || !(c.presentationAsset || c.profile === 'demo' || String(c.detectJobId || '').startsWith('MOCK-')))
     const jobId = params.job || params.job_id
     if (jobId) {
       const hit = cases.find((c) => c.detectJobId === jobId || c.id === `live-${jobId}`)
@@ -108,7 +108,7 @@ export function fetchDetectionResults(params = {}) {
           sourceType: isDemo ? 'demo-run' : 'pending-sync',
         }
       })
-    let cases = [...local, ...real, ...presentationCases()]
+    let cases = [...local, ...real, ...presentationCases()].filter(c => presentationEnabled() || !c.presentationAsset)
     const jobId = params.job || params.job_id
     if (jobId) {
       const hit = cases.find((item) => item.detectJobId === jobId || item.id === `live-${jobId}`)
@@ -126,7 +126,7 @@ export function fetchDetectionResults(params = {}) {
         cases,
         summary: buildSummary(cases),
         origin: res.data.origin || resultOrigin,
-        presentationAssetsEnabled: ENABLE_PRESENTATION_ASSETS,
+        presentationAssetsEnabled: presentationEnabled(),
       },
     }
   })

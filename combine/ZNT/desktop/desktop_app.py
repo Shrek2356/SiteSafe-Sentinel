@@ -25,10 +25,11 @@ from typing import IO, Any
 from urllib.parse import unquote, urlsplit
 
 import webview
+from gateway import GatewayMixin
 
 
 APP_NAME = "SiteSafe-Sentinel"
-APP_TITLE = "SiteSafe-Sentinel｜嘉然今天也在守护工地"
+APP_TITLE = "筑安智巡 · SiteSafe-Sentinel"
 DEFAULT_CONFIG = {
     "profile": "demo",
     "backend_python": "python-runtime/python.exe",
@@ -88,15 +89,21 @@ def port_is_open(port: int) -> bool:
         return sock.connect_ex(("127.0.0.1", port)) == 0
 
 
-def http_ready(url: str, timeout: float = 1.5) -> bool:
+def http_ready(url: str, timeout: float = 1.5, *, service: str = "") -> bool:
     try:
-        with urllib.request.urlopen(url, timeout=timeout) as response:
-            return 200 <= response.status < 500
+        opener = urllib.request.build_opener(urllib.request.ProxyHandler({}))
+        with opener.open(url, timeout=timeout) as response:
+            if response.status != 200:
+                return False
+            if service:
+                data = json.load(response)
+                return isinstance(data, dict) and data.get("ok") is True and data.get("service") == service
+            return True
     except Exception:
         return False
 
 
-class SpaHandler(SimpleHTTPRequestHandler):
+class SpaHandler(GatewayMixin, SimpleHTTPRequestHandler):
     server_version = "SiteSafeDesktop/1.0"
     MIME_OVERRIDES = {
         ".css": "text/css; charset=utf-8",
@@ -109,7 +116,8 @@ class SpaHandler(SimpleHTTPRequestHandler):
         ".woff2": "font/woff2",
     }
 
-    def __init__(self, *args: Any, directory: str, **kwargs: Any) -> None:
+    def __init__(self, *args: Any, directory: str, proxy_routes=None, **kwargs: Any) -> None:
+        self.proxy_routes = proxy_routes or {}
         super().__init__(*args, directory=directory, **kwargs)
 
     def send_head(self):
@@ -166,8 +174,12 @@ class DesktopRuntime:
         self.processes: list[ManagedProcess] = []
         self.started_frontend = False
         self._stopped = False
+        self._lifecycle_lock = threading.RLock()
 
     def validate(self) -> None:
+        ports = [self.frontend_port, self.business_port, self.bridge_port]
+        if len(set(ports)) != 3 or any(not 1024 <= p <= 65535 for p in ports):
+            raise RuntimeError("前端、业务与检测桥端口须互不相同且在1024–65535之间")
         missing = []
         for path in (
             self.python,
@@ -182,10 +194,21 @@ class DesktopRuntime:
             raise RuntimeError("桌面版文件不完整：\n" + "\n".join(missing))
 
     def _spawn(self, name: str, args: list[str], cwd: Path) -> None:
+        with self._lifecycle_lock:
+            if self._stopped:
+                raise RuntimeError("桌面已关闭，取消后续服务启动")
+            self._spawn_owned(name, args, cwd)
+
+    def _spawn_owned(self, name: str, args: list[str], cwd: Path) -> None:
         LOG_DIR.mkdir(parents=True, exist_ok=True)
         stamp = datetime.now().strftime("%Y%m%d")
         log_handle = open(LOG_DIR / f"{name}-{stamp}.log", "ab", buffering=0)
         creationflags = subprocess.CREATE_NO_WINDOW | subprocess.CREATE_NEW_PROCESS_GROUP
+        env = dict(os.environ)
+        env["ZNT_BUSINESS_API"] = f"http://127.0.0.1:{self.business_port}"
+        env["ZNT_DETECT_API"] = f"http://127.0.0.1:{self.bridge_port}"
+        env["NO_PROXY"] = ",".join(filter(None, [env.get("NO_PROXY", env.get("no_proxy", "")), "127.0.0.1", "localhost", "::1"]))
+        env["no_proxy"] = env["NO_PROXY"]
         process = subprocess.Popen(
             args,
             cwd=str(cwd),
@@ -193,17 +216,24 @@ class DesktopRuntime:
             stdout=log_handle,
             stderr=subprocess.STDOUT,
             creationflags=creationflags,
+            env=env,
         )
         self.processes.append(ManagedProcess(name, process, log_handle))
 
     def start_frontend(self) -> None:
+        with self._lifecycle_lock:
+            if self._stopped:
+                raise RuntimeError("桌面启动已取消")
+            self._start_frontend_owned()
+
+    def _start_frontend_owned(self) -> None:
         if port_is_open(self.frontend_port):
-            if not http_ready(f"http://127.0.0.1:{self.frontend_port}/login"):
-                raise RuntimeError(f"端口 {self.frontend_port} 已被其他程序占用。")
-            return
+            raise RuntimeError(f"前端端口 {self.frontend_port} 已被占用。请关闭旧平台，或修改 desktop-settings.json 端口。")
 
         def handler(*args: Any, **kwargs: Any):
-            return SpaHandler(*args, directory=str(self.frontend_root), **kwargs)
+            return SpaHandler(*args, directory=str(self.frontend_root), proxy_routes={
+                "/business-api": self.business_port, "/detect-api": self.bridge_port,
+            }, **kwargs)
 
         self.server = ReusableThreadingHTTPServer(
             ("127.0.0.1", self.frontend_port), handler
@@ -249,15 +279,17 @@ class DesktopRuntime:
             )
 
         checks = {
-            "PC前端": f"http://127.0.0.1:{self.frontend_port}/login",
-            "业务后台": f"http://127.0.0.1:{self.business_port}/api/health",
-            "检测桥": f"http://127.0.0.1:{self.bridge_port}/api/detect/health",
+            "PC前端": (f"http://127.0.0.1:{self.frontend_port}/desktop-api/health", "sitesafe-desktop"),
+            "业务后台": (f"http://127.0.0.1:{self.frontend_port}/business-api/api/health", "znt-business-api"),
+            "检测桥": (f"http://127.0.0.1:{self.frontend_port}/detect-api/api/detect/health", "site-OpenRisk-detect-bridge"),
         }
         deadline = time.monotonic() + 90
         pending = dict(checks)
         while pending and time.monotonic() < deadline:
-            for name, url in list(pending.items()):
-                if http_ready(url):
+            if self._stopped:
+                raise RuntimeError("桌面启动已取消")
+            for name, (url, service) in list(pending.items()):
+                if http_ready(url, service=service):
                     pending.pop(name)
             if pending:
                 time.sleep(0.4)
@@ -266,19 +298,15 @@ class DesktopRuntime:
             raise RuntimeError(f"以下服务未能启动：{names}\n请查看 {LOG_DIR}")
 
     def stop(self) -> None:
-        if self._stopped:
-            return
-        self._stopped = True
-        try:
-            request = urllib.request.Request(
-                f"http://127.0.0.1:{self.bridge_port}/api/detect/qwen-service/stop",
-                method="POST",
-            )
-            urllib.request.urlopen(request, timeout=2).close()
-        except Exception:
-            pass
+        with self._lifecycle_lock:
+            if self._stopped:
+                return
+            self._stopped = True
+        # The owned process tree includes models launched by this bridge. Never call
+        # a global model-stop API: a pre-existing model may be used by another app.
 
         if self.server and self.started_frontend:
+            self.server.stopping = True
             self.server.shutdown()
             self.server.server_close()
 
@@ -293,6 +321,19 @@ class DesktopRuntime:
                     check=False,
                 )
             item.log_handle.close()
+
+    def get_desktop_settings(self) -> dict:
+        return {**self.config, "app_root": str(ROOT), "restart_required": False}
+
+    def save_desktop_settings(self, values: dict) -> dict:
+        allowed = {"profile", "backend_python", "business_port", "bridge_port", "frontend_port"}
+        updated = {**self.config, **{k: v for k, v in values.items() if k in allowed}}
+        candidate = DesktopRuntime(updated)
+        candidate.validate()
+        temporary = CONFIG_PATH.with_suffix(".tmp")
+        temporary.write_text(json.dumps(updated, ensure_ascii=False, indent=2), encoding="utf-8")
+        temporary.replace(CONFIG_PATH)
+        return {"ok": True, "restart_required": True}
 
 
 LOADING_HTML = """
@@ -325,6 +366,8 @@ def acquire_single_instance() -> Any:
     if os.name != "nt":
         return None
     kernel32 = ctypes.windll.kernel32
+    kernel32.CreateMutexW.restype = ctypes.c_void_p
+    kernel32.CloseHandle.argtypes = [ctypes.c_void_p]
     handle = kernel32.CreateMutexW(None, False, "Local\\SiteSafeSentinelDesktop")
     if not handle or kernel32.GetLastError() == ERROR_ALREADY_EXISTS:
         ctypes.windll.user32.MessageBoxW(
@@ -366,6 +409,13 @@ def main() -> int:
         background_color="#091b28",
         confirm_close=bool(config.get("confirm_close", True))
         and args.smoke_test_seconds <= 0,
+        js_api=type("DesktopSettingsAPI", (), {
+            "get_desktop_settings": lambda _self: runtime.get_desktop_settings(),
+            "save_desktop_settings": lambda _self, values: runtime.save_desktop_settings(values),
+            "choose_backend_python": lambda _self: (webview.windows[0].create_file_dialog(
+                webview.FileDialog.OPEN, allow_multiple=False, file_types=("Python (*.exe)",)
+            ) or [""])[0],
+        })(),
     )
 
     def startup() -> None:
@@ -386,10 +436,13 @@ def main() -> int:
                 )
                 print(f"DESKTOP_WEB_STATE={state}", flush=True)
         except Exception as exc:
-            window.load_html(error_html(str(exc)))
+            if not runtime._stopped:
+                runtime.stop()
+                window.load_html(error_html(str(exc)))
 
     try:
-        webview.start(startup, gui="edgechromium", debug=args.debug)
+        webview.start(startup, gui="edgechromium", debug=args.debug,
+                      private_mode=False, storage_path=str(RUNTIME_DIR / "webview-profile"))
     finally:
         runtime.stop()
         if mutex and os.name == "nt":
