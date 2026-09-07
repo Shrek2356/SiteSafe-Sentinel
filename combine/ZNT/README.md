@@ -1,93 +1,43 @@
-# 工地安全智能检测系统
+# 筑安智巡 · SiteSafe-Sentinel
 
-队名：**嘉然今天也在守护工地**
+嘉然今天也在守护工地。当前桌面版本 **v1.3.0**。
 
-当前桌面版 **v1.3.0**，建议直接打开 `desktop-dist/SiteSafe-Sentinel.exe`；完整交付包的 EXE 在根目录。下文批处理启动方式是兼容入口。[新版说明](./docs/桌面版v1.3视觉升级与使用指南.md)。
+本目录是平台的应用根目录。项目介绍与版本导航以[仓库首页](../../README.md)为准；[变更记录](../../CHANGELOG.md)记录实际改动，避免多个 README 各自保留过时说明。
 
----
+## 选择你的使用方式
 
-## 怎么打开（PC 管理后台）
+| 来源／用途 | 启动方式 |
+|------------|----------|
+| 完整桌面交付包 | 完整解压后，双击包根目录 `SiteSafe-Sentinel.exe` |
+| 已完成本地构建的源码 | 从本目录打开 `desktop-dist/SiteSafe-Sentinel.exe` |
+| 源码浏览器兼容入口 | 从本目录运行 `start-platform.bat`；需先准备运行依赖 |
+| 仅开发前端页面 | `pc-admin/` 中运行 `npm ci`、`npm run dev`；不自动启动后台 |
 
-根目录启动文件：
+GitHub 源码包不包含已构建 EXE 和前端 `dist`。仓库里的基础 Python 文件也不等于完整业务依赖环境；从源码开发需要安装依赖。完整桌面交付包则提供 Demo 运行环境，不需要系统 Node、GPU 或模型。
 
-### `start-platform.bat`
+## v1.3 重点
 
-1. 双击 `start-platform.bat`  
-2. 选择检测模式后回车：  
-   - **1 演示 Mock**：无需 GPU/API（先体验用这个）  
-   - **2 本地离线**：YOLO 初筛 + 本地 Qwen + 本地 SAM3（推荐）  
-   - **3 标准检测**：YOLO 初筛 + Qwen 云端 API + 本地 SAM3/CLIP  
-3. **不要关闭**弹出的黑色窗口  
-4. 浏览器打开 http://localhost:5173  
-5. 登录选「管理员」，密码随便填  
+- 统一雾白／石墨蓝与青绿操作色，风险色独立表达。
+- 优化导航、文字、表格、状态标签、图表与小高度窗口布局。
+- 保留嘉然动画、八个预置案例、完整展示素材，以及既有模型／Agent 链路。
+- 原有搜索、使用引导、连接诊断、路径配置、RAG 导入与人工复核入口不变。
+- 只改 PC／桌面视觉，不代表移动端或大屏已同步改版，也不代表模型检测率提升。
 
-体验检测：菜单 **「实时检测」** → 点测试图片 → **开始检测**
+## 运行与配置
 
-比赛展示版默认把包内预编辑的八张案例、风险点、检测框和掩码与真实接口数据合并显示；这不会伪造数据库事件。正式生产前如需仅显示实时数据，构建前设置 `VITE_ENABLE_PRESENTATION_ASSETS=false`。
+关闭旧版窗口后再启动新版，避免全局单实例或端口冲突。桌面默认配置是 `desktop-settings.json`，服务默认端口为前端 5173、业务 8800、检测桥 8810。
 
-### 模式 2/3 配置（本机 / 打包给别人）
-
-1. **Python 环境**  
-   - Demo展示随包提供 `python-runtime\python.exe` 和基础依赖，可直接使用  
-   - Offline/Cloud真实检测使用另建的 `env\Scripts\python.exe`，启动脚本会优先选择完整环境  
-2. **当前本机权重**：  
-   - YOLO：`..\yolo_site_workspace_portable\weights\`  
-   - Qwen：`E:\model\`  
-   - SAM3：`E:\SAM3_MAIN\`  
-   - CLIP：`C:\Users\SYS03\.cache\clip\ViT-L-14.pt`  
-3. **密钥**：编辑 `detectmodel/Site_Safety_OpenRisk/.env`  
-   - 模式 2 使用 `LOCAL_QWEN_*`，启动脚本会按需启动本地 Qwen  
-   - 模式 3 填 `DASHSCOPE_API_KEY`  
-
-依赖清单集中在 `requirements/` 目录。
-
----
-
-## 三端怎么用
-
-| 端 | 目录 | 能否用 | 使用方式 |
-|----|------|--------|----------|
-| **PC 管理后台** | `pc-admin/` | ✅ 主入口 | 双击 `start-platform.bat` → http://localhost:5173 |
-| **门口大屏** | `big-screen/` | ✅ | 另开终端：`cd big-screen && npm install && npm run dev` → http://localhost:5174 |
-| **安全员移动端** | `mobile/` | ✅ | `cd mobile && npm install && npm run dev` → http://localhost:5175 |
-
-移动端说明见 `mobile/README.md`。PC 与移动端当前均为 Mock 数据可独立浏览；真实检测走 PC「实时检测」+ 检测桥接。
-
----
-
-## 目录结构
-
-```
-ZNT/
-├── start-platform.bat              ← 只双击这一个
-├── start-local-qwen.bat            ← 本地Qwen服务（模式2自动调用）
-├── Outcomes/                       ← 评测与成果图
-├── example/                        ← 测试图片
-├── JR/                             ← 队形象素材
-├── requirements/                   ← Python 依赖清单
-├── detectmodel/
-│   └── Site_Safety_OpenRisk/       ← 检测算法与桥接
-├── pc-admin/                       ← PC 管理后台
-├── big-screen/                     ← 可视化大屏
-├── mobile/                         ← 安全员移动端 H5
-└── docs/
-```
-
-## 检测代码位置
-
-| 内容 | 路径 |
-|------|------|
-| 算法包 | `detectmodel/Site_Safety_OpenRisk/` |
-| 桥接服务 | 同目录 `detect_bridge.py`（端口 8810） |
-| 云端配置 | `configs/qwen_visual.yaml` |
-| 本地配置 | `configs/qwen_local_zero_cost.yaml` |
-| 演示配置 | `configs/default.yaml` |
-| 成果文档 | `Outcomes/` |
+先查看预置案例可直接进入“检测结果汇总”。新图片真实检测需要另行准备完整 Python、推理引擎及模型权重；从“系统设置 → 桌面与连接”和“模型规则配置”更新本机路径与服务配置。不要把开发者电脑的路径作为固定部署路径。
 
 ## 文档
 
-1. [启动运行说明书](./docs/启动运行说明书.md)  
-2. [对接指南](./docs/对接指南.md)  
+- [v1.3 使用与视觉说明](./docs/桌面版v1.3视觉升级与使用指南.md)
+- [v1.3 验证与交付记录](./docs/v1.3视觉验收记录.md)
+- [桌面开发、构建与打包](./desktop/README.md)
+- [环境与模型依赖](./requirements/README.md)
+- [完整部署指南](./requirements/DEPLOYMENT_GUIDE.md)
+- [接口对接指南](./docs/对接指南.md)
+- [YOLO－VLM－前端整合](./docs/YOLO-VLM-前端接口整合说明.md)
 
 ## License
 

@@ -12,103 +12,125 @@ An open-risk visual detection and multi-agent safety management platform for con
 
 <p align="center"><em>点击动画可查看原始高清视频</em></p>
 
-# 工地安全智能检测系统
+## v1.3.0 · 更清晰的安全工作台
 
+这次更新聚焦 **PC 管理后台与 Windows 桌面体验**，不改变异常识别策略，不增加大模型调用，也没有重新计算检测效果。
 
----
+- **统一明暗主题**：雾白与石墨蓝底色，青绿表达操作和选中，红／橙／黄表达风险。
+- **清楚的视觉层次**：优化侧栏、项目切换、文字、卡片、表格、滑杆、图表与状态标签；小高度窗口使用紧凑导航。
+- **随时找到下一步**：保留功能搜索 `Ctrl + K`、本页指南、首次使用引导和连接诊断。
+- **展示内容完整保留**：嘉然动画、八张关键案例、原图、检测框、掩码与报告；预置素材始终标注来源。
+- **保持真实状态**：检测桥在线不等于模型已加载；连接失败不会把真实检测自动改为 Mock。
 
-## 怎么打开（PC 管理后台）
+[版本变更记录](./CHANGELOG.md) · [新版使用指南](./combine/ZNT/docs/桌面版v1.3视觉升级与使用指南.md) · [验证与交付记录](./combine/ZNT/docs/v1.3视觉验收记录.md)
 
-### 独立桌面版（推荐）
+## 如何开始
 
-构建或交付后直接双击 `combine/ZNT/desktop-dist/SiteSafe-Sentinel.exe`。系统会在独立 Windows 窗口中打开，不显示浏览器地址栏，并自动启动业务后台与检测桥。关闭主窗口后，本次由桌面程序启动的后台进程会一并退出。
+### 直接体验：完整桌面交付包
 
-桌面端运行模式和模型路径由 `combine/ZNT/desktop-settings.json` 配置；模型权重仍采用外置路径，便于不同设备按显卡能力安装或更换。构建方法见 `combine/ZNT/desktop/README.md`。
+使用项目方提供的 `SiteSafe-Sentinel_Desktop_v1.3.0_visual_final.zip`，完整解压后双击根目录 **`SiteSafe-Sentinel.exe`**。若旧版仍在运行，请先正常退出旧版。
 
-**1.2.0 更新**：引导式工作台、功能搜索（Ctrl + K）、覆盖全部模块的本页指南、使用与支持中心、可操作的连接诊断和统一明暗主题。原有嘉然动画与八个关键案例保留，真实检测断线不会自动切成演示。详见 [产品体验与使用指南](./combine/ZNT/docs/桌面版v1.2产品体验与使用指南.md)。本版不再以压缩包体积为优先约束，保留完整前端素材用于继续开发。
+- 环境：Windows 10/11 64 位，Microsoft Edge WebView2 Runtime。
+- 随包提供基础 Python 与已构建前端；演示不要求系统 Node、GPU、API 密钥或大模型权重。
+- 软件使用独立窗口，自动启动业务后台与检测桥；关闭时只停止由该窗口启动的服务，不强关原有共享服务。
+- 不要只拷贝 EXE，它需要同目录的运行时、前端和后台文件。
 
-### 兼容启动方式
+**GitHub 的“Download ZIP”下载的是源码，不是这个完整运行包。** 当前仓库不跟踪桌面应用 `SiteSafe-Sentinel.exe` 与前端 `dist`；代码同步不等于上传了桌面压缩包。完整交付包的文件名、体积和校验值见[交付记录](./combine/ZNT/docs/v1.3视觉验收记录.md)。
 
-根目录启动文件：
+默认演示账号：
 
-### `start-platform.bat`
+| 角色 | 账号 | 密码 |
+|------|------|------|
+| 管理员 | `admin` | `admin123` |
+| 安全员 | `safety` | `safety123` |
+| 只读总监 | `viewer` | `viewer123` |
 
-1. 双击 `start-platform.bat`  
-2. 选择检测模式后回车：  
-   - **1 演示 Mock**：无需 GPU/API（先体验用这个）  
-   - **2 本地离线**：YOLO 初筛 + 本地 Qwen + 本地 SAM3（推荐）  
-   - **3 标准检测**：YOLO 初筛 + Qwen 云端 API + 本地 SAM3/CLIP  
-3. **不要关闭**弹出的黑色窗口  
-4. 浏览器打开 http://localhost:5173  
-5. 默认管理员 `admin / admin123`；安全员 `safety / safety123`；只读总监 `viewer / viewer123`。真实账号必须使用对应密码。
+真实账号权限由后台决定，正式使用应更改默认凭据。
 
-体验检测：菜单 **「实时检测」** → 点测试图片 → **开始检测**
+### 看八个案例，还是检测新图片？
 
-比赛展示版默认把包内预编辑的八张案例、风险点、检测框和掩码与真实接口数据合并显示；这不会伪造数据库事件。正式生产前如需仅显示实时数据，构建前设置 `VITE_ENABLE_PRESENTATION_ASSETS=false`。
+| 目的 | 操作入口 | 所需条件 |
+|------|----------|----------|
+| 查看已有作品 | 检测结果汇总 → 预置展示案例 | 不需要模型；展示既有证据 |
+| 体验操作流程 | 实时检测 → 演示模式 | Mock 结果，不用于安全判定 |
+| 检测新图片 | 模型规则配置 → 配置运行时与模型 → 实时检测 | 完整环境、本地模型，或云端视觉 API 加本地定位模型 |
+| 排查连接 | 使用与支持 → 连接诊断 | 可分别检查业务后台与检测桥 |
+| 导入规范 | 模型规则配置 → 安全知识库管理 | 业务与 RAG 依赖就绪，导入后可检索验证 |
 
-### 模式 2/3 配置（本机 / 打包给别人）
+右上角按钮切换明暗主题；用户菜单可切换“工作台／展示视图”。**外观模式与预置素材开关彼此独立**，隐藏展示素材不会删除文件，也不会改变真实事件数据库。
 
-1. **Python 环境**  
-   - Demo展示随包提供 `python-runtime\python.exe` 和基础依赖，可直接使用  
-   - Offline/Cloud真实检测使用另建的 `env\Scripts\python.exe`，启动脚本会优先选择完整环境  
-2. **当前本机权重**：  
-   - YOLO：`..\yolo_site_workspace_portable\weights\`  
-   - Qwen：`E:\model\`  
-   - SAM3：`E:\SAM3_MAIN\`  
-   - CLIP：`C:\Users\SYS03\.cache\clip\ViT-L-14.pt`  
-3. **密钥**：编辑 `detectmodel/Site_Safety_OpenRisk/.env`  
-   - 模式 2 使用 `LOCAL_QWEN_*`，启动脚本会按需启动本地 Qwen  
-   - 模式 3 填 `DASHSCOPE_API_KEY`  
+### 接入真实检测
 
-依赖清单集中在 `requirements/` 目录。
+在“系统设置 → 桌面与连接”选择完整 Python 环境；在“模型规则配置 → 模型部件与运行时”配置推理引擎和模型路径，在对应配置入口填写云端服务信息。
 
----
+YOLO、Qwen、SAM3 与可选 CLIP 的权重不在代码／演示包内。不要照抄开发者电脑的盘符或缓存路径。按 [部署指南](./combine/ZNT/requirements/DEPLOYMENT_GUIDE.md)、[依赖说明](./combine/ZNT/requirements/README.md) 和[已验证环境记录](./combine/ZNT/requirements/TESTED_ENVIRONMENT.md)准备自己的环境，再用新图片验收。
 
-## 三端怎么用
+保留实时监测初筛、定期全图检查与直接图片输入入口。风险描述、定位证据和人工复核各有用途，不能仅凭掩码有无判断整条链路成功与否。
 
-| 端 | 目录 | 能否用 | 使用方式 |
-|----|------|--------|----------|
-| **PC 管理后台** | `pc-admin/` | ✅ 主入口 | 双击 `start-platform.bat` → http://localhost:5173 |
-| **门口大屏** | `big-screen/` | ✅ | 另开终端：`cd big-screen && npm install && npm run dev` → http://localhost:5174 |
-| **安全员移动端** | `mobile/` | ✅ | `cd mobile && npm install && npm run dev` → http://localhost:5175 |
+## 从源码开发
 
-移动端说明见 `mobile/README.md`。PC 与移动端当前均为 Mock 数据可独立浏览；真实检测走 PC「实时检测」+ 检测桥接。
+主要应用目录是 `combine/ZNT/`。源码开发需要自行准备 Python、Node 和依赖；本地虚拟环境与模型不通过 Git 同步。
 
----
+前端依赖与构建：
 
-## 目录结构
-
-```
-ZNT/
-├── start-platform.bat              ← 只双击这一个
-├── start-local-qwen.bat            ← 本地Qwen服务（模式2自动调用）
-├── Outcomes/                       ← 评测与成果图
-├── example/                        ← 测试图片
-├── JR/                             ← 队形象素材
-├── requirements/                   ← Python 依赖清单
-├── detectmodel/
-│   └── Site_Safety_OpenRisk/       ← 检测算法与桥接
-├── pc-admin/                       ← PC 管理后台
-├── big-screen/                     ← 可视化大屏
-├── mobile/                         ← 安全员移动端 H5
-└── docs/
+```powershell
+cd combine/ZNT/pc-admin
+npm ci
+npm test
+npm run build
 ```
 
-## 检测代码位置
+开发预览使用 `npm run dev`，它不是桌面一键启动器，也不负责启动后台。业务环境、桌面 EXE 构建及首次启动的配置步骤见[桌面开发说明](./combine/ZNT/desktop/README.md)。
 
-| 内容 | 路径 |
-|------|------|
-| 算法包 | `detectmodel/Site_Safety_OpenRisk/` |
-| 桥接服务 | 同目录 `detect_bridge.py`（端口 8810） |
-| 云端配置 | `configs/qwen_visual.yaml` |
-| 本地配置 | `configs/qwen_local_zero_cost.yaml` |
-| 演示配置 | `configs/default.yaml` |
-| 成果文档 | `Outcomes/` |
+源码中的 `combine/ZNT/start-platform.bat` 保留浏览器兼容启动方式；完整桌面交付包中的同名入口用于打开 EXE。两者不要混淆。
 
-## 文档
+## 项目目录
 
-1. [启动运行说明书](./docs/启动运行说明书.md)  
-2. [对接指南](./docs/对接指南.md)  
+```text
+SiteSafe-Sentinel/
+├── README.md
+├── CHANGELOG.md
+├── LICENSE
+├── assets/readme/                     # GitHub 首页动画
+└── combine/ZNT/
+    ├── desktop/                      # 独立窗口、服务生命周期与 EXE 构建
+    ├── desktop-settings.json         # 运行档位、Python 路径与端口
+    ├── pc-admin/
+    │   ├── src/                      # 主工作台代码
+    │   ├── public/                   # 动画、案例与预编辑展示素材
+    │   └── tests/                    # 前端回归
+    ├── detectmodel/Site_Safety_OpenRisk/ # 检测、业务、Agent 与接口
+    ├── requirements/                 # 环境、模型和部署说明
+    ├── example/                      # 示例图片
+    ├── big-screen/                   # 大屏端源码
+    ├── mobile/                       # 移动端源码
+    └── docs/                         # 使用、接口、汇报与版本记录
+```
+
+`desktop-dist/`、`pc-admin/dist/` 与完整 Python 环境由构建或交付阶段准备。**v1.3 的视觉改版范围是 PC／桌面端，不包含移动端和大屏端重新设计**；完整桌面包也不等于自动启动三端。
+
+## 验证范围
+
+2026-09-07 的 v1.3 记录：
+
+- 前端 17 项、后端与桌面 145 项回归通过；前端和 EXE 构建成功。
+- 与 v1.2 比对的 55 个前端静态文件未变，八个预置案例保留。
+- 解压后的 5,524 项清单文件校验一致。
+- 当时旧版占用全局单实例，新 EXE 尚未完成独立窗口启动验收；页面视觉检查不能替代这项检查。
+- 没有重新测试模型召回率、误报率或推理速度；色板对比度测试不是完整可访问性或生产认证。
+
+这些是已记录的本地结果，**不是对当前 GitHub Actions 运行状态的声明**。仓库提供[自动回归工作流](./.github/workflows/regression.yml)，实际执行结果请查看仓库 Actions。
+
+## 文档导航
+
+- [v1.3 视觉与使用指南](./combine/ZNT/docs/桌面版v1.3视觉升级与使用指南.md)
+- [v1.3 验证与交付记录](./combine/ZNT/docs/v1.3视觉验收记录.md)
+- [v1.2 产品引导与功能说明](./combine/ZNT/docs/桌面版v1.2产品体验与使用指南.md)
+- [桌面构建与打包](./combine/ZNT/desktop/README.md)
+- [环境与模型部署](./combine/ZNT/requirements/README.md)
+- [接口对接指南](./combine/ZNT/docs/对接指南.md)
+- [YOLO－VLM－前端接口整合](./combine/ZNT/docs/YOLO-VLM-前端接口整合说明.md)
+- [作品演示脚本](./combine/ZNT/docs/两分钟作品演示-画面字幕配音脚本.md)
 
 ## License / 授权说明
 
