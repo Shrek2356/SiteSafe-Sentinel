@@ -16,6 +16,14 @@ An open-risk visual detection and multi-agent safety management platform for con
 
 ## 怎么打开（PC 管理后台）
 
+### 独立桌面版（推荐）
+
+构建或交付后直接双击 `combine/ZNT/desktop-dist/SiteSafe-Sentinel.exe`。系统会在独立 Windows 窗口中打开，不显示浏览器地址栏，并自动启动业务后台与检测桥。关闭主窗口后，本次由桌面程序启动的后台进程会一并退出。
+
+桌面端运行模式和模型路径由 `combine/ZNT/desktop-settings.json` 配置；模型权重仍采用外置路径，便于不同设备按显卡能力安装或更换。构建方法见 `combine/ZNT/desktop/README.md`。
+
+### 兼容启动方式
+
 根目录启动文件：
 
 ### `start-platform.bat`

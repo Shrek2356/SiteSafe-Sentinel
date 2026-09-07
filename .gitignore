@@ -179,3 +179,10 @@ cython_debug/
 #  refer to https://docs.cursor.com/context/ignore-files
 .cursorignore
 .cursorindexingignore
+
+# SiteSafe-Sentinel desktop build/runtime artifacts
+combine/ZNT/desktop/.venv/
+combine/ZNT/desktop/build/
+combine/ZNT/desktop/dist/
+combine/ZNT/desktop-dist/
+combine/ZNT/runtime/desktop/
