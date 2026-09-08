@@ -1,6 +1,6 @@
 # SiteSafe-Sentinel 独立桌面版
 
-当前源码版本 **1.4.0**。修复桌面导出、配置保存和复盘请求边界，增加完整工作空间备份恢复；保留已有主题和展示素材。见[使用说明](../docs/桌面版v1.4可靠性与备份说明.md)与[版本记录](../../../CHANGELOG.md)。
+当前源码版本 **1.4.1**。保留桌面导出、工作空间备份恢复，新增新机模型部署向导和 Windows 安装包构建。见[模型部署说明](../docs/桌面版v1.4.1模型部署说明.md)、[安装版说明](installer/安装版使用说明.md)与[版本记录](../../../CHANGELOG.md)。
 
 ## 用户启动
 
@@ -59,7 +59,7 @@ desktop\.venv\Scripts\python.exe desktop\desktop_app.py --profile demo
 
 双击`desktop/build-desktop-exe.bat`。构建环境与业务运行环境分离，生成文件位于`desktop-dist/SiteSafe-Sentinel.exe`。构建会写入产品名称、版本号和应用图标；对外正式分发时如需消除 Windows SmartScreen 的“未知发布者”提示，还需要使用团队自己的代码签名证书签名。
 
-先验证便携目录版，再考虑将所有资源压入单文件安装包。模型权重应始终外置，便于更新和不同GPU配置。
+先验证便携目录版，再使用 [installer/build-installer.ps1](installer/build-installer.ps1) 将已核验的便携 ZIP 封装成单个安装 EXE。模型权重始终外置，便于更新和不同 GPU 配置；安装包注册 Windows 软件信息，不新增联网激活。
 
 ## 生成便携交付包
 

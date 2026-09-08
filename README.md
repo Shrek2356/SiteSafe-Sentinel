@@ -26,6 +26,12 @@ An open-risk visual detection and multi-agent safety management platform for con
 
 ## 如何开始
 
+### Windows 安装版：像普通软件一样安装
+
+项目方提供的 **`SiteSafe-Sentinel_Setup_v1.4.1_x64.exe`** 可选择安装位置，创建桌面/开始菜单快捷方式，并在 Windows“已安装的应用”提供卸载入口。默认当前用户安装；包含原有演示内容和离线 WebView2，不包含模型权重，模型仍从软件内的部署引导接入。
+
+升级保留已有配置，卸载不主动清理业务资料或外置模型。这里的“注册”指 Windows 软件管理登记，不是账号注册或联网激活。[安装与迁移说明](./combine/ZNT/desktop/installer/安装版使用说明.md) · [安装包构建说明](./combine/ZNT/desktop/installer/README.md)。安装包和便携包是两种分发方式，软件本体同为 v1.4.1，GitHub 源码下载不包含这些运行包。
+
 ### 直接体验：完整桌面交付包
 
 使用项目方提供的 `SiteSafe-Sentinel_Desktop_v1.4.1_deployment_final.zip`，完整解压后双击根目录 **`SiteSafe-Sentinel.exe`**。若旧版仍在运行，请先正常退出旧版。接入模型请从“模型与规则 → 新设备部署”开始；项目 YOLO 下载地址暂留空，不影响通过选择文件配置已有权重。
