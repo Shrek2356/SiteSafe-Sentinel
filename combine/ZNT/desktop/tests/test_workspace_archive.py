@@ -21,11 +21,11 @@ def workspace(root, label='original'):
         conn.execute('INSERT INTO docs VALUES(?,?,?)',('camera','camera_source',json.dumps({'desired_running':True})))
         conn.execute('INSERT INTO users VALUES(?)',(label,))
     conn.close()
-    (backend/'knowledge_base/rules.txt').write_text('safety rules')
-    (backend/'outputs/bridge_jobs/JOB-1/bridge_summary.json').write_text(json.dumps({'status':'queued','output_dir':str(image.parent)}))
-    (backend/'outputs/runtime/runtime_settings.json').write_text(json.dumps({'qwen_autostart':True,'qwen_model_path':'E:/external/model.gguf'}))
-    (backend/'configs/threshold_overrides.json').write_text(json.dumps({'risk_overrides':{label:{'min_verified_confidence':.65}}}))
-    (backend/'.env').write_text('DO_NOT_EXPORT=secret')
+    (backend/'knowledge_base/rules.txt').write_text('安全规则：高处作业检查安全绳。', encoding='utf-8')
+    (backend/'outputs/bridge_jobs/JOB-1/bridge_summary.json').write_text(json.dumps({'status':'queued','output_dir':str(image.parent)}), encoding='utf-8')
+    (backend/'outputs/runtime/runtime_settings.json').write_text(json.dumps({'qwen_autostart':True,'qwen_model_path':'E:/external/model.gguf'}), encoding='utf-8')
+    (backend/'configs/threshold_overrides.json').write_text(json.dumps({'risk_overrides':{label:{'min_verified_confidence':.65}}}), encoding='utf-8')
+    (backend/'.env').write_text('DO_NOT_EXPORT=secret', encoding='utf-8')
     (backend/'app_data/weight.pt').write_bytes(b'weight')
     return backend
 
@@ -50,9 +50,10 @@ def test_offline_roundtrip_preserves_evidence_rebases_paths_and_pauses_models(tm
         assert Path(json.loads(conn.execute("SELECT json FROM docs WHERE id='event'").fetchone()[0])['image']).is_relative_to(target)
         assert not json.loads(conn.execute("SELECT json FROM docs WHERE id='camera'").fetchone()[0])['desired_running']
         assert conn.execute('SELECT username FROM users').fetchone()[0]=='original'
-    assert not json.loads((backend/'outputs/runtime/runtime_settings.json').read_text())['qwen_autostart']
-    assert json.loads((backend/'outputs/bridge_jobs/JOB-1/bridge_summary.json').read_text())['status']=='error'
-    assert (backend/'.env').read_text()=='DO_NOT_EXPORT=secret'
+    assert not json.loads((backend/'outputs/runtime/runtime_settings.json').read_text(encoding='utf-8'))['qwen_autostart']
+    assert json.loads((backend/'outputs/bridge_jobs/JOB-1/bridge_summary.json').read_text(encoding='utf-8'))['status']=='error'
+    assert (backend/'.env').read_text(encoding='utf-8')=='DO_NOT_EXPORT=secret'
+    assert (backend/'knowledge_base/rules.txt').read_text(encoding='utf-8')=='安全规则：高处作业检查安全绳。'
 
 
 def test_existing_archive_is_never_overwritten_and_pending_can_be_cancelled(tmp_path):
