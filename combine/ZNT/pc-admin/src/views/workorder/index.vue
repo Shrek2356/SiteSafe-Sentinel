@@ -128,7 +128,7 @@
           <a-descriptions-item v-if="current.knowledgeReferences?.length" label="本次检索快照" :span="2">
             <div v-for="ref in current.knowledgeReferences" :key="ref.chunk_id">
               <strong>{{ ref.source_file }} · {{ ref.section }}</strong>
-              <span v-if="ref.page_number"> · PDF第{{ ref.page_number }}页</span>
+              <span v-if="ref.page_number"> · PDF页序：{{ ref.page_numbers?.length ? ref.page_numbers.join('、') : ref.page_number }}</span>
               <span> · {{ ref.version || '版本待核验' }} · {{ ref.source_status === 'official_text_checked' ? '官方文本已核对' : '来源未核验' }}（适用性待核验）</span>
               <a v-if="/^https?:\/\//i.test(ref.source_url || '')" :href="ref.source_url" target="_blank" rel="noopener noreferrer">查看来源</a>
               <p>{{ ref.text }}</p>

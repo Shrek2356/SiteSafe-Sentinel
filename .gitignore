@@ -186,3 +186,6 @@ combine/ZNT/desktop/build/
 combine/ZNT/desktop/dist/
 combine/ZNT/desktop-dist/
 combine/ZNT/runtime/desktop/
+
+# Local imported-source copies and authenticated review records are runtime data.
+combine/ZNT/detectmodel/Site_Safety_OpenRisk/knowledge_base/.history/

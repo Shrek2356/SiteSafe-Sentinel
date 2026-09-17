@@ -1096,7 +1096,7 @@ def create_app(bridge: DetectBridge) -> FastAPI:
     @app.post("/api/detect/knowledge/preview-upload")
     async def preview_knowledge_upload(file: UploadFile = File(...)) -> dict:
         import tempfile
-        from site_safety.agents.knowledge_base import _read_pages, _split_clauses
+        from site_safety.agents.knowledge_base import _read_pages, _document_clauses
         filename = Path(file.filename or '').name
         if Path(filename).suffix.lower() not in {'.md', '.txt', '.pdf', '.docx'}:
             raise HTTPException(400, '仅支持md、txt、pdf、docx')
@@ -1108,8 +1108,7 @@ def create_app(bridge: DetectBridge) -> FastAPI:
                 path = Path(folder) / filename
                 path.write_bytes(content)
                 pages = _read_pages(path)
-                chunks = [{'section': s, 'text': t, 'page_number': p}
-                          for p, text in pages for s, t in _split_clauses(text)]
+                chunks = _document_clauses(pages)
                 if not chunks:
                     raise ValueError('没有有效文本，请先OCR并人工核对')
                 return {'filename': filename, 'chunks': chunks,

@@ -3,7 +3,7 @@ import json
 import pytest
 from pathlib import Path
 
-from site_safety.agents.knowledge_base import KnowledgeBase, _read_pages
+from site_safety.agents.knowledge_base import KnowledgeBase, _read_pages, _document_clauses
 from site_safety.agents.schemas import DetectionEvent, KnowledgeReference
 from test_agents import _event, _finding, _reasoning
 from site_safety.agents import CollaborativeResponseAgent, ReviewLearningAgent
@@ -159,3 +159,29 @@ def test_expired_source_requires_review_and_pdf_garbage_rejected(tmp_path, monke
     monkeypatch.setattr(pypdf, 'PdfReader', lambda path: SimpleNamespace(pages=[SimpleNamespace(extract_text=lambda:'\x00'*30+'乱码')]))
     with pytest.raises(ValueError, match='乱码'):
         _read_pages(tmp_path / 'fake.pdf')
+
+
+def test_pdf_cross_page_clause_retains_exception_and_page_provenance():
+    chunks = _document_clauses([(6, '3.2.1 高处作业应采取防护措施。\n以下情况需结合现场判断：'),
+                               (7, '特殊条件不得仅凭图像判定。\n3.2.2 临边防护应保持完整可靠。')])
+    assert len(chunks) == 2
+    assert '特殊条件不得仅凭图像判定' in chunks[0]['text']
+    assert chunks[0]['page_numbers'] == [6, 7]
+    assert chunks[1]['page_numbers'] == [7]
+    assert '3.2.2' not in chunks[0]['text']
+
+
+def test_unstructured_pdf_does_not_invent_cross_page_clauses():
+    chunks = _document_clauses([(1, '这是无编号的第一页安全说明。'), (2, '这是完全不同的第二页说明。')])
+    assert len(chunks) == 2
+    assert chunks[0]['page_numbers'] == [1]
+
+
+@pytest.mark.parametrize('status', ['repealed', 'superseded'])
+def test_expired_revocation_never_reenters_search(tmp_path, status):
+    content = '安全防护条文，临边设施检查要求。'.encode()
+    (tmp_path / 'rule.txt').write_bytes(content)
+    (tmp_path / 'source_catalog.json').write_text(json.dumps({'rule.txt': {
+        'document_sha256': hashlib.sha256(content).hexdigest(),
+        'effective_status': status, 'valid_until': '2000-01-01'}}), encoding='utf-8')
+    assert KnowledgeBase(tmp_path).search('安全防护') == []

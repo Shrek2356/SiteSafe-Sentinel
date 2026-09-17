@@ -92,6 +92,7 @@ class KnowledgeReference(BaseModel):
     score: float = 0.0
     document_sha256: str = ""
     page_number: Optional[int] = None
+    page_numbers: List[int] = Field(default_factory=list)
     source_url: str = ""
     title: str = ""
     version: str = ""

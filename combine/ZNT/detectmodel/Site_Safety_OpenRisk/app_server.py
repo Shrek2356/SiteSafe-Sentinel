@@ -1072,7 +1072,7 @@ def evidence_report(event_id: str, user: dict = Depends(auth_viewer)) -> dict:
             lines.append('未保存可核验依据，不代表无风险。旧记录不自动补造历史引用。')
         for ref in refs:
             lines.extend([f"- 来源：{ref.get('title') or ref.get('source_file')}；{ref.get('version', '')}",
-                          f"- 定位：{ref.get('section', '')}；PDF页序：{ref.get('page_number') or '见条款定位'}",
+                          f"- 定位：{ref.get('section', '')}；PDF页序：{ref.get('page_numbers') or ref.get('page_number') or '见条款定位'}",
                           f"- 出处：{ref.get('source_url', '')}",
                           f"- 来源状态：{ref.get('source_status', 'unverified')}；效力：{ref.get('effective_status', 'unverified')}；适用性待人工核验",
                           f"- 核查时间：{ref.get('checked_at', '')}；SHA256：{ref.get('document_sha256', '')}",

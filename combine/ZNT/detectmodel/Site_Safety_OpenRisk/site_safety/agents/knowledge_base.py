@@ -46,6 +46,7 @@ class KnowledgeChunk:
     text: str
     metadata: dict = field(default_factory=dict)
     page_number: Optional[int] = None
+    page_numbers: List[int] = field(default_factory=list)
 
 
 def _read_pages(path: Path) -> List[Tuple[Optional[int], str]]:
@@ -112,6 +113,44 @@ def _split_clauses(text: str) -> List[Tuple[str, str]]:
     return chunks
 
 
+def _document_clauses(pages: List[Tuple[Optional[int], str]]) -> List[dict]:
+    """Join PDF continuation text at clause anchors, retaining every source page.
+
+    Never remove headers/footers heuristically or split exceptions off long clauses.
+    Without recognizable anchors, keep page-sized blocks instead of inventing clauses.
+    """
+    if not any(page is not None for page, _ in pages):
+        return [{'section': s, 'text': t, 'page_number': None, 'page_numbers': []}
+                for _, text in pages for s, t in _split_clauses(text)]
+    joined, spans = '', []
+    for page, text in pages:
+        start = len(joined)
+        joined += text + '\n'
+        spans.append((start, len(joined), page))
+    matches = list(_CLAUSE_PATTERN.finditer(joined))
+    if not matches:
+        return [{'section': '未识别条款边界', 'text': text.strip(), 'page_number': page,
+                 'page_numbers': [page] if page is not None else []}
+                for page, text in pages if len(text.strip()) >= _MIN_CHUNK_CHARS]
+    boundaries = [m.start() for m in matches]
+    if boundaries[0] > 0:
+        boundaries.insert(0, 0)
+    boundaries.append(len(joined))
+    sections = {m.start(): m.group(0).lstrip('# ').strip() for m in matches}
+    chunks = []
+    for start, end in zip(boundaries, boundaries[1:]):
+        raw = joined[start:end]
+        text = raw.strip()
+        if len(text) < _MIN_CHUNK_CHARS:
+            continue
+        content_start = start + len(raw) - len(raw.lstrip())
+        content_end = end - len(raw) + len(raw.rstrip())
+        numbers = [p for a, b, p in spans if p is not None and a < content_end and b > content_start]
+        chunks.append({'section': sections.get(start, '前言'), 'text': text,
+                       'page_number': numbers[0] if numbers else None, 'page_numbers': numbers})
+    return chunks
+
+
 class KnowledgeBase:
     def __init__(self, kb_dir: str | Path) -> None:
         self._lock = threading.RLock()
@@ -148,11 +187,10 @@ class KnowledgeBase:
         entry = self._catalog().get(filename, {})
         bound = entry if entry.get('document_sha256') == digest else {}
         chunks = [{'chunk_id': c.chunk_id, 'section': c.section, 'text': c.text,
-                   'page_number': c.page_number} for c in self.chunks if c.source_file == filename]
+                   'page_number': c.page_number, 'page_numbers': c.page_numbers} for c in self.chunks if c.source_file == filename]
         if entry.get('excluded'):
             try:
-                chunks = [{'section': section, 'text': text, 'page_number': page}
-                          for page, content in _read_pages(path) for section, text in _split_clauses(content)]
+                chunks = _document_clauses(_read_pages(path))
             except Exception:
                 chunks = []
         return {'source_file': filename, 'document_sha256': digest,
@@ -295,17 +333,17 @@ class KnowledgeBase:
                 metadata = {'document_sha256': digest, 'source_status': 'unverified', 'effective_status': 'unverified'}
                 if entry.get('document_sha256') == digest:
                     metadata.update({k: entry[k] for k in ('source_url', 'title', 'version', 'source_status', 'effective_status', 'checked_at', 'reviewed_by', 'valid_until', 'revision') if k in entry})
-                    if entry.get('valid_until') and entry['valid_until'] < date.today().isoformat():
+                    if entry.get('valid_until') and entry['valid_until'] < date.today().isoformat() and metadata['effective_status'] not in {'repealed', 'superseded'}:
                         metadata['effective_status'] = 'review_due'
                 for page_number, text in pages:
                     if not text.strip():
                         self.parse_errors.append({'source_file': path.name, 'page_number': page_number, 'error': '无可提取文本，请检查扫描页/OCR'})
-                    for index, (section, content) in enumerate(_split_clauses(text)):
-                        chunk_digest = hashlib.sha256(f'{path.name}|{digest}|{page_number}|{index}|{content}'.encode()).hexdigest()[:24]
-                        self.chunks.append(KnowledgeChunk(
-                            chunk_id=f'KB-{chunk_digest}', source_file=path.name,
-                            section=section, text=content, metadata=dict(metadata), page_number=page_number,
-                        ))
+                for index, chunk in enumerate(_document_clauses(pages)):
+                    chunk_digest = hashlib.sha256(f'{path.name}|{digest}|{index}|{chunk}'.encode()).hexdigest()[:24]
+                    self.chunks.append(KnowledgeChunk(
+                        chunk_id=f'KB-{chunk_digest}', source_file=path.name,
+                        metadata=dict(metadata), **chunk,
+                    ))
         self._retriever = None  # 懒重建
         return True
 
@@ -365,6 +403,7 @@ class KnowledgeBase:
                 "section": chunk.section,
                 "text": chunk.text,
                 "page_number": chunk.page_number,
+                "page_numbers": list(chunk.page_numbers),
                 **chunk.metadata,
                 "applicability": "requires_human_review",
                 "score": round(float(score), 4),

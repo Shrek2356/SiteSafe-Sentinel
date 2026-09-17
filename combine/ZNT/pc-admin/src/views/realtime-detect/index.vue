@@ -316,7 +316,7 @@
                     <div v-for="ref in risk.knowledge_references" :key="ref.chunk_id">
                       <strong>{{ ref.source_file }} · {{ ref.section }}</strong>
                       <span v-if="ref.page_number"> · PDF第{{ ref.page_number }}页</span>
-                      <span> · {{ ref.source_status === 'official_text_checked' ? '官方文本已核对' : '来源未核验' }} · {{ ref.version || '版本待核验' }}</span>
+                      <span> · {{ {official_text_checked:'官方文本已核对', human_checked:'管理员已核对来源'}[ref.source_status] || '来源未核验' }} · {{ ref.version || '版本待核验' }}{{ ref.page_numbers?.length ? ` · PDF页序：${ref.page_numbers.join('、')}` : '' }}</span>
                       <a v-if="/^https?:\/\//i.test(ref.source_url || '')" :href="ref.source_url" target="_blank" rel="noopener noreferrer"> 查看来源 </a>
                       <span>（相关度 {{ ref.score }}）</span>：{{ ref.text }}
                     </div>

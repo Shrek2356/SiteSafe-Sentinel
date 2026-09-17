@@ -8,7 +8,7 @@
       <p v-for="(warning, i) in detail.warnings || []" :key="i">解析警告：{{ warning.error }}</p>
       <div style="max-height: 320px; overflow:auto; margin:16px 0">
         <article v-for="(chunk, i) in detail.chunks || []" :key="i">
-          <strong>{{ chunk.section }} {{ chunk.page_number ? `（PDF第${chunk.page_number}页）` : '' }}</strong>
+          <strong>{{ chunk.section }} {{ chunk.page_numbers?.length ? `（PDF页序：${chunk.page_numbers.join('、')}）` : chunk.page_number ? `（PDF第${chunk.page_number}页）` : '' }}</strong>
           <p style="white-space:pre-wrap">{{ chunk.text }}</p>
         </article>
         <a-empty v-if="!detail.chunks?.length" description="没有可用解析片段，请检查文件或先进行OCR" />

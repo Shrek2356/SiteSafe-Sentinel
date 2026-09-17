@@ -220,7 +220,7 @@
       <p v-for="warning in importPreview.warnings || []" :key="warning">{{ warning }}</p>
       <div style="max-height:450px;overflow:auto">
         <div v-for="(chunk, i) in importPreview.chunks || []" :key="i">
-          <strong>{{ chunk.section }} {{ chunk.page_number ? `PDF第${chunk.page_number}页` : '' }}</strong>
+          <strong>{{ chunk.section }} {{ chunk.page_numbers?.length ? `PDF页序：${chunk.page_numbers.join('、')}` : chunk.page_number ? `PDF第${chunk.page_number}页` : '' }}</strong>
           <p style="white-space:pre-wrap">{{ chunk.text }}</p>
         </div>
       </div>
