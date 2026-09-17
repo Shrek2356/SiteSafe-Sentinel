@@ -13,6 +13,7 @@
     <div class="list">
       <div v-for="item in list" :key="item.id" class="card">
         <WorkOrderCard :order="item" />
+        <KnowledgeEvidence :record="item" />
         <div class="steps">
           <div
             v-for="(s, i) in item.steps"
@@ -32,6 +33,7 @@
 </template>
 
 <script setup>
+import KnowledgeEvidence from '../../components/KnowledgeEvidence.vue'
 import { onMounted, ref } from 'vue'
 import WorkOrderCard from '../../components/WorkOrderCard.vue'
 import { advanceWorkOrder, fetchWorkOrders, uploadWorkOrderEvidence } from '../../api/index.js'

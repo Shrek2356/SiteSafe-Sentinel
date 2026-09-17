@@ -9,6 +9,7 @@
       <div class="line">时间：{{ alarm.time }}</div>
       <div class="snap">{{ alarm.snapTip }}</div>
       <div class="reg">{{ alarm.regulation }}</div>
+      <KnowledgeEvidence :record="alarm" />
       <button type="button" class="primary" @click="onHandle('accept')">接单处置</button>
       <button type="button" class="ghost" @click="onHandle('ignore')">误报忽略</button>
     </div>
@@ -17,6 +18,7 @@
 
 <script setup>
 import { onMounted, ref } from 'vue'
+import KnowledgeEvidence from '../../components/KnowledgeEvidence.vue'
 import { fetchLatestAlarm, handleAlarm } from '../../api/index.js'
 import { levelColor, levelText } from '../../utils/risk.js'
 

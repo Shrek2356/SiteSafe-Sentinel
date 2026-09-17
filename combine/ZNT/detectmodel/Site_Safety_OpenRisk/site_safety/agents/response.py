@@ -70,7 +70,7 @@ class CollaborativeResponseAgent:
         confirmations: List[ConfirmationRequest] = []
         date_tag = datetime.now().strftime("%Y%m%d")
         for finding in event.risks:
-            if finding.risk_level in SLA_HOURS and finding.verified:
+            if finding.risk_level in SLA_HOURS and finding.verified and not finding.manual_review_required:
                 due_at = (
                     datetime.now().astimezone()
                     + timedelta(hours=SLA_HOURS[finding.risk_level])
@@ -88,6 +88,8 @@ class CollaborativeResponseAgent:
                     device_id=event.device.device_id,
                     notify_targets=list(self.notify_targets.get(finding.risk_level, [])),
                     disposal_recommendations=list(finding.disposal_recommendations),
+                    knowledge_references=[r.model_copy(deep=True) for r in finding.knowledge_references],
+                    knowledge_status=finding.knowledge_status,
                     history=[
                         WorkOrderHistoryItem(
                             at=now, to_status="pending_confirmation", note="系统自动创建"
@@ -97,7 +99,7 @@ class CollaborativeResponseAgent:
                 finding.work_order_id = order.work_order_id
                 work_orders.append(order)
                 self._enqueue_notification(order, event)
-            elif finding.risk_level == "pending_review":
+            elif finding.manual_review_required or finding.risk_level == "pending_review":
                 confirmations.append(
                     ConfirmationRequest(
                         request_id=f"CR-{date_tag}-{_short_uid()}",
@@ -105,6 +107,8 @@ class CollaborativeResponseAgent:
                         risk_id=finding.risk_id,
                         risk_name_zh=finding.risk_name_zh,
                         reason="；".join(finding.uncertainties) or "自动证据不足，需人工确认",
+                        knowledge_references=[r.model_copy(deep=True) for r in finding.knowledge_references],
+                        knowledge_status=finding.knowledge_status,
                         model_verified=finding.verified,
                         model_confidence=finding.confidence,
                         model_judgment=finding.risk_description,

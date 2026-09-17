@@ -294,12 +294,12 @@
                   </template>
                   <template v-else-if="column.key === 'verified'">
                     <a-tag :color="record.verified ? 'success' : 'default'">
-                      {{ record.verified ? '已确认' : '未确认' }}
+                      {{ record.verified ? '机器判断支持' : '机器证据不足' }}
                     </a-tag>
                   </template>
                   <template v-else-if="column.key === 'manual_review'">
                     <a-tag :color="record.manual_review ? 'orange' : 'green'">
-                      {{ record.manual_review ? '需复核' : '免复核' }}
+                      {{ record.manual_review ? '有疑点待复核' : '待安全员确认' }}
                     </a-tag>
                   </template>
                 </template>
@@ -310,15 +310,19 @@
                   type="info"
                   show-icon
                   class="rag-reference"
-                  :message="`${risk.name} · RAG规范依据`"
+                  :message="`${risk.name} · 检索相关条文（适用性待人工核验）`"
                 >
                   <template #description>
                     <div v-for="ref in risk.knowledge_references" :key="ref.chunk_id">
                       <strong>{{ ref.source_file }} · {{ ref.section }}</strong>
+                      <span v-if="ref.page_number"> · PDF第{{ ref.page_number }}页</span>
+                      <span> · {{ ref.source_status === 'official_text_checked' ? '官方文本已核对' : '来源未核验' }} · {{ ref.version || '版本待核验' }}</span>
+                      <a v-if="/^https?:\/\//i.test(ref.source_url || '')" :href="ref.source_url" target="_blank" rel="noopener noreferrer"> 查看来源 </a>
                       <span>（相关度 {{ ref.score }}）</span>：{{ ref.text }}
                     </div>
                   </template>
                 </a-alert>
+                <a-alert v-else type="warning" show-icon :message="`${risk.name} · ${risk.knowledge_status === 'not_found' ? '未检索到可核验依据' : '未保存本次规范检索依据'}，请人工核查；不代表无风险。`" />
               </div>
             </template>
             <div v-else class="empty">等待检测完成…</div>

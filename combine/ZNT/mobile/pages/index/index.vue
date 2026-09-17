@@ -33,6 +33,7 @@
           <div class="line"><span class="label">时间</span>{{ alarm.time }}</div>
           <div class="snap">{{ alarm.snapTip }}</div>
           <div class="reg">{{ alarm.regulation }}</div>
+          <KnowledgeEvidence :record="alarm" />
         </div>
         <div class="dialog-actions">
           <button type="button" @click="onHandle('accept')">接单处置</button>
@@ -45,6 +46,7 @@
 </template>
 
 <script setup>
+import KnowledgeEvidence from '../../components/KnowledgeEvidence.vue'
 import { onMounted, ref } from 'vue'
 import WorkOrderCard from '../../components/WorkOrderCard.vue'
 import { fetchHomeReminders, fetchLatestAlarm, handleAlarm } from '../../api/index.js'

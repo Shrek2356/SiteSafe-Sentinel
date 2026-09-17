@@ -38,7 +38,7 @@
 
       <!-- 安全知识库 -->
       <a-tab-pane key="kb" tab="安全知识库管理">
-        <a-alert type="info" show-icon style="margin-bottom: 14px" message="导入 md、txt、pdf 或 docx 行业规范，系统会自动解析、按条款切块并建立本地检索索引。" />
+        <a-alert type="info" show-icon style="margin-bottom: 14px" message="导入后请检查解析预览和来源。上传成功不等于规范有效；相关度不等于适用性。未核验文件仅供参考，同名覆盖保留历史原文件。扫描PDF需先OCR。" />
         <a-space wrap style="margin-bottom: 14px">
           <a-upload :show-upload-list="false" :before-upload="beforeKnowledgeUpload" accept=".md,.txt,.pdf,.docx">
             <a-button type="primary" :loading="knowledgeLoading">导入规范文件</a-button>
@@ -56,6 +56,11 @@
         <a-table :columns="kbCols" :data-source="knowledge" row-key="source_file" :pagination="false">
           <template #bodyCell="{ column, record }">
             <template v-if="column.key === 'action'">
+              <a-tag v-if="record.excluded" color="orange">已排除示例/业务说明</a-tag>
+              <a-tag v-else>{{ {official_text_checked:'官方文本已核对', human_checked:'管理员已核对来源'}[record.source_status] || '来源待核验' }}</a-tag>
+              <span v-if="record.parse_warning">{{ record.parse_warning }}</span>
+              <a-tag v-if="record.effective_status === 'review_due'" color="red">已到复核日期</a-tag>
+              <KnowledgeReview :filename="record.source_file" @updated="loadKnowledge" />
               <a-popconfirm title="确认删除该规范文件及其索引？" @confirm="delKb(record)">
                 <a-button type="link" danger>删除</a-button>
               </a-popconfirm>
@@ -67,6 +72,8 @@
           <template #renderItem="{ item }">
             <a-list-item>
               <a-list-item-meta :title="`${item.source_file} · ${item.section}`" :description="item.text" />
+              <span>{{ item.version || '版本待核验' }}{{ item.page_number ? ` · PDF第${item.page_number}页` : '' }} · 适用性待核验</span>
+              <a v-if="/^https?:\/\//i.test(item.source_url || '')" :href="item.source_url" target="_blank" rel="noopener noreferrer">查看来源</a>
               <a-tag color="green">{{ item.score }}</a-tag>
             </a-list-item>
           </template>
@@ -208,6 +215,16 @@
         </a-card>
       </a-tab-pane>
     </a-tabs>
+    <a-modal v-model:open="importPreviewOpen" title="导入前解析预览" width="850px" ok-text="确认导入（未核验参考）" :confirm-loading="knowledgeLoading" @ok="confirmKnowledgeImport">
+      <a-alert type="warning" message="请检查条文、表格和跨页内容。导入不等于批准有效；同名文件会替换，旧原文件保留历史副本。" />
+      <p v-for="warning in importPreview.warnings || []" :key="warning">{{ warning }}</p>
+      <div style="max-height:450px;overflow:auto">
+        <div v-for="(chunk, i) in importPreview.chunks || []" :key="i">
+          <strong>{{ chunk.section }} {{ chunk.page_number ? `PDF第${chunk.page_number}页` : '' }}</strong>
+          <p style="white-space:pre-wrap">{{ chunk.text }}</p>
+        </div>
+      </div>
+    </a-modal>
     <a-modal v-model:open="pushEditorOpen" title="编辑告警推送规则" @ok="savePushRule">
       <a-form layout="vertical">
         <a-form-item label="风险等级"><a-input :value="levelText(pushEditor.level)" disabled /></a-form-item>
@@ -226,6 +243,7 @@
 <script setup>
 import { onMounted, ref } from 'vue'
 import ModelDeploymentGuide from '@/components/ModelDeploymentGuide.vue'
+import KnowledgeReview from '@/components/KnowledgeReview.vue'
 import { useRouteTab } from '@/composables/useRouteTab'
 import { message } from 'ant-design-vue'
 import { fetchModelConfig, updatePushRule, updateThreshold } from '@/api/modelConfig'
@@ -243,6 +261,7 @@ import {
   startQwenService,
   stopQwenService,
   uploadKnowledgeDocument,
+  previewKnowledgeDocument,
 } from '@/api/detect'
 
 const tab = useRouteTab(['deployment','threshold','kb','push','runtime','train'], 'deployment')
@@ -252,6 +271,7 @@ const knowledgeSummary = ref({})
 const knowledgeLoading = ref(false)
 const knowledgeQuery = ref('')
 const knowledgeHits = ref([])
+const importPreviewOpen = ref(false), importPreview = ref({}), importFile = ref(null)
 const pushRules = ref([])
 const pushEditorOpen = ref(false)
 const pushEditor = ref({ id: '', level: '', channels: [] })
@@ -370,9 +390,24 @@ async function loadKnowledge() {
 async function beforeKnowledgeUpload(file) {
   knowledgeLoading.value = true
   try {
+    importPreview.value = await previewKnowledgeDocument(file)
+    importFile.value = file
+    importPreviewOpen.value = true
+  } catch (error) { message.error(error?.response?.data?.detail || '预览解析失败') }
+  finally { knowledgeLoading.value = false }
+  return false
+}
+
+async function confirmKnowledgeImport() {
+  const file = importFile.value
+  if (!file) return
+  knowledgeLoading.value = true
+  try {
     const res = await uploadKnowledgeDocument(file)
     message.success(`${res.filename} 已导入，生成 ${res.document_chunk_count ?? res.chunk_count} 个条款块`)
     await loadKnowledge()
+    importPreviewOpen.value = false
+    importFile.value = null
   } catch (error) {
     message.error(error?.response?.data?.detail || '规范导入失败')
   } finally {

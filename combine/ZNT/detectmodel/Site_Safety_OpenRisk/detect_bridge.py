@@ -853,6 +853,7 @@ class DetectBridge:
                 risk["knowledge_references"] = self.knowledge_base.search(
                     query or risk.get("risk_id", ""), top_k=3, min_score=0.08
                 )
+                risk["knowledge_status"] = "retrieved_unconfirmed" if risk["knowledge_references"] else "not_found"
             return payload
         except Exception as exc:  # noqa: BLE001
             return {"error": f"event_build_failed: {exc}"}
@@ -944,6 +945,7 @@ class DetectBridge:
                         "description": r.get("risk_description") or "",
                         "suggestions": r.get("disposal_recommendations") or [],
                         "knowledge_references": r.get("knowledge_references") or [],
+                        "knowledge_status": r.get("knowledge_status", "not_retrieved"),
                         "overlay": self._media_url(job["job_id"], Path(geom["overlay_path"]).name)
                         if geom.get("overlay_path")
                         else None,
@@ -1090,6 +1092,31 @@ def create_app(bridge: DetectBridge) -> FastAPI:
             "document_chunk_count": chunk_count,
             **bridge.knowledge_base.summary(),
         }
+
+    @app.post("/api/detect/knowledge/preview-upload")
+    async def preview_knowledge_upload(file: UploadFile = File(...)) -> dict:
+        import tempfile
+        from site_safety.agents.knowledge_base import _read_pages, _split_clauses
+        filename = Path(file.filename or '').name
+        if Path(filename).suffix.lower() not in {'.md', '.txt', '.pdf', '.docx'}:
+            raise HTTPException(400, '仅支持md、txt、pdf、docx')
+        content = await file.read(30 * 1024 * 1024 + 1)
+        if not content or len(content) > 30 * 1024 * 1024:
+            raise HTTPException(400, '文件为空或超过30MB')
+        try:
+            with tempfile.TemporaryDirectory(prefix='znt-kb-preview-') as folder:
+                path = Path(folder) / filename
+                path.write_bytes(content)
+                pages = _read_pages(path)
+                chunks = [{'section': s, 'text': t, 'page_number': p}
+                          for p, text in pages for s, t in _split_clauses(text)]
+                if not chunks:
+                    raise ValueError('没有有效文本，请先OCR并人工核对')
+                return {'filename': filename, 'chunks': chunks,
+                        'warnings': [f'PDF第{p}页无可提取文本' for p, text in pages if not text.strip()],
+                        'document_sha256': hashlib.sha256(content).hexdigest()}
+        except Exception as exc:
+            raise HTTPException(422, f'预览解析失败：{exc}') from exc
 
     @app.delete("/api/detect/knowledge/{filename}")
     def delete_knowledge(filename: str) -> dict:

@@ -1,0 +1,29 @@
+{
+  "GB55034-2022-核对节选.md": {
+    "document_sha256": "3a92acedbbc306351dac214d91c6f3f0a0057b70fcea28942431c407bc5d8084",
+    "title": "建筑与市政施工现场安全卫生与职业健康通用规范（4条核对节选）",
+    "version": "GB 55034-2022，2023-06-01施行",
+    "source_url": "https://szwb.sz.gov.cn/attachment/1/1232/1232877/10358827.pdf",
+    "source_status": "official_text_checked",
+    "effective_status": "unverified",
+    "checked_at": "2026-09-16",
+    "note": "已核对官方公告与原文，尚未完成截至核查日全部修订公告的检索；效力状态保持待核验。节选页码记录在section中。原PDF文本层乱码，不参与自动索引。"
+  },
+  "示例-高处作业安全带使用规程.md": {
+    "excluded": true,
+    "reason": "演示自编文本，不作为真实规范检索来源"
+  },
+  "页面业务逻辑与新增规范.md": {
+    "excluded": true,
+    "reason": "软件业务说明，不是施工安全规范"
+  },
+  "建设工程安全生产管理条例-核对节选.md": {
+    "document_sha256": "8a22c4485a8c7fd15c0e5e39c49b20654cae2519951cd9c6d4fa22a4f966f289",
+    "title": "建设工程安全生产管理条例（第2、28、31、32、33、69、70、71条节选）",
+    "version": "国务院令第393号，2004-02-01施行",
+    "source_url": "https://www.nea.gov.cn/2011-08/18/c_131057761.htm",
+    "source_status": "official_text_checked",
+    "effective_status": "active_as_checked",
+    "checked_at": "2026-09-16"
+  }
+}

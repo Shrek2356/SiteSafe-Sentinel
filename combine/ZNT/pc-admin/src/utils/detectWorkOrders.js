@@ -43,7 +43,9 @@ export function loadDetectWorkOrders() {
   try {
     const raw = localStorage.getItem(STORAGE_KEY)
     const list = raw ? JSON.parse(raw) : []
-    return Array.isArray(list) ? list : []
+    return Array.isArray(list) ? list.map(item => item.source === 'realtime-detect' && !item.knowledgeStatus
+      ? {...item, riskDescription:item.riskDescription || item.regulation || '', regulation:'旧记录未保存规范证据，请人工核查', knowledgeStatus:'not_retrieved', knowledgeReferences:[]}
+      : item) : []
   } catch {
     return []
   }
@@ -92,6 +94,12 @@ export function syncDetectJobToWorkOrders(job) {
 
     if (found) {
       let changed = false
+      if (risk.knowledge_status) {
+        found.knowledgeReferences = risk.knowledge_references || []
+        found.knowledgeStatus = risk.knowledge_status
+        found.regulation = found.knowledgeReferences.length ? '检索相关条文，适用性待核验' : '未保存本次规范依据，不代表无风险'
+        changed = true
+      }
       if (!found.snapUrl && images.snapUrl) {
         found.snapUrl = images.snapUrl
         changed = true
@@ -135,7 +143,11 @@ export function syncDetectJobToWorkOrders(job) {
       snapUrl: images.snapUrl,
       maskUrl: images.maskUrl || images.overlayUrl,
       overlayUrl: images.overlayUrl,
-      regulation: risk.description || result.report_summary || '见检测报告与规范映射',
+      regulation: risk.knowledge_references?.length ? '检索相关条文，适用性待核验' : '未保存本次规范依据，不代表无风险',
+      riskDescription: risk.description || result.report_summary || '',
+      knowledgeReferences: risk.knowledge_references || [],
+      knowledgeStatus: risk.knowledge_status || 'not_retrieved',
+      humanReviewStatus: 'pending',
       suggestions: risk.suggestions || [],
       detectJobId: job.job_id,
       jobProfile: job.profile || '',

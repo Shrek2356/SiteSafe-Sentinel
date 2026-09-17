@@ -21,7 +21,8 @@ export async function exportCsv(rows, filename, columns) {
         .map((c) => {
           const val = row[c.key] ?? ''
           // 处理逗号与换行，避免破坏 CSV
-          const str = String(val).replace(/"/g, '""')
+          const text = typeof val === 'object' ? JSON.stringify(val) : String(val)
+          const str = (/^[=+@\-\t\r]/.test(text) ? "'" + text : text).replace(/"/g, '""')
           return `"${str}"`
         })
         .join(',')

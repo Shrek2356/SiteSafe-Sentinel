@@ -474,6 +474,8 @@ class AppState:
                 device_id=event.device.device_id,
                 notify_targets=list(self.response.notify_targets.get(level, [])),
                 disposal_recommendations=self.reasoning.disposal_for(finding.risk_id),
+                knowledge_references=[r.model_copy(deep=True) for r in finding.knowledge_references],
+                knowledge_status=finding.knowledge_status,
                 history=[WorkOrderHistoryItem(at=now, to_status="confirmed", by=by,
                                               note=f"人工复核确认（{payload.get('comment') or '无备注'}）")],
             )
@@ -810,9 +812,13 @@ class AppState:
                     "result": risk.get("risk_description") or event.get("scene_summary") or "检测完成",
                     "confidence": float(risk.get("confidence") or 0),
                     "autoConfirm": bool(risk.get("verified")) and not bool(risk.get("manual_review_required")),
-                    "humanReview": bool(risk.get("manual_review_required")) or risk.get("risk_level") == "pending_review",
+                    "humanReview": risk.get("human_review_status", "pending") == "pending" and (bool(risk.get("manual_review_required")) or risk.get("risk_level") == "pending_review"),
                     "status": "review" if risk.get("manual_review_required") else "confirmed",
                     "analysis": risk.get("risk_description") or "来自真实检测事件",
+                    "machineVerified": bool(risk.get("verified")),
+                    "humanReviewStatus": risk.get("human_review_status", "pending"),
+                    "knowledgeReferences": risk.get("knowledge_references", []),
+                    "knowledgeStatus": risk.get("knowledge_status", "not_retrieved"),
                     "suggestion": (risk.get("disposal_recommendations") or ["请结合现场证据处置"])[0],
                     "cover": self.media_url(geom.get("overlay_path") or event.get("media", {}).get("image_path")),
                     "images": {
@@ -846,7 +852,11 @@ class AppState:
                 "createTime": order.get("created_at", ""), "deadline": order.get("due_at", ""),
                 "snapUrl": self.media_url(event.get("media", {}).get("image_path")),
                 "maskUrl": self.media_url(geom.get("mask_path")), "overlayUrl": self.media_url(geom.get("overlay_path")),
-                "regulation": finding.get("risk_description") or "见规范映射与检测证据",
+                "regulation": "检索相关条文，适用性待人工核验" if finding.get("knowledge_references") else "未保存可核验的规范检索依据（不代表无风险）",
+                "knowledgeReferences": finding.get("knowledge_references", []),
+                "knowledgeStatus": finding.get("knowledge_status", "not_retrieved"),
+                "humanReviewStatus": finding.get("human_review_status", "pending"),
+                "riskDescription": finding.get("risk_description", ""),
                 "suggestions": order.get("disposal_recommendations", []), "detectJobId": order.get("event_id"),
                 "evidenceImages": [self.media_url(path) for path in order.get("evidence_images", [])],
                 "logs": [{"time": h.get("at", "")[-8:], "action": h.get("note") or h.get("to_status", ""),
@@ -1043,6 +1053,56 @@ def regulations(q: str = Query(""), user: dict = Depends(auth_viewer)) -> List[d
 @app.get("/api/knowledge")
 def knowledge(user: dict = Depends(auth_viewer)) -> dict:
     return STATE.kb.summary()
+
+
+@app.get("/api/events/{event_id}/evidence-report")
+def evidence_report(event_id: str, user: dict = Depends(auth_viewer)) -> dict:
+    event = STATE.db.get(event_id)
+    if not event or 'risks' not in event:
+        raise HTTPException(404, '检测事件不存在')
+    lines = ['# 风险观察与规范证据报告', '', f'事件：{event_id}',
+             '本报告来自已保存事件快照，不重新检索知识库。机器判断不是人工结论，相关条文不是违规认定。', '']
+    for risk in event.get('risks', []):
+        lines.extend([f"## {risk.get('risk_name_zh', risk.get('risk_id', '风险'))}",
+                      f"机器支持异常：{bool(risk.get('verified'))}；置信度：{risk.get('confidence', 0)}",
+                      f"人工状态：{risk.get('human_review_status', 'pending')}；审核人：{risk.get('human_reviewed_by', '')}",
+                      f"模型观察：{risk.get('risk_description', '')}", '', '### 本次规范检索快照'])
+        refs = risk.get('knowledge_references') or []
+        if not refs:
+            lines.append('未保存可核验依据，不代表无风险。旧记录不自动补造历史引用。')
+        for ref in refs:
+            lines.extend([f"- 来源：{ref.get('title') or ref.get('source_file')}；{ref.get('version', '')}",
+                          f"- 定位：{ref.get('section', '')}；PDF页序：{ref.get('page_number') or '见条款定位'}",
+                          f"- 出处：{ref.get('source_url', '')}",
+                          f"- 来源状态：{ref.get('source_status', 'unverified')}；效力：{ref.get('effective_status', 'unverified')}；适用性待人工核验",
+                          f"- 核查时间：{ref.get('checked_at', '')}；SHA256：{ref.get('document_sha256', '')}",
+                          '', ref.get('text', ''), ''])
+        lines.append('预设规范映射仅供参考，不替代经核验的原文依据。')
+    return {'event_id': event_id, 'markdown': '\n'.join(lines), 'snapshot': event}
+
+
+@app.get("/api/knowledge/preview")
+def knowledge_preview(filename: str, user: dict = Depends(auth_viewer)) -> dict:
+    try:
+        return STATE.kb.preview(filename)
+    except ValueError as exc:
+        raise HTTPException(400, str(exc)) from exc
+
+
+@app.get("/api/knowledge/source")
+def knowledge_source(filename: str, user: dict = Depends(auth_viewer)) -> FileResponse:
+    try:
+        return FileResponse(STATE.kb.source_path(filename), filename=filename)
+    except ValueError as exc:
+        raise HTTPException(400, str(exc)) from exc
+
+
+@app.post("/api/knowledge/review")
+def knowledge_review(payload: dict, user: dict = Depends(auth_admin)) -> dict:
+    try:
+        return STATE.kb.review_source(str(payload.get('filename', '')), payload, user['username'])
+    except ValueError as exc:
+        raise HTTPException(409, str(exc)) from exc
 
 
 @app.get("/api/proposals")
@@ -1316,6 +1376,10 @@ def frontend_alarms(user: dict = Depends(auth_viewer)) -> List[dict]:
             if not order and not confirmation:
                 continue
             alarms.append({"id": f"{event['event_id']}:{risk.get('risk_id')}",
+                           "knowledgeReferences": risk.get("knowledge_references", []),
+                           "knowledgeStatus": risk.get("knowledge_status", "not_retrieved"),
+                           "machineVerified": bool(risk.get("verified")),
+                           "humanReviewStatus": risk.get("human_review_status", "pending"),
                            "title": risk.get("risk_name_zh", "现场风险"),
                            "level": STATE._level_color(risk.get("risk_level", "general")),
                            "camera": event.get("device", {}).get("device_id", "未知设备"),
@@ -1407,7 +1471,7 @@ def mobile_latest_alarm(user: dict = Depends(auth_viewer)) -> dict:
                 "camera": "-", "time": "-", "snapTip": "当前没有待处置告警", "regulation": "-"}
     alarm = alarms[0]
     return {**alarm, "area": alarm["camera"], "snapTip": "请在PC检测结果页查看证据图",
-            "regulation": "请依据已导入的行业规范和现场证据进行处置。"}
+            "regulation": "检索相关条文，适用性待核验" if alarm.get('knowledgeReferences') else "未保存可核验依据，不代表无风险；请现场复核。"}
 
 
 @app.post("/api/mobile/alarm/handle")

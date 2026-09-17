@@ -122,6 +122,12 @@ export async function uploadKnowledgeDocument(file) {
   return data
 }
 
+export async function previewKnowledgeDocument(file) {
+  const form = new FormData()
+  form.append('file', file)
+  return (await detectHttp.post('/api/detect/knowledge/preview-upload', form)).data
+}
+
 export async function deleteKnowledgeDocument(filename) {
   const { data } = await detectHttp.delete(`/api/detect/knowledge/${encodeURIComponent(filename)}`)
   return data

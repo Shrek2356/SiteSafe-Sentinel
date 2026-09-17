@@ -124,6 +124,16 @@
           <a-descriptions-item label="责任人">{{ current.assignee }}</a-descriptions-item>
           <a-descriptions-item label="截止时间">{{ current.deadline }}</a-descriptions-item>
           <a-descriptions-item label="规范条文" :span="2">{{ current.regulation }}</a-descriptions-item>
+          <a-descriptions-item v-if="current.riskDescription" label="机器风险描述" :span="2">{{ current.riskDescription }}</a-descriptions-item>
+          <a-descriptions-item v-if="current.knowledgeReferences?.length" label="本次检索快照" :span="2">
+            <div v-for="ref in current.knowledgeReferences" :key="ref.chunk_id">
+              <strong>{{ ref.source_file }} · {{ ref.section }}</strong>
+              <span v-if="ref.page_number"> · PDF第{{ ref.page_number }}页</span>
+              <span> · {{ ref.version || '版本待核验' }} · {{ ref.source_status === 'official_text_checked' ? '官方文本已核对' : '来源未核验' }}（适用性待核验）</span>
+              <a v-if="/^https?:\/\//i.test(ref.source_url || '')" :href="ref.source_url" target="_blank" rel="noopener noreferrer">查看来源</a>
+              <p>{{ ref.text }}</p>
+            </div>
+          </a-descriptions-item>
         </a-descriptions>
 
         <!-- 抓拍图 + 掩码/标注对比（来自实时检测） -->
@@ -413,6 +423,10 @@ async function onExport() {
     { key: 'team', title: '班组' },
     { key: 'status', title: '状态' },
     { key: 'createTime', title: '创建时间' },
+    { key: 'riskDescription', title: '模型观察（非规范结论）' },
+    { key: 'humanReviewStatus', title: '人工审核状态' },
+    { key: 'knowledgeStatus', title: '规范检索状态' },
+    { key: 'knowledgeReferences', title: '规范证据快照JSON（适用性待核验）' },
   ])
   } catch (error) { message.error(error.message || '工单导出失败') }
 }

@@ -63,6 +63,8 @@ class RiskReasoningAgent:
         confidence: float,
         manual_review_required: bool,
     ) -> str:
+        if manual_review_required:
+            return "pending_review"
         if verified:
             level = self.base_severity(risk_id)
             if confidence < self.downgrade_threshold:

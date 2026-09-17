@@ -78,6 +78,30 @@ class RegulationRef(BaseModel):
     name_zh: str
     clause: str = ""
     requirement_zh: str = ""
+    verification_status: str = "unverified_preset"
+    source_url: str = ""
+    version: str = ""
+
+
+class KnowledgeReference(BaseModel):
+    """Frozen retrieval evidence; source verification is not applicability approval."""
+    chunk_id: str
+    source_file: str
+    section: str = ""
+    text: str
+    score: float = 0.0
+    document_sha256: str = ""
+    page_number: Optional[int] = None
+    source_url: str = ""
+    title: str = ""
+    version: str = ""
+    effective_status: str = "unverified"
+    source_status: str = "unverified"
+    checked_at: str = ""
+    applicability: str = "requires_human_review"
+    reviewed_by: str = ""
+    valid_until: str = ""
+    revision: str = ""
 
 
 class RiskFinding(BaseModel):
@@ -90,6 +114,11 @@ class RiskFinding(BaseModel):
     risk_level_zh: str
     regulation_ids: List[str] = Field(default_factory=list)
     regulations: List[RegulationRef] = Field(default_factory=list)
+    knowledge_references: List[KnowledgeReference] = Field(default_factory=list)
+    knowledge_status: str = "not_retrieved"
+    human_review_status: ReviewStatus = "pending"
+    human_reviewed_by: str = ""
+    human_reviewed_at: str = ""
     geometry: GeometryInfo = Field(default_factory=GeometryInfo)
     visible_evidence: List[str] = Field(default_factory=list)
     counter_evidence: List[str] = Field(default_factory=list)
@@ -159,6 +188,8 @@ class WorkOrder(BaseModel):
     rectification_note: str = ""
     evidence_images: List[str] = Field(default_factory=list)
     history: List[WorkOrderHistoryItem] = Field(default_factory=list)
+    knowledge_references: List[KnowledgeReference] = Field(default_factory=list)
+    knowledge_status: str = "not_retrieved"
 
 
 class ConfirmationRequest(BaseModel):
@@ -182,6 +213,8 @@ class ConfirmationRequest(BaseModel):
     image_path: Optional[str] = None
     created_at: str
     status: ReviewStatus = "pending"
+    knowledge_references: List[KnowledgeReference] = Field(default_factory=list)
+    knowledge_status: str = "not_retrieved"
 
 
 class ThresholdProposal(BaseModel):

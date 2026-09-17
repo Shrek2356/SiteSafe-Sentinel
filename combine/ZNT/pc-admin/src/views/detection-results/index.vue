@@ -43,7 +43,7 @@
           <a-radio-button value="real">真实 {{ realCount }}</a-radio-button>
           <a-radio-button value="presentation">展示 {{ presentationCount }}</a-radio-button>
           <a-radio-button value="live">实时 {{ liveCount }}</a-radio-button>
-          <a-radio-button value="confirmed">已确认 {{ confirmedCount }}</a-radio-button>
+          <a-radio-button value="confirmed">机器支持 {{ confirmedCount }}</a-radio-button>
           <a-radio-button value="review">真实待复核 {{ reviewCount }}</a-radio-button>
           <a-radio-button value="high">高置信 {{ highCount }}</a-radio-button>
         </a-radio-group>
@@ -68,8 +68,11 @@
               <div class="title">{{ displayId(c) }} {{ c.expected }}</div>
               <div class="result">{{ c.result }}</div>
               <p class="analysis">{{ c.analysis }}</p>
+              <p v-if="!c.presentationAsset">人工结论：{{ {confirmed:'已确认', rejected:'已驳回', pending:'待确认'}[c.humanReviewStatus] || '未记录' }}</p>
+              <KnowledgeEvidence v-if="!c.presentationAsset" :references="c.knowledgeReferences || []" :status="c.knowledgeStatus" />
               <div class="suggest">建议：{{ c.suggestion }}</div>
               <div class="actions">
+                <a-button v-if="c.eventId" type="link" @click="downloadEvidence(c)">导出证据报告</a-button>
                 <a-button type="link" @click="preview(c.images?.overlay || c.cover)">查看标注图</a-button>
                 <a-button
                   v-if="c.images?.original"
@@ -122,6 +125,16 @@ import { useRoute, useRouter } from 'vue-router'
 import { message } from 'ant-design-vue'
 import { fetchDetectionResults } from '@/api/detectionResults'
 import { subscribeModules } from '@/utils/moduleBus'
+import KnowledgeEvidence from '@/components/KnowledgeEvidence.vue'
+import request from '@/utils/request'
+import { saveFile } from '@/utils/saveFile'
+
+async function downloadEvidence(item) {
+  try {
+    const {data} = await request.get(`/events/${encodeURIComponent(item.eventId)}/evidence-report`)
+    await saveFile(new Blob([data.markdown], {type:'text/markdown;charset=utf-8'}), `证据报告-${item.eventId}.md`)
+  } catch (e) { message.error('证据报告导出失败，请确认事件已入库') }
+}
 
 const route = useRoute()
 const router = useRouter()
@@ -168,7 +181,7 @@ function displayId(c) {
   return `${c.id}.`
 }
 function statusText(s) {
-  return { confirmed: '已确认', partial: '部分确认', review: '待复核' }[s] || s
+  return { confirmed: '机器支持', partial: '机器部分支持', review: '机器建议复核' }[s] || s
 }
 function preview(url) {
   if (!url) return

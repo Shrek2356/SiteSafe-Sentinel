@@ -57,10 +57,16 @@ class ReviewLearningAgent:
         with self.case_library_path.open("a", encoding="utf-8") as handle:
             handle.write(json.dumps(record.model_dump(), ensure_ascii=False) + "\n")
         # 回写事件复核状态
-        event.review.status = verdict
         event.review.reviewer = reviewer
         event.review.reviewed_at = record.recorded_at
         event.review.comment = comment
+        finding.human_review_status = verdict
+        finding.human_reviewed_by = reviewer
+        finding.human_reviewed_at = record.recorded_at
+        # One reviewed risk must not mark unrelated pending risks as reviewed.
+        statuses = [r.human_review_status for r in event.risks]
+        event.review.status = ('pending' if 'pending' in statuses else
+                               'confirmed' if 'confirmed' in statuses else 'rejected')
         return record
 
     def load_cases(self) -> List[CaseRecord]:
