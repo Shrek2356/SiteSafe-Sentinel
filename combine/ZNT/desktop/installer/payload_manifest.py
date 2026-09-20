@@ -34,7 +34,7 @@ def installer_flags(relative: str) -> str:
 
 def assert_release_file(relative: str) -> None:
     parts = safe_relative(relative).lower().split("/")
-    if any(part in {"app_data", "outputs", "runtime", "node_modules", ".git", ".venv", "__pycache__"} for part in parts):
+    if any(part in {"app_data", "outputs", "runtime", "node_modules", ".git", ".history", ".venv", "__pycache__"} for part in parts):
         raise ValueError(f"Runtime/developer data must not enter the installer: {relative}")
     if parts[-1] == ".env" or PurePosixPath(parts[-1]).suffix in {".gguf", ".pt", ".pth", ".safetensors", ".log", ".sqlite", ".db"}:
         raise ValueError(f"Private state or model weight must not enter the installer: {relative}")

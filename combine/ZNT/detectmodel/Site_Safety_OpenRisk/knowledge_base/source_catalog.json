@@ -7,7 +7,9 @@
     "source_status": "official_text_checked",
     "effective_status": "unverified",
     "checked_at": "2026-09-16",
-    "note": "已核对官方公告与原文，尚未完成截至核查日全部修订公告的检索；效力状态保持待核验。节选页码记录在section中。原PDF文本层乱码，不参与自动索引。"
+    "note": "已核对官方公告与原文，尚未完成截至核查日全部修订公告的检索；效力状态保持待核验。节选页码记录在section中。原PDF文本层乱码，不参与自动索引。",
+    "excluded": true,
+    "reason": "完整正文已入库，旧节选保留核对但不重复检索"
   },
   "示例-高处作业安全带使用规程.md": {
     "excluded": true,
@@ -24,6 +26,239 @@
     "source_url": "https://www.nea.gov.cn/2011-08/18/c_131057761.htm",
     "source_status": "official_text_checked",
     "effective_status": "active_as_checked",
-    "checked_at": "2026-09-16"
+    "checked_at": "2026-09-16",
+    "excluded": true,
+    "reason": "完整正文已入库，旧节选保留核对但不重复检索"
+  },
+  "GB55034-2022-正文-1.md": {
+    "document_sha256": "a062a78265c40ef26208d6a3628d452bd829b80941dfd26a24f0ecac6662c6bf",
+    "title": "GB 55034-2022 1 总则（正文）",
+    "version": "GB 55034-2022，2023-06-01施行",
+    "source_url": "https://gf.cabr-fire.com/m/article-62614.htm",
+    "source_status": "institution_text_structurally_checked",
+    "effective_status": "unverified",
+    "content_kind": "normative",
+    "checked_at": "2026-09-20",
+    "note": "专业机构转录文本，章节/条款编号完整性已检查；不表示全部条款已对官方原件逐字核验或现场适用性已确认。"
+  },
+  "GB55034-2022-正文-2.md": {
+    "document_sha256": "9e4b33aaddec745c4d0b9d9a468baa9996aa51ba3006b02d73d65340f179208c",
+    "title": "GB 55034-2022 2 基本规定（正文）",
+    "version": "GB 55034-2022，2023-06-01施行",
+    "source_url": "https://gf.cabr-fire.com/m/article-62615.htm",
+    "source_status": "institution_text_structurally_checked",
+    "effective_status": "unverified",
+    "content_kind": "normative",
+    "checked_at": "2026-09-20",
+    "note": "专业机构转录文本，章节/条款编号完整性已检查；不表示全部条款已对官方原件逐字核验或现场适用性已确认。"
+  },
+  "GB55034-2022-正文-3.1.md": {
+    "document_sha256": "f038d77f7d65f493791fbda9a278be3f52a3406f7be7f54f41fb01327c54e462",
+    "title": "GB 55034-2022 3.1 一般规定（正文）",
+    "version": "GB 55034-2022，2023-06-01施行",
+    "source_url": "https://gf.cabr-fire.com/m/article-62617.htm",
+    "source_status": "institution_text_structurally_checked",
+    "effective_status": "unverified",
+    "content_kind": "normative",
+    "checked_at": "2026-09-20",
+    "note": "专业机构转录文本，章节/条款编号完整性已检查；不表示全部条款已对官方原件逐字核验或现场适用性已确认。"
+  },
+  "GB55034-2022-正文-3.2.md": {
+    "document_sha256": "f9c911fca30f64761a9919fc8d5e02ee2363a2cea33b560710053d267e023412",
+    "title": "GB 55034-2022 3.2 高处坠落（正文）",
+    "version": "GB 55034-2022，2023-06-01施行",
+    "source_url": "https://gf.cabr-fire.com/m/article-62618.htm",
+    "source_status": "institution_text_structurally_checked",
+    "effective_status": "unverified",
+    "content_kind": "normative",
+    "checked_at": "2026-09-20",
+    "note": "专业机构转录文本，章节/条款编号完整性已检查；不表示全部条款已对官方原件逐字核验或现场适用性已确认。"
+  },
+  "GB55034-2022-正文-3.3.md": {
+    "document_sha256": "599834d490378dbd37021c55e01243ce03290543587939a6ead078a05062d082",
+    "title": "GB 55034-2022 3.3 物体打击（正文）",
+    "version": "GB 55034-2022，2023-06-01施行",
+    "source_url": "https://gf.cabr-fire.com/m/article-62619.htm",
+    "source_status": "institution_text_structurally_checked",
+    "effective_status": "unverified",
+    "content_kind": "normative",
+    "checked_at": "2026-09-20",
+    "note": "专业机构转录文本，章节/条款编号完整性已检查；不表示全部条款已对官方原件逐字核验或现场适用性已确认。"
+  },
+  "GB55034-2022-正文-3.4.md": {
+    "document_sha256": "6393d156c1a49921a8f884ba850d32884b8b014604576f419f6d1876e93a0ceb",
+    "title": "GB 55034-2022 3.4 起重伤害（正文）",
+    "version": "GB 55034-2022，2023-06-01施行",
+    "source_url": "https://gf.cabr-fire.com/m/article-62620.htm",
+    "source_status": "institution_text_structurally_checked",
+    "effective_status": "unverified",
+    "content_kind": "normative",
+    "checked_at": "2026-09-20",
+    "note": "专业机构转录文本，章节/条款编号完整性已检查；不表示全部条款已对官方原件逐字核验或现场适用性已确认。"
+  },
+  "GB55034-2022-正文-3.5.md": {
+    "document_sha256": "612c6945f9729a14bdff48e17a92db1a76893782f970b9a5afa0f1ef45ed1928",
+    "title": "GB 55034-2022 3.5 坍塌（正文）",
+    "version": "GB 55034-2022，2023-06-01施行",
+    "source_url": "https://gf.cabr-fire.com/m/article-62621.htm",
+    "source_status": "institution_text_structurally_checked",
+    "effective_status": "unverified",
+    "content_kind": "normative",
+    "checked_at": "2026-09-20",
+    "note": "专业机构转录文本，章节/条款编号完整性已检查；不表示全部条款已对官方原件逐字核验或现场适用性已确认。"
+  },
+  "GB55034-2022-正文-3.6.md": {
+    "document_sha256": "eb872f424c23057b6078623bf75d41d6ff8465a089b86094287e37e37a306f07",
+    "title": "GB 55034-2022 3.6 机械伤害（正文）",
+    "version": "GB 55034-2022，2023-06-01施行",
+    "source_url": "https://gf.cabr-fire.com/m/article-62622.htm",
+    "source_status": "institution_text_structurally_checked",
+    "effective_status": "unverified",
+    "content_kind": "normative",
+    "checked_at": "2026-09-20",
+    "note": "专业机构转录文本，章节/条款编号完整性已检查；不表示全部条款已对官方原件逐字核验或现场适用性已确认。"
+  },
+  "GB55034-2022-正文-3.7.md": {
+    "document_sha256": "ebf28200ee6b9f424dcc42f0752e5bba8b587cc52a2c731c16195d26e9026829",
+    "title": "GB 55034-2022 3.7 冒顶片帮（正文）",
+    "version": "GB 55034-2022，2023-06-01施行",
+    "source_url": "https://gf.cabr-fire.com/m/article-62623.htm",
+    "source_status": "institution_text_structurally_checked",
+    "effective_status": "unverified",
+    "content_kind": "normative",
+    "checked_at": "2026-09-20",
+    "note": "专业机构转录文本，章节/条款编号完整性已检查；不表示全部条款已对官方原件逐字核验或现场适用性已确认。"
+  },
+  "GB55034-2022-正文-3.8.md": {
+    "document_sha256": "d870dd6dd6a22cae6404ea1c43f1f77bef6045fb55e5b6a4e9f0bf2d8eb7501c",
+    "title": "GB 55034-2022 3.8 车辆伤害（正文）",
+    "version": "GB 55034-2022，2023-06-01施行",
+    "source_url": "https://gf.cabr-fire.com/m/article-62624.htm",
+    "source_status": "institution_text_structurally_checked",
+    "effective_status": "unverified",
+    "content_kind": "normative",
+    "checked_at": "2026-09-20",
+    "note": "专业机构转录文本，章节/条款编号完整性已检查；不表示全部条款已对官方原件逐字核验或现场适用性已确认。"
+  },
+  "GB55034-2022-正文-3.9.md": {
+    "document_sha256": "5753b9934bddb0546178bad6a38b086e7b8a46c9d1f7956e9977e5e32e013d4e",
+    "title": "GB 55034-2022 3.9 中毒和窒息（正文）",
+    "version": "GB 55034-2022，2023-06-01施行",
+    "source_url": "https://gf.cabr-fire.com/m/article-62625.htm",
+    "source_status": "institution_text_structurally_checked",
+    "effective_status": "unverified",
+    "content_kind": "normative",
+    "checked_at": "2026-09-20",
+    "note": "专业机构转录文本，章节/条款编号完整性已检查；不表示全部条款已对官方原件逐字核验或现场适用性已确认。"
+  },
+  "GB55034-2022-正文-3.10.md": {
+    "document_sha256": "a1dc8aa90830ef327c938542650a6a966038414300a4859959af504aa7223307",
+    "title": "GB 55034-2022 3.10 触电（正文）",
+    "version": "GB 55034-2022，2023-06-01施行",
+    "source_url": "https://gf.cabr-fire.com/m/article-62626.htm",
+    "source_status": "institution_text_structurally_checked",
+    "effective_status": "unverified",
+    "content_kind": "normative",
+    "checked_at": "2026-09-20",
+    "note": "专业机构转录文本，章节/条款编号完整性已检查；不表示全部条款已对官方原件逐字核验或现场适用性已确认。"
+  },
+  "GB55034-2022-正文-3.11.md": {
+    "document_sha256": "933577ab756700dfe0304e4d6ae2dd78d072998a21af5061325646f1d238eb6b",
+    "title": "GB 55034-2022 3.11 爆炸（正文）",
+    "version": "GB 55034-2022，2023-06-01施行",
+    "source_url": "https://gf.cabr-fire.com/m/article-62628.htm",
+    "source_status": "institution_text_structurally_checked",
+    "effective_status": "unverified",
+    "content_kind": "normative",
+    "checked_at": "2026-09-20",
+    "note": "专业机构转录文本，章节/条款编号完整性已检查；不表示全部条款已对官方原件逐字核验或现场适用性已确认。"
+  },
+  "GB55034-2022-正文-3.12.md": {
+    "document_sha256": "cc7b327ab61de781087e194db192166ba7af96d661c06eed71a19dddab7f4e0e",
+    "title": "GB 55034-2022 3.12 爆破作业（正文）",
+    "version": "GB 55034-2022，2023-06-01施行",
+    "source_url": "https://gf.cabr-fire.com/m/article-62629.htm",
+    "source_status": "institution_text_structurally_checked",
+    "effective_status": "unverified",
+    "content_kind": "normative",
+    "checked_at": "2026-09-20",
+    "note": "专业机构转录文本，章节/条款编号完整性已检查；不表示全部条款已对官方原件逐字核验或现场适用性已确认。"
+  },
+  "GB55034-2022-正文-3.13.md": {
+    "document_sha256": "322ab4c893ad6f3db7c983eb18c3dbde4166987312276144b346dc8737e89262",
+    "title": "GB 55034-2022 3.13 透水（正文）",
+    "version": "GB 55034-2022，2023-06-01施行",
+    "source_url": "https://gf.cabr-fire.com/m/article-62631.htm",
+    "source_status": "institution_text_structurally_checked",
+    "effective_status": "unverified",
+    "content_kind": "normative",
+    "checked_at": "2026-09-20",
+    "note": "专业机构转录文本，章节/条款编号完整性已检查；不表示全部条款已对官方原件逐字核验或现场适用性已确认。"
+  },
+  "GB55034-2022-正文-3.14.md": {
+    "document_sha256": "5a63cf8032c75172e84ab9771c1308d3a328f0ac346f2f47c124fd039c4edbbe",
+    "title": "GB 55034-2022 3.14 淹溺（正文）",
+    "version": "GB 55034-2022，2023-06-01施行",
+    "source_url": "https://gf.cabr-fire.com/m/article-62633.htm",
+    "source_status": "institution_text_structurally_checked",
+    "effective_status": "unverified",
+    "content_kind": "normative",
+    "checked_at": "2026-09-20",
+    "note": "专业机构转录文本，章节/条款编号完整性已检查；不表示全部条款已对官方原件逐字核验或现场适用性已确认。"
+  },
+  "GB55034-2022-正文-3.15.md": {
+    "document_sha256": "64c560e2abf86ddfdd1111c5c22223c78c41659c71833fdad057670064864f45",
+    "title": "GB 55034-2022 3.15 灼烫（正文）",
+    "version": "GB 55034-2022，2023-06-01施行",
+    "source_url": "https://gf.cabr-fire.com/m/article-62634.htm",
+    "source_status": "institution_text_structurally_checked",
+    "effective_status": "unverified",
+    "content_kind": "normative",
+    "checked_at": "2026-09-20",
+    "note": "专业机构转录文本，章节/条款编号完整性已检查；不表示全部条款已对官方原件逐字核验或现场适用性已确认。"
+  },
+  "GB55034-2022-正文-4.md": {
+    "document_sha256": "ce38b45f50f807ec64bb2823562c347d54f8f843bcdfa87d7af7aff8f55f48a4",
+    "title": "GB 55034-2022 4 环境管理（正文）",
+    "version": "GB 55034-2022，2023-06-01施行",
+    "source_url": "https://gf.cabr-fire.com/m/article-62638.htm",
+    "source_status": "institution_text_structurally_checked",
+    "effective_status": "unverified",
+    "content_kind": "normative",
+    "checked_at": "2026-09-20",
+    "note": "专业机构转录文本，章节/条款编号完整性已检查；不表示全部条款已对官方原件逐字核验或现场适用性已确认。"
+  },
+  "GB55034-2022-正文-5.md": {
+    "document_sha256": "12927fb5add33b5912f1cbce097e703995cd4c6f5e396c5edcb51c2c76e65af4",
+    "title": "GB 55034-2022 5 卫生管理（正文）",
+    "version": "GB 55034-2022，2023-06-01施行",
+    "source_url": "https://gf.cabr-fire.com/m/article-62639.htm",
+    "source_status": "institution_text_structurally_checked",
+    "effective_status": "unverified",
+    "content_kind": "normative",
+    "checked_at": "2026-09-20",
+    "note": "专业机构转录文本，章节/条款编号完整性已检查；不表示全部条款已对官方原件逐字核验或现场适用性已确认。"
+  },
+  "GB55034-2022-正文-6.md": {
+    "document_sha256": "11fd184f2106b870d6db4a2ccc9adff21e17ff055e96154c6e12557c4dc2f33e",
+    "title": "GB 55034-2022 6 职业健康管理（正文）",
+    "version": "GB 55034-2022，2023-06-01施行",
+    "source_url": "https://gf.cabr-fire.com/m/article-62641.htm",
+    "source_status": "institution_text_structurally_checked",
+    "effective_status": "unverified",
+    "content_kind": "normative",
+    "checked_at": "2026-09-20",
+    "note": "专业机构转录文本，章节/条款编号完整性已检查；不表示全部条款已对官方原件逐字核验或现场适用性已确认。"
+  },
+  "建设工程安全生产管理条例-全文.md": {
+    "document_sha256": "55cc2ebb3a65dec50583d320768586dd4b2531a448d72f1f786b601d40b2daf9",
+    "title": "建设工程安全生产管理条例（全文71条）",
+    "version": "国务院令第393号，2004-02-01施行",
+    "source_url": "https://www.nea.gov.cn/2011-08/18/c_131057761.htm",
+    "source_status": "official_text_checked",
+    "effective_status": "unverified",
+    "content_kind": "normative",
+    "checked_at": "2026-09-20",
+    "note": "官方网页直接提取第1—71条，编号连续性已检查；效力及适用范围应另行核查。网页前置日期未纳入条文。"
   }
 }

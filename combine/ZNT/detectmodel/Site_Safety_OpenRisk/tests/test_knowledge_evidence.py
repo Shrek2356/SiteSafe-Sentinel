@@ -62,7 +62,7 @@ def test_curated_sources_and_no_match():
     kb = KnowledgeBase(Path(__file__).resolve().parents[1] / 'knowledge_base')
     hits = kb.search('劳动防护用品安全防护用具')
     assert hits
-    assert all(h['source_status'] == 'official_text_checked' for h in hits)
+    assert all(h['source_status'] in {'official_text_checked', 'institution_text_structurally_checked'} for h in hits)
     assert not any(c.source_file in {'页面业务逻辑与新增规范.md', '示例-高处作业安全带使用规程.md'} for c in kb.chunks)
     assert kb.search('zzqqxx987654321', min_score=.5) == []
 
@@ -185,3 +185,24 @@ def test_expired_revocation_never_reenters_search(tmp_path, status):
         'document_sha256': hashlib.sha256(content).hexdigest(),
         'effective_status': status, 'valid_until': '2000-01-01'}}), encoding='utf-8')
     assert KnowledgeBase(tmp_path).search('安全防护') == []
+
+
+def test_full_standard_corpus_and_commentary_separation():
+    root = Path(__file__).resolve().parents[1]
+    manifest = json.loads((root / 'docs/standards/TEXT_SOURCE_MANIFEST.json').read_text(encoding='utf-8'))
+    assert len(manifest['sections']) == 20
+    assert manifest['law_clause_count'] == 71
+    kb = KnowledgeBase(root / 'knowledge_base')
+    assert not kb.parse_errors
+    assert len(kb.chunks) == 200
+    assert all('条文说明' not in c.source_file for c in kb.chunks)
+    assert all('核对节选' not in c.source_file for c in kb.chunks)
+    for item in manifest['sections']:
+        path = root / 'knowledge_base' / item['filename']
+        assert hashlib.sha256(path.read_bytes()).hexdigest() == item['document_sha256']
+        chunks = [c for c in kb.chunks if c.source_file == item['filename']]
+        assert chunks
+        assert all(c.metadata['content_kind'] == 'normative' for c in chunks)
+    hits = kb.search('严禁任何人在吊物或起重臂下停留或通过', top_k=3)
+    assert any('3.4.1' in h['text'] for h in hits)
+    assert all(h['applicability'] == 'requires_human_review' for h in hits)

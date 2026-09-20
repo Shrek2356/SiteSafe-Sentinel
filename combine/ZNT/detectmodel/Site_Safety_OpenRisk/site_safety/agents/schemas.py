@@ -100,6 +100,7 @@ class KnowledgeReference(BaseModel):
     source_status: str = "unverified"
     checked_at: str = ""
     applicability: str = "requires_human_review"
+    content_kind: str = "unclassified"
     reviewed_by: str = ""
     valid_until: str = ""
     revision: str = ""

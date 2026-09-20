@@ -1,0 +1,322 @@
+{
+  "checked_at": "2026-09-20",
+  "index_url": "https://gf.cabr-fire.com/m/list-2085.htm",
+  "sections": [
+    {
+      "section": "1",
+      "filename": "GB55034-2022-正文-1.md",
+      "url": "https://gf.cabr-fire.com/m/article-62614.htm",
+      "clauses": [
+        "1.0.1",
+        "1.0.2",
+        "1.0.3",
+        "1.0.4"
+      ],
+      "document_sha256": "a062a78265c40ef26208d6a3628d452bd829b80941dfd26a24f0ecac6662c6bf",
+      "source_html_sha256": "5d00780bfc864a5cf5be5a9667be7a31e13e9c803435290ac03edb094709d9bb"
+    },
+    {
+      "section": "2",
+      "filename": "GB55034-2022-正文-2.md",
+      "url": "https://gf.cabr-fire.com/m/article-62615.htm",
+      "clauses": [
+        "2.0.1",
+        "2.0.2",
+        "2.0.3",
+        "2.0.4",
+        "2.0.5",
+        "2.0.6",
+        "2.0.7",
+        "2.0.8"
+      ],
+      "document_sha256": "9e4b33aaddec745c4d0b9d9a468baa9996aa51ba3006b02d73d65340f179208c",
+      "source_html_sha256": "6dfefdb3665fcb00cdee76bc8de384340707eb60b4031168419425add15b43b9"
+    },
+    {
+      "section": "3.1",
+      "filename": "GB55034-2022-正文-3.1.md",
+      "url": "https://gf.cabr-fire.com/m/article-62617.htm",
+      "clauses": [
+        "3.1.1",
+        "3.1.2",
+        "3.1.3",
+        "3.1.4"
+      ],
+      "document_sha256": "f038d77f7d65f493791fbda9a278be3f52a3406f7be7f54f41fb01327c54e462",
+      "source_html_sha256": "32be654c47f5abfe2fdc445705eabdfe31f7bca5ee533c74c52931a105346bb0"
+    },
+    {
+      "section": "3.2",
+      "filename": "GB55034-2022-正文-3.2.md",
+      "url": "https://gf.cabr-fire.com/m/article-62618.htm",
+      "clauses": [
+        "3.2.1",
+        "3.2.2",
+        "3.2.3",
+        "3.2.4",
+        "3.2.5",
+        "3.2.6"
+      ],
+      "document_sha256": "f9c911fca30f64761a9919fc8d5e02ee2363a2cea33b560710053d267e023412",
+      "source_html_sha256": "e8d8fd81339490aa16a4051b4d7e7f073fbbba8f7e4053178173dfc866d6c437"
+    },
+    {
+      "section": "3.3",
+      "filename": "GB55034-2022-正文-3.3.md",
+      "url": "https://gf.cabr-fire.com/m/article-62619.htm",
+      "clauses": [
+        "3.3.1",
+        "3.3.2",
+        "3.3.3",
+        "3.3.4",
+        "3.3.5"
+      ],
+      "document_sha256": "599834d490378dbd37021c55e01243ce03290543587939a6ead078a05062d082",
+      "source_html_sha256": "bc3b92cc7a296a756ce760bb3af82f34d17f7d9c85957f0ac722927d4ea5d700"
+    },
+    {
+      "section": "3.4",
+      "filename": "GB55034-2022-正文-3.4.md",
+      "url": "https://gf.cabr-fire.com/m/article-62620.htm",
+      "clauses": [
+        "3.4.1",
+        "3.4.2",
+        "3.4.3",
+        "3.4.4",
+        "3.4.5",
+        "3.4.6",
+        "3.4.7"
+      ],
+      "document_sha256": "6393d156c1a49921a8f884ba850d32884b8b014604576f419f6d1876e93a0ceb",
+      "source_html_sha256": "2beca6656dc4c6e5dc481e5770b68aa589d824c3e1bcd18f380e4afe13a5745f"
+    },
+    {
+      "section": "3.5",
+      "filename": "GB55034-2022-正文-3.5.md",
+      "url": "https://gf.cabr-fire.com/m/article-62621.htm",
+      "clauses": [
+        "3.5.1",
+        "3.5.2",
+        "3.5.3",
+        "3.5.4",
+        "3.5.5",
+        "3.5.6",
+        "3.5.7",
+        "3.5.8",
+        "3.5.9",
+        "3.5.10",
+        "3.5.11",
+        "3.5.12",
+        "3.5.13",
+        "3.5.14"
+      ],
+      "document_sha256": "612c6945f9729a14bdff48e17a92db1a76893782f970b9a5afa0f1ef45ed1928",
+      "source_html_sha256": "5c17d1575c221bc2d7558a7e400232f79272e06662ceb847f249b2d74314cf18"
+    },
+    {
+      "section": "3.6",
+      "filename": "GB55034-2022-正文-3.6.md",
+      "url": "https://gf.cabr-fire.com/m/article-62622.htm",
+      "clauses": [
+        "3.6.1",
+        "3.6.2",
+        "3.6.3",
+        "3.6.4",
+        "3.6.5",
+        "3.6.6"
+      ],
+      "document_sha256": "eb872f424c23057b6078623bf75d41d6ff8465a089b86094287e37e37a306f07",
+      "source_html_sha256": "dfaac7f98aa6e485f56433bafbb8048fec30ed40391af612db06722e3ec7ce87"
+    },
+    {
+      "section": "3.7",
+      "filename": "GB55034-2022-正文-3.7.md",
+      "url": "https://gf.cabr-fire.com/m/article-62623.htm",
+      "clauses": [
+        "3.7.1",
+        "3.7.2",
+        "3.7.3",
+        "3.7.4"
+      ],
+      "document_sha256": "ebf28200ee6b9f424dcc42f0752e5bba8b587cc52a2c731c16195d26e9026829",
+      "source_html_sha256": "e4dec3bf2d3fa6da07c43a7e9e1e2640569c83446cdf47e6c50b4b685123d27a"
+    },
+    {
+      "section": "3.8",
+      "filename": "GB55034-2022-正文-3.8.md",
+      "url": "https://gf.cabr-fire.com/m/article-62624.htm",
+      "clauses": [
+        "3.8.1",
+        "3.8.2",
+        "3.8.3",
+        "3.8.4",
+        "3.8.5"
+      ],
+      "document_sha256": "d870dd6dd6a22cae6404ea1c43f1f77bef6045fb55e5b6a4e9f0bf2d8eb7501c",
+      "source_html_sha256": "d0ab4c2cb39edcdc7267a2be2eaf68e8da3441078255078ba4d2f40a7326e9bb"
+    },
+    {
+      "section": "3.9",
+      "filename": "GB55034-2022-正文-3.9.md",
+      "url": "https://gf.cabr-fire.com/m/article-62625.htm",
+      "clauses": [
+        "3.9.1",
+        "3.9.2",
+        "3.9.3",
+        "3.9.4"
+      ],
+      "document_sha256": "5753b9934bddb0546178bad6a38b086e7b8a46c9d1f7956e9977e5e32e013d4e",
+      "source_html_sha256": "28682ab7592f7f0de25b4d1f746b8db1995204e4fe2b1ccd7ffcf0de3ae36e34"
+    },
+    {
+      "section": "3.10",
+      "filename": "GB55034-2022-正文-3.10.md",
+      "url": "https://gf.cabr-fire.com/m/article-62626.htm",
+      "clauses": [
+        "3.10.1",
+        "3.10.2",
+        "3.10.3",
+        "3.10.4",
+        "3.10.5",
+        "3.10.6"
+      ],
+      "document_sha256": "a1dc8aa90830ef327c938542650a6a966038414300a4859959af504aa7223307",
+      "source_html_sha256": "9a81d1fa8419f0664f8143777c8d253e628a15098652e89d50c0d4875dc202b5"
+    },
+    {
+      "section": "3.11",
+      "filename": "GB55034-2022-正文-3.11.md",
+      "url": "https://gf.cabr-fire.com/m/article-62628.htm",
+      "clauses": [
+        "3.11.1",
+        "3.11.2",
+        "3.11.3",
+        "3.11.4",
+        "3.11.5",
+        "3.11.6",
+        "3.11.7",
+        "3.11.8"
+      ],
+      "document_sha256": "933577ab756700dfe0304e4d6ae2dd78d072998a21af5061325646f1d238eb6b",
+      "source_html_sha256": "812642d11371512711d2f61ea0787870c30bce98baa42aef7820c9e208d0e902"
+    },
+    {
+      "section": "3.12",
+      "filename": "GB55034-2022-正文-3.12.md",
+      "url": "https://gf.cabr-fire.com/m/article-62629.htm",
+      "clauses": [
+        "3.12.1",
+        "3.12.2",
+        "3.12.3",
+        "3.12.4",
+        "3.12.5"
+      ],
+      "document_sha256": "cc7b327ab61de781087e194db192166ba7af96d661c06eed71a19dddab7f4e0e",
+      "source_html_sha256": "959e5b2789cf6f7419e87835f0221c9df8ff0e15bf1545c367f250b2282554ee"
+    },
+    {
+      "section": "3.13",
+      "filename": "GB55034-2022-正文-3.13.md",
+      "url": "https://gf.cabr-fire.com/m/article-62631.htm",
+      "clauses": [
+        "3.13.1",
+        "3.13.2",
+        "3.13.3"
+      ],
+      "document_sha256": "322ab4c893ad6f3db7c983eb18c3dbde4166987312276144b346dc8737e89262",
+      "source_html_sha256": "1c23ff68e39f4f6b9975b684d209daf64ce00fa27cb48600ff9d5f07ea4e7437"
+    },
+    {
+      "section": "3.14",
+      "filename": "GB55034-2022-正文-3.14.md",
+      "url": "https://gf.cabr-fire.com/m/article-62633.htm",
+      "clauses": [
+        "3.14.1",
+        "3.14.2",
+        "3.14.3"
+      ],
+      "document_sha256": "5a63cf8032c75172e84ab9771c1308d3a328f0ac346f2f47c124fd039c4edbbe",
+      "source_html_sha256": "ee902ed0a08436492f3222ffb76ddf1d1f49a3dea568a07884b9ae2b9f8fc10d"
+    },
+    {
+      "section": "3.15",
+      "filename": "GB55034-2022-正文-3.15.md",
+      "url": "https://gf.cabr-fire.com/m/article-62634.htm",
+      "clauses": [
+        "3.15.1",
+        "3.15.2",
+        "3.15.3"
+      ],
+      "document_sha256": "64c560e2abf86ddfdd1111c5c22223c78c41659c71833fdad057670064864f45",
+      "source_html_sha256": "aae50bf5e448b150e8eb93d315412677d80f36076cf436382f67d4511bc39b2d"
+    },
+    {
+      "section": "4",
+      "filename": "GB55034-2022-正文-4.md",
+      "url": "https://gf.cabr-fire.com/m/article-62638.htm",
+      "clauses": [
+        "4.0.1",
+        "4.0.2",
+        "4.0.3",
+        "4.0.4",
+        "4.0.5",
+        "4.0.6",
+        "4.0.7",
+        "4.0.8",
+        "4.0.9"
+      ],
+      "document_sha256": "ce38b45f50f807ec64bb2823562c347d54f8f843bcdfa87d7af7aff8f55f48a4",
+      "source_html_sha256": "f972cbb3ca33c0527bbd1812981f95134a44fb884071c3ce9547465b34f0192c"
+    },
+    {
+      "section": "5",
+      "filename": "GB55034-2022-正文-5.md",
+      "url": "https://gf.cabr-fire.com/m/article-62639.htm",
+      "clauses": [
+        "5.0.1",
+        "5.0.2",
+        "5.0.3",
+        "5.0.4",
+        "5.0.5",
+        "5.0.6",
+        "5.0.7",
+        "5.0.8",
+        "5.0.9",
+        "5.0.10",
+        "5.0.11",
+        "5.0.12"
+      ],
+      "document_sha256": "12927fb5add33b5912f1cbce097e703995cd4c6f5e396c5edcb51c2c76e65af4",
+      "source_html_sha256": "e0bff339f58662d1d667424d2773ab5feaf6b66a7cf64a1361160f533d82574f"
+    },
+    {
+      "section": "6",
+      "filename": "GB55034-2022-正文-6.md",
+      "url": "https://gf.cabr-fire.com/m/article-62641.htm",
+      "clauses": [
+        "6.0.1",
+        "6.0.2",
+        "6.0.3",
+        "6.0.4",
+        "6.0.5",
+        "6.0.6",
+        "6.0.7",
+        "6.0.8",
+        "6.0.9",
+        "6.0.10",
+        "6.0.11",
+        "6.0.12",
+        "6.0.13"
+      ],
+      "document_sha256": "11fd184f2106b870d6db4a2ccc9adff21e17ff055e96154c6e12557c4dc2f33e",
+      "source_html_sha256": "f18a86738a9a69c7559f1198db9b4e3f42bb106d635576f9e61e9bbfa14c262e"
+    }
+  ],
+  "gb_clause_count": 129,
+  "law_clause_count": 71,
+  "law_source_url": "https://www.nea.gov.cn/2011-08/18/c_131057761.htm",
+  "law_source_html_sha256": "c5194c91d5cc9d8b51fcb50ed5a20c859c6e659e817f97e44e555431213544a6",
+  "commentary_sections": 20,
+  "gb_visual_comparison": "4 previously checked clauses match",
+  "limitation": "GB全量逐字核对及法律有效性核验未完成；条文说明未进入规范索引。"
+}

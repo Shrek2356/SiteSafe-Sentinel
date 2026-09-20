@@ -1,6 +1,6 @@
 param(
-    [string]$Destination = 'E:\work\competition\FINAL_DELIVERABLES_20260907',
-    [string]$Name = 'SiteSafe-Sentinel_Desktop_v1.4.1_deployment'
+    [string]$Destination = 'E:\work\competition\FINAL_DELIVERABLES_20260920',
+    [string]$Name = 'SiteSafe-Sentinel_Desktop_v1.4.2_deployment'
 )
 $ErrorActionPreference = 'Stop'
 $appSource = [IO.Path]::GetFullPath((Join-Path $PSScriptRoot '..'))
@@ -23,7 +23,7 @@ function Copy-Tree([string]$relative) {
     $from = Join-Path $appSource $relative
     if (-not (Test-Path -LiteralPath $from)) { return }
     $to = Join-Path $releaseRoot $relative
-    & robocopy $from $to /E /R:1 /W:1 /NFL /NDL /NJH /NJS /NP /XD __pycache__ .pytest_cache .venv node_modules app_data outputs runtime build desktop-dist .git (Join-Path $appSource 'desktop\dist') /XF .env '*.log' '*.pyc' '*.pyo' '*.spec' '*.db' '*.sqlite*' '*.pt' '*.pth' '*.gguf' '*.safetensors' | Out-Null
+    & robocopy $from $to /E /R:1 /W:1 /NFL /NDL /NJH /NJS /NP /XD __pycache__ .pytest_cache .history .venv node_modules app_data outputs runtime build desktop-dist .git (Join-Path $appSource 'desktop\dist') /XF .env '*.log' '*.pyc' '*.pyo' '*.spec' '*.db' '*.sqlite*' '*.pt' '*.pth' '*.gguf' '*.safetensors' | Out-Null
     if ($LASTEXITCODE -ge 8) { throw "复制失败：$relative" }
 }
 # Runtime node_modules is not required; precompiled frontend needs no Node.

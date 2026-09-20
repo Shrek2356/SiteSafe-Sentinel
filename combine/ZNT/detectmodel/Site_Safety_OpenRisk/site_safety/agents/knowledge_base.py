@@ -80,7 +80,7 @@ def _read_document(path: Path) -> str:
     return '\n'.join(text for _, text in _read_pages(path))
 
 
-def _split_clauses(text: str) -> List[Tuple[str, str]]:
+def _split_clauses(text: str, *, split_long: bool = True) -> List[Tuple[str, str]]:
     """按标题/条款编号切块，返回[(section标题, 正文)]；超长块再按空行细分。"""
     matches = list(_CLAUSE_PATTERN.finditer(text))
     blocks: List[Tuple[str, str]] = []
@@ -99,7 +99,7 @@ def _split_clauses(text: str) -> List[Tuple[str, str]]:
         content = f"{section}\n{body}" if body else section
         if len(content) < _MIN_CHUNK_CHARS:
             continue
-        if len(content) <= _MAX_CHUNK_CHARS:
+        if not split_long or len(content) <= _MAX_CHUNK_CHARS:
             chunks.append((section, content))
         else:  # 超长条款按空行二次切分
             part = ""
@@ -113,7 +113,7 @@ def _split_clauses(text: str) -> List[Tuple[str, str]]:
     return chunks
 
 
-def _document_clauses(pages: List[Tuple[Optional[int], str]]) -> List[dict]:
+def _document_clauses(pages: List[Tuple[Optional[int], str]], *, preserve_clauses: bool = False) -> List[dict]:
     """Join PDF continuation text at clause anchors, retaining every source page.
 
     Never remove headers/footers heuristically or split exceptions off long clauses.
@@ -121,7 +121,7 @@ def _document_clauses(pages: List[Tuple[Optional[int], str]]) -> List[dict]:
     """
     if not any(page is not None for page, _ in pages):
         return [{'section': s, 'text': t, 'page_number': None, 'page_numbers': []}
-                for _, text in pages for s, t in _split_clauses(text)]
+                for _, text in pages for s, t in _split_clauses(text, split_long=not preserve_clauses)]
     joined, spans = '', []
     for page, text in pages:
         start = len(joined)
@@ -228,6 +228,9 @@ class KnowledgeBase:
         if not current['chunks'] and not payload.get('excluded', False):
             raise ValueError('无可用解析文本，不能批准为检索来源')
         entry = {k: payload[k].strip() for k in required}
+        # Preserve the hash-bound parser classification, not an arbitrary form field.
+        if current['metadata'].get('content_kind') == 'normative':
+            entry['content_kind'] = 'normative'
         entry.update(document_sha256=current['document_sha256'], source_status='human_checked',
                      effective_status=status, excluded=bool(payload.get('excluded', False)),
                      checked_at=datetime.now(timezone.utc).isoformat(), reviewed_by=reviewer,
@@ -332,13 +335,16 @@ class KnowledgeBase:
                     continue
                 metadata = {'document_sha256': digest, 'source_status': 'unverified', 'effective_status': 'unverified'}
                 if entry.get('document_sha256') == digest:
-                    metadata.update({k: entry[k] for k in ('source_url', 'title', 'version', 'source_status', 'effective_status', 'checked_at', 'reviewed_by', 'valid_until', 'revision') if k in entry})
+                    metadata.update({k: entry[k] for k in ('source_url', 'title', 'version', 'source_status', 'effective_status', 'checked_at', 'reviewed_by', 'valid_until', 'revision', 'content_kind') if k in entry})
                     if entry.get('valid_until') and entry['valid_until'] < date.today().isoformat() and metadata['effective_status'] not in {'repealed', 'superseded'}:
                         metadata['effective_status'] = 'review_due'
                 for page_number, text in pages:
                     if not text.strip():
                         self.parse_errors.append({'source_file': path.name, 'page_number': page_number, 'error': '无可提取文本，请检查扫描页/OCR'})
-                for index, chunk in enumerate(_document_clauses(pages)):
+                normative = metadata.get('content_kind') == 'normative'
+                for index, chunk in enumerate(_document_clauses(pages, preserve_clauses=normative)):
+                    if normative and not re.search(r'(?m)^(?:\d+\.\d+\.\d+|第[一二三四五六七八九十百\d]+条)', chunk['text']):
+                        continue  # Titles/chapter labels are not regulatory evidence.
                     chunk_digest = hashlib.sha256(f'{path.name}|{digest}|{index}|{chunk}'.encode()).hexdigest()[:24]
                     self.chunks.append(KnowledgeChunk(
                         chunk_id=f'KB-{chunk_digest}', source_file=path.name,
