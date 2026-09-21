@@ -2,6 +2,16 @@
 ## SiteSafe-Sentinel 嘉然今天也在守护工地
 An open-risk visual detection and multi-agent safety management platform for construction sites.
 
+## 下载与安装（Windows）
+
+**[前往安装包下载页（GitHub Releases）](https://github.com/Shrek2356/SiteSafe-Sentinel/releases)**
+
+> 当前尚未在 Releases 发布安装包。链接为正式发布入口，不是已经可下载的 EXE；现阶段请向项目维护者索取安装包。
+
+发布后，在对应版本的 **Assets（附件）** 中下载 `SiteSafe-Sentinel_Setup_v1.4.2_x64.exe`，运行安装程序，再通过桌面快捷方式打开软件。若选择便携版，请下载 `SiteSafe-Sentinel_Desktop_v1.4.2_deployment.zip` 并完整解压。
+
+**不要将 GitHub 的「Code → Download ZIP」或 Releases 中自动生成的「Source code」当作安装包**，它们只有源码，不能免配置运行。安装包不含大模型权重；初次体验可使用演示模式，真实检测从软件内「模型规则配置 → 新设备部署」配置。
+
 当前软件版本 **v1.4.2**：Windows 独立窗口，集成开放风险识别、人工复核、风险工单、Agent 协同与规范证据管理。新增 **200 条可检索规范正文**，保留模型部署向导、工作空间备份、双主题、八个展示案例与嘉然动画。[本版更新说明](./combine/ZNT/docs/桌面版v1.4.2更新说明.md) · [本轮审计](./combine/ZNT/docs/软件审计与首页核对_20260920.md)。
 
 <p align="center">
