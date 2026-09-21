@@ -4,11 +4,11 @@ An open-risk visual detection and multi-agent safety management platform for con
 
 ## 下载与安装（Windows）
 
-**[前往安装包下载页（GitHub Releases）](https://github.com/Shrek2356/SiteSafe-Sentinel/releases)**
+**[下载 Windows 安装包 v1.4.2（EXE，约446 MiB）](https://github.com/Shrek2356/SiteSafe-Sentinel/releases/download/v1.4.2/SiteSafe-Sentinel_Setup_v1.4.2_x64.exe)** · [版本说明与校验值](https://github.com/Shrek2356/SiteSafe-Sentinel/releases/tag/v1.4.2)
 
-> 当前尚未在 Releases 发布安装包。链接为正式发布入口，不是已经可下载的 EXE；现阶段请向项目维护者索取安装包。
+> 安装包已发布至 GitHub Releases，附件 SHA-256 已与本地交付文件核对一致。安装器未进行团队代码签名，Windows 可能显示未知发布者。
 
-发布后，在对应版本的 **Assets（附件）** 中下载 `SiteSafe-Sentinel_Setup_v1.4.2_x64.exe`，运行安装程序，再通过桌面快捷方式打开软件。若选择便携版，请下载 `SiteSafe-Sentinel_Desktop_v1.4.2_deployment.zip` 并完整解压。
+点击上方直链，或在对应版本的 **Assets（附件）** 中下载 `SiteSafe-Sentinel_Setup_v1.4.2_x64.exe`，运行安装程序，再通过桌面快捷方式打开软件。当前 Release 仅提供安装版；便携版另向项目维护者获取。
 
 **不要将 GitHub 的「Code → Download ZIP」或 Releases 中自动生成的「Source code」当作安装包**，它们只有源码，不能免配置运行。安装包不含大模型权重；初次体验可使用演示模式，真实检测从软件内「模型规则配置 → 新设备部署」配置。
 
