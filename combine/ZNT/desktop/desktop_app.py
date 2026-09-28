@@ -117,7 +117,7 @@ def http_ready(url: str, timeout: float = 1.5, *, service: str = "") -> bool:
 
 
 class SpaHandler(GatewayMixin, SimpleHTTPRequestHandler):
-    server_version = "SiteSafeDesktop/1.5.1"
+    server_version = "SiteSafeDesktop/1.5.2"
     MIME_OVERRIDES = {
         ".css": "text/css; charset=utf-8",
         ".js": "text/javascript; charset=utf-8",

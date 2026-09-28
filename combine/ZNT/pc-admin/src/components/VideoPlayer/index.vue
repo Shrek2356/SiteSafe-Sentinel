@@ -6,7 +6,8 @@
       <img :src="showOriginal ? exampleOriginalUrl : exampleImageUrl" :alt="name + '异常示例图'" @error="exampleError = true" />
       <div class="example-caption"><strong>{{ name }} · {{ showOriginal ? '异常示例 · 原图' : exampleLabel }}</strong><span>静态示意，非实时视频；点位为展示关联</span>
         <div><button v-if="exampleImageUrl !== exampleOriginalUrl" @click.stop="showOriginal = !showOriginal">{{ showOriginal ? '查看检测标注' : '查看原图' }}</button>
-        <router-link :to="exampleJobId ? {path:'/realtime-detect',query:{job:exampleJobId}} : {path:'/detection-results',query:{case:exampleCaseId}}">查看过程与报告 →</router-link></div>
+        <a v-if="exampleJobId" :href="`/showcase/latest/case${exampleCaseId}_report.html`" target="_blank" rel="noopener">查看随包报告快照 →</a>
+        <router-link v-else :to="{path:'/detection-results',query:{case:exampleCaseId}}">查看案例报告 →</router-link></div>
       </div>
     </div>
     <div v-else-if="!hasStream || error" class="placeholder">

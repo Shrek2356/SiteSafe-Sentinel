@@ -4,15 +4,15 @@ An open-risk visual detection and multi-agent safety management platform for con
 
 ## 下载与安装（Windows）
 
-**[下载 Windows 安装包 v1.4.2（EXE，约446 MiB）](https://github.com/Shrek2356/SiteSafe-Sentinel/releases/download/v1.4.2/SiteSafe-Sentinel_Setup_v1.4.2_x64.exe)** · [版本说明与校验值](https://github.com/Shrek2356/SiteSafe-Sentinel/releases/tag/v1.4.2)
+**[下载 Windows 安装包 v1.5.2（EXE，约485 MiB）](https://github.com/Shrek2356/SiteSafe-Sentinel/releases/download/v1.5.2/SiteSafe-Sentinel_Setup_v1.5.2_x64.exe)** · [版本说明与校验值](https://github.com/Shrek2356/SiteSafe-Sentinel/releases/tag/v1.5.2)
 
 > 安装包已发布至 GitHub Releases，附件 SHA-256 已与本地交付文件核对一致。安装器未进行团队代码签名，Windows 可能显示未知发布者。
 
-点击上方直链，或在对应版本的 **Assets（附件）** 中下载 `SiteSafe-Sentinel_Setup_v1.4.2_x64.exe`，运行安装程序，再通过桌面快捷方式打开软件。当前 Release 仅提供安装版；便携版另向项目维护者获取。
+点击上方直链，或在对应版本的 **Assets（附件）** 中下载 `SiteSafe-Sentinel_Setup_v1.5.2_x64.exe`，运行安装程序，再通过桌面快捷方式打开软件。当前 Release 仅提供安装版；便携版另向项目维护者获取。
 
 **不要将 GitHub 的「Code → Download ZIP」或 Releases 中自动生成的「Source code」当作安装包**，它们只有源码，不能免配置运行。安装包不含大模型权重；初次体验可使用演示模式，真实检测从软件内「模型规则配置 → 新设备部署」配置。
 
-当前软件版本 **v1.4.2**：Windows 独立窗口，集成开放风险识别、人工复核、风险工单、Agent 协同与规范证据管理。新增 **200 条可检索规范正文**，保留模型部署向导、工作空间备份、双主题、八个展示案例与嘉然动画。[本版更新说明](./combine/ZNT/docs/桌面版v1.4.2更新说明.md) · [本轮审计](./combine/ZNT/docs/软件审计与首页核对_20260920.md)。
+当前软件版本 **v1.5.2**：Windows 独立窗口，集成开放风险识别、人工复核、风险工单、Agent 协同与规范证据管理。本版发布 **深蓝工业／黑白水墨主题、可旋转三维工地、八图本地重跑快照与摄像头示意关联**，保留 200 条可检索规范正文、部署向导与嘉然动画。[本版更新说明](./combine/ZNT/docs/桌面版v1.5.2更新说明.md)。
 
 <p align="center">
   <a href="./combine/ZNT/video/%E5%80%99%E6%9C%BA%E5%8A%A8%E7%94%BB.mp4" title="点击观看原始高清视频">
@@ -38,13 +38,33 @@ An open-risk visual detection and multi-agent safety management platform for con
 
 ## 当前工作台界面
 
-### 源码工作区更新（2026-09-27，尚未发布安装包）
+### 双主题与三维工地
 
-新增可旋转三维工地示意、点位筛选与摄像头入口、字体 100%–200% 调节、画面 100%–400% 放大，以及真实记录的图像/规范对照窗口。原八个案例和模型流程保留；没有新增模型调用或准确率结论。
+以下为本地安装版实际界面截图。三维布局和点位为通用演示，不是实测地图或 BIM；图片与静态案例不代表摄像头实时在线。截图中的项目、计数和任务仅反映该本地工作空间，不是产品精度指标。
 
-![三维工地总览（隔离 Mock 界面截图）](./combine/ZNT/docs/images/construction-overview-20260927.png)
+**深蓝工业主题：旋转、平移、缩放、点位与风险入口。**
 
-三维布局不是测绘或 BIM；真实点位在完成坐标配置前仅以列表显示。上方 v1.4.2 下载链接仍指向旧发布包，不包含本次源码变更。[当前技术报告与功能边界](./combine/ZNT/docs/工地安全智能检测系统-技术报告.md)。
+![深蓝工业与三维工地](./assets/readme/theme-industrial-20260928.png)
+
+**黑白水墨主题：纸白、墨黑与灰阶；风险提示保留语义色。**
+
+![黑白水墨与三维工地](./assets/readme/theme-ink-20260928.png)
+
+### 检测证据与人工判断
+
+原图、风险定位和初筛图并列查看；机器判断与待安全员确认分别呈现。图片直接输入可以绕过未触发的 YOLO 初筛，保留开放风险发现。
+
+![本地检测结果与图像证据](./assets/readme/detection-evidence-20260928.png)
+
+2026-09-27 八张指定示例均完成本地推理，七张检出异常，第五张本次未检出；这只是展示批次，不是通用准确率。摄像头静态示例关联本轮原图／标注和**随包报告快照**，新设备不需要开发者任务数据库即可查看。原八张历史案例仍保留，与本轮结果分开标识。
+
+### 规范知识库
+
+支持导入、检索验证、解析预览和来源核验记录。上传成功不等于规范有效，检索相关不等于适用；未核验来源会明确标识。
+
+![规范导入与来源核验](./assets/readme/knowledge-20260928.png)
+
+[当前技术报告与功能边界](./combine/ZNT/docs/工地安全智能检测系统-技术报告.md)
 
 以下按 PC 源码中的实际菜单分组整理；不同角色看到的页面有所不同。
 
@@ -58,7 +78,7 @@ An open-risk visual detection and multi-agent safety management platform for con
 
 ### 桌面体验
 
-- **统一明暗主题（当前源码）**：深蓝工业主题采用冷蓝高亮与蓝图网格；黑白水墨主题采用纸白、墨黑、灰阶图表及宋体标题。红／橙／黄仍表达风险，现场照片保持原色。可在右上角或系统设置切换并保存。
+- **统一明暗主题**：深蓝工业主题采用冷蓝高亮与蓝图网格；黑白水墨主题采用纸白、墨黑、灰阶图表及宋体标题。红／橙／黄仍表达风险，现场照片保持原色。可在右上角或系统设置切换并保存。
 - **清楚的视觉层次**：优化侧栏、项目切换、文字、卡片、表格、滑杆、图表与状态标签；小高度窗口使用紧凑导航。
 - **随时找到下一步**：保留功能搜索 `Ctrl + K`、本页指南、首次使用引导和连接诊断。
 - **展示内容完整保留**：嘉然动画、八张关键案例、原图、检测框、掩码与报告；预置素材始终标注来源。
@@ -70,22 +90,22 @@ An open-risk visual detection and multi-agent safety management platform for con
 
 ### Windows 安装版：像普通软件一样安装
 
-项目方提供的 **`SiteSafe-Sentinel_Setup_v1.4.2_x64.exe`** 可选择安装位置，创建桌面/开始菜单快捷方式，并在 Windows“已安装的应用”提供卸载入口。默认当前用户安装；包含原有演示内容和离线 WebView2，不包含模型权重，模型仍从软件内的部署引导接入。安装器尚未进行团队代码签名，Windows 可能提示未知发布者。
+项目方提供的 **`SiteSafe-Sentinel_Setup_v1.5.2_x64.exe`** 可选择安装位置，创建桌面/开始菜单快捷方式，并在 Windows“已安装的应用”提供卸载入口。默认当前用户安装；包含原有演示内容和离线 WebView2，不包含模型权重，模型仍从软件内的部署引导接入。安装器尚未进行团队代码签名，Windows 可能提示未知发布者。
 
-升级保留已有配置，卸载不主动清理业务资料或外置模型。这里的“注册”指 Windows 软件管理登记，不是账号注册或联网激活。[安装与迁移说明](./combine/ZNT/desktop/installer/安装版使用说明.md) · [安装包构建说明](./combine/ZNT/desktop/installer/README.md)。安装包和便携包是两种分发方式，软件本体同为 v1.4.2，GitHub 源码下载不包含这些运行包。
+升级保留已有配置，卸载不主动清理业务资料或外置模型。这里的“注册”指 Windows 软件管理登记，不是账号注册或联网激活。[安装与迁移说明](./combine/ZNT/desktop/installer/安装版使用说明.md) · [安装包构建说明](./combine/ZNT/desktop/installer/README.md)。安装包和便携包是两种分发方式，软件本体同为 v1.5.2，GitHub 源码下载不包含这些运行包。
 
 **旧目录覆盖安装会保留原来的知识库目录配置，不保证自动切换为新版默认200条索引。**完整体验新默认知识库，建议使用新目录或本次便携包；自定义规范和核验记录应先备份、再人工核对合并。
 
 ### 直接体验：完整桌面交付包
 
-使用项目方提供的 `SiteSafe-Sentinel_Desktop_v1.4.2_deployment.zip`，完整解压后双击根目录 **`SiteSafe-Sentinel.exe`**。若旧版仍在运行，请先正常退出旧版。接入模型请从“模型规则配置 → 新设备部署”开始；项目 YOLO 下载地址暂留空，不影响通过选择文件配置已有权重。
+使用项目方提供的 `SiteSafe-Sentinel_Desktop_v1.5.2_deployment.zip`，完整解压后双击根目录 **`SiteSafe-Sentinel.exe`**。若旧版仍在运行，请先正常退出旧版。接入模型请从“模型规则配置 → 新设备部署”开始；项目 YOLO 下载地址暂留空，不影响通过选择文件配置已有权重。
 
 - 环境：Windows 10/11 64 位，Microsoft Edge WebView2 Runtime。
 - 随包提供基础 Python 与已构建前端；演示不要求系统 Node、GPU、API 密钥或大模型权重。
 - 软件使用独立窗口，自动启动业务后台与检测桥；关闭时只停止由该窗口启动的服务，不强关原有共享服务。
 - 不要只拷贝 EXE，它需要同目录的运行时、前端和后台文件。
 
-**GitHub 的“Download ZIP”下载的是源码，不是这个完整运行包。** 当前仓库不跟踪桌面应用 `SiteSafe-Sentinel.exe` 与前端 `dist`；代码同步不等于上传了桌面压缩包。2026-09-20交付的便携ZIP约229 MiB，安装EXE约446 MiB（包含离线WebView2）。
+**GitHub 的“Download ZIP”下载的是源码，不是这个完整运行包。** 当前仓库不跟踪桌面应用 `SiteSafe-Sentinel.exe` 与前端 `dist`；代码同步不等于上传了桌面压缩包。2026-09-28交付的便携ZIP约267 MiB，安装EXE约485 MiB（包含离线WebView2）。
 
 默认演示账号：
 
@@ -173,7 +193,7 @@ SiteSafe-Sentinel/
 
 ## 验证范围
 
-2026-09-20针对 v1.4.2 的源码审计与回归：
+2026-09-20针对 v1.5.2 的源码审计与回归：
 
 - 后端175项、桌面35项、前端27项，共237项通过。桌面测试包含真实HTTP/WebSocket登录、规范上传、Demo任务与媒体链路；这不是GPU推理测试。
 - 本次交付构建校验5,589项载荷文件，随包Python验证200条正文加载与代表性条款检索。
@@ -184,7 +204,7 @@ SiteSafe-Sentinel/
 
 ## 文档导航
 
-- [v1.4.2更新与升级注意事项](./combine/ZNT/docs/桌面版v1.4.2更新说明.md)
+- [v1.5.2更新与升级注意事项](./combine/ZNT/docs/桌面版v1.5.2更新说明.md)
 - [当前软件审计记录](./combine/ZNT/docs/软件审计与首页核对_20260920.md)
 - [规范管理与证据报告](./combine/ZNT/docs/规范管理与证据报告使用说明.md)
 
