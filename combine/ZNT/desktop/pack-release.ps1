@@ -1,6 +1,6 @@
 param(
-    [string]$Destination = 'E:\work\competition\FINAL_DELIVERABLES_20260920',
-    [string]$Name = 'SiteSafe-Sentinel_Desktop_v1.4.2_deployment'
+    [string]$Destination = 'E:\work\competition\FINAL_DELIVERABLES_20260927',
+    [string]$Name = 'SiteSafe-Sentinel_Desktop_v1.5.1_deployment'
 )
 $ErrorActionPreference = 'Stop'
 $appSource = [IO.Path]::GetFullPath((Join-Path $PSScriptRoot '..'))
@@ -32,6 +32,7 @@ Copy-Tree 'pc-admin\dist'
 Copy-Tree 'pc-admin\public'
 Copy-Tree 'pc-admin\src'
 Copy-Tree 'pc-admin\tests'
+Copy-Tree 'pc-admin\scripts'
 Copy-Tree 'detectmodel\Site_Safety_OpenRisk'
 Copy-Tree 'desktop'
 Copy-Tree 'requirements'
@@ -50,7 +51,7 @@ foreach ($file in @('package.json','package-lock.json','vite.config.js','index.h
     Copy-Item -LiteralPath (Join-Path $appSource "pc-admin\$file") -Destination (Join-Path $releaseRoot "pc-admin\$file")
 }
 Copy-Item -LiteralPath (Join-Path $appSource 'desktop-dist\SiteSafe-Sentinel.exe') -Destination (Join-Path $releaseRoot 'SiteSafe-Sentinel.exe')
-Copy-Item -LiteralPath (Join-Path $appSource 'docs\桌面版v1.4.1模型部署说明.md') -Destination (Join-Path $releaseRoot 'README.md')
+Copy-Item -LiteralPath (Join-Path $appSource 'docs\桌面版v1.5.1更新说明.md') -Destination (Join-Path $releaseRoot 'README.md')
 # A fresh delivery uses only documented in-package locations, never the developer's model paths.
 [ordered]@{
     qwen_enabled=$true; qwen_autostart=$false; yolo_enabled=$true; sam3_enabled=$true; clip_enabled=$false

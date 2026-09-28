@@ -117,6 +117,7 @@ class RuntimePathPickerRequest(BaseModel):
 
 
 class DetectBridge:
+    _persistence_lock = threading.RLock()
     def __init__(self, default_profile: str = "") -> None:
         self.default_profile_explicit = bool(default_profile.strip())
         self.default_profile = (
@@ -427,10 +428,20 @@ class DetectBridge:
         out_dir = Path(job["output_dir"])
         out_dir.mkdir(parents=True, exist_ok=True)
         temporary = out_dir / f"bridge_summary.{threading.get_ident()}.tmp"
-        temporary.write_text(
-            json.dumps(job, ensure_ascii=False, indent=2), encoding="utf-8"
-        )
-        temporary.replace(out_dir / "bridge_summary.json")
+        with DetectBridge._persistence_lock:
+            temporary.write_text(
+                json.dumps(job, ensure_ascii=False, indent=2), encoding="utf-8"
+            )
+            # Windows readers / antivirus may briefly deny atomic replacement.
+            # Keep the previous valid snapshot until the replacement succeeds.
+            for attempt in range(40):
+                try:
+                    temporary.replace(out_dir / "bridge_summary.json")
+                    return
+                except PermissionError:
+                    if attempt == 39:
+                        raise
+                    time.sleep(0.05)
 
     def _recover_interrupted_jobs(self) -> None:
         """Requeue jobs whose input was persisted before an unexpected bridge restart."""
@@ -450,11 +461,12 @@ class DetectBridge:
                 job["updated_at"] = _now()
                 with self.lock:
                     self.jobs[job["job_id"]] = job
+                self._persist_job(job)
                 try:
                     self.job_queue.put_nowait(job["job_id"])
                 except queue.Full:
                     job.update(status="error", error="恢复队列已满，请从任务中心重试", updated_at=_now())
-                self._persist_job(job)
+                    self._persist_job(job)
             except (OSError, ValueError, KeyError, queue.Full):
                 continue
 
@@ -493,6 +505,16 @@ class DetectBridge:
             job_id = self.job_queue.get()
             try:
                 self._run_job(job_id)
+            except Exception as exc:
+                # Persistence failures before the inference try-block must not
+                # kill the sole worker and leave all future jobs queued forever.
+                with self.lock:
+                    job = self.jobs[job_id]
+                    job.update(status="error", error=f"任务状态写入失败：{exc}", updated_at=_now())
+                try:
+                    self._persist_job(job)
+                except OSError:
+                    pass
             finally:
                 self.job_queue.task_done()
 
@@ -797,10 +819,7 @@ class DetectBridge:
             job["event"] = event_payload
             job["status"] = "done"
             job["updated_at"] = _now()
-            (out_dir / "bridge_summary.json").write_text(
-                json.dumps(job, ensure_ascii=False, indent=2),
-                encoding="utf-8",
-            )
+            self._persist_job(job)
         except Exception as exc:  # noqa: BLE001
             job["status"] = "error"
             job["error"] = str(exc)

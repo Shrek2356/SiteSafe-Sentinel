@@ -28,10 +28,11 @@
           default-expand-all
           @select="onSelect"
         >
-          <template #title="{ title, online, isLeaf }">
+          <template #title="{ title, online, isLeaf, presentationAsset }">
             <span>
               <a-badge v-if="isLeaf" :status="online === false ? 'default' : 'success'" />
               {{ title }}
+              <small v-if="isLeaf && presentationAsset"> · 示例</small>
             </span>
           </template>
         </a-tree>
@@ -52,6 +53,11 @@
             :stream-url="cam.streamUrl"
             :online="cam.online"
             :masks="cam.masks"
+            :example-image-url="cam.exampleImageUrl"
+            :example-original-url="cam.exampleOriginalUrl"
+            :example-label="cam.exampleLabel"
+            :example-case-id="cam.exampleCaseId"
+            :example-job-id="cam.exampleJobId"
           />
           <div v-else class="empty-cell">空闲窗口</div>
         </div>
@@ -105,7 +111,7 @@
 </template>
 
 <script setup>
-import { computed, onMounted, ref } from 'vue'
+import { computed, onMounted, ref, watch } from 'vue'
 import { useRoute } from 'vue-router'
 import { useUserStore } from '@/stores/user'
 import VideoPlayer from '@/components/VideoPlayer/index.vue'
@@ -205,6 +211,9 @@ async function loadData() {
 }
 
 onMounted(loadData)
+watch(() => route.query.cameraId, id => {
+  if (id) { selectedIds.value = [String(id)]; selectedCamId.value = String(id) }
+})
 </script>
 
 <style scoped>

@@ -4,10 +4,13 @@
     <a-tabs v-model:activeKey="tab">
       <a-tab-pane key="workspace" tab="工作台与展示">
         <a-form layout="vertical" class="settings-form">
+          <a-form-item label="主题配色"><a-radio-group :value="colorTheme" @change="e => setColorTheme(e.target.value)"><a-radio-button value="dark">深蓝工业</a-radio-button><a-radio-button value="light">黑白水墨</a-radio-button></a-radio-group><p>风险警示保留语义颜色，现场图像与视频保持原色。</p></a-form-item>
           <a-form-item label="界面风格"><a-radio-group :value="workspaceStyle" @change="e => setWorkspaceStyle(e.target.value)"><a-radio-button value="professional">专业工作台</a-radio-button><a-radio-button value="showcase">作品展示视图</a-radio-button></a-radio-group></a-form-item>
           <a-form-item label="预置展示素材"><a-switch :checked="presentationAssets" :disabled="!presentationAvailable" @change="toggleAssets" /> <span>{{ presentationAvailable ? '显示预编辑的八个案例、展示点位和成果图' : '当前构建已禁用预置素材，请联系部署者调整。' }}</span></a-form-item>
           <a-alert type="info" show-icon message="关闭只影响显示，不删除素材或历史检测。展示素材不写入真实事件数据库。切换后重新进入对应页面即可刷新。" />
         </a-form>
+        <a-divider />
+        <ReadingSettings />
       </a-tab-pane>
       <a-tab-pane key="desktop" tab="桌面与连接">
         <a-alert :type="desktop ? 'success' : 'info'" show-icon :message="desktop ? '当前为独立桌面窗口；以下设置保存后在下次启动生效。' : '当前为浏览器入口。桌面环境设置需在 EXE 独立窗口内修改。'" />
@@ -23,7 +26,7 @@
       </a-tab-pane>
       <a-tab-pane key="users" tab="用户与工作空间备份"><SystemAdministration /></a-tab-pane>
       <a-tab-pane key="about" tab="关于与部署">
-        <a-descriptions title="筑安智巡 · SiteSafe-Sentinel" bordered :column="1"><a-descriptions-item label="产品版本">1.4.1 · 模型部署引导与工作空间维护</a-descriptions-item><a-descriptions-item label="软件结构">独立桌面窗口 → 同源网关 → 业务后台 / 检测桥 → 按需加载模型</a-descriptions-item><a-descriptions-item label="模型">YOLO 初筛、Qwen 视觉与报告、SAM3 定位、可选 CLIP；本次未新增模型审核调用。</a-descriptions-item><a-descriptions-item label="首次部署">Windows 10/11 64位，WebView2；展示使用包内 Python，无需 Node。离线检测先打开“模型与规则 → 新设备部署”，按五步引导准备 GPU 环境和组件。</a-descriptions-item><a-descriptions-item label="使用边界">展示/试点版本。模型结论须经安全人员判断；本版本的软件链路回归不等同于新一轮模型准确率评测。</a-descriptions-item></a-descriptions>
+        <a-descriptions title="筑安智巡 · SiteSafe-Sentinel" bordered :column="1"><a-descriptions-item label="产品版本">{{ productVersion }} · 工地空间总览与证据工作台</a-descriptions-item><a-descriptions-item label="软件结构">独立桌面窗口 → 同源网关 → 业务后台 / 检测桥 → 按需加载模型</a-descriptions-item><a-descriptions-item label="模型">YOLO 初筛、Qwen 视觉与报告、SAM3 定位、可选 CLIP；本次未新增模型审核调用。</a-descriptions-item><a-descriptions-item label="首次部署">Windows 10/11 64位，WebView2；展示使用包内 Python，无需 Node。离线检测先打开“模型与规则 → 新设备部署”，按五步引导准备 GPU 环境和组件。</a-descriptions-item><a-descriptions-item label="使用边界">展示/试点版本。模型结论须经安全人员判断；本版本的软件链路回归不等同于新一轮模型准确率评测。</a-descriptions-item></a-descriptions>
       </a-tab-pane>
     </a-tabs>
   </div>
@@ -33,6 +36,9 @@ import { onMounted, onBeforeUnmount, reactive, ref } from 'vue'
 import { useRouteTab } from '@/composables/useRouteTab'
 import { message } from 'ant-design-vue'
 import SystemAdministration from '@/components/SystemAdministration.vue'
+import ReadingSettings from '@/components/ReadingSettings.vue'
+import { colorTheme, setColorTheme } from '@/utils/theme'
+import { version as productVersion } from '../../../package.json'
 import { workspaceStyle, setWorkspaceStyle, presentationAssets, presentationAvailable, setPresentationAssets } from '@/utils/preferences'
 import { getBusinessApiBase, getDetectApiBase, saveEndpointSettings, resetEndpointSettings } from '@/utils/endpoints'
 import { refreshServiceHealth } from '@/composables/useServiceHealth'

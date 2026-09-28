@@ -57,7 +57,7 @@ function buildSummary(cases) {
     pendingSyncCount,
     persistedCount,
     conclusion:
-      `当前展示 ${persistedCount} 条真实持久化风险记录` +
+      `当前展示 ${persistedCount} 条真实持久化检测记录` +
       `${pendingSyncCount ? `，${pendingSyncCount} 条真实检测待后台同步` : ''}` +
       `${liveCount ? `（其中 ${liveCount} 条实时检测）` : ''}` +
       `${demoRunCount ? `，${demoRunCount} 条本次浏览器演示结果` : ''}` +

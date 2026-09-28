@@ -154,6 +154,8 @@ def build_markdown(batch_dir: Path, output_path: Path, title: str) -> str:
         report_label = "本地 Qwen"
     elif report_sources == {"glm"}:
         report_label = "GLM"
+    elif report_sources == {"deterministic_template"}:
+        report_label = "程序模板（不额外调用报告模型）"
     else:
         report_label = "配置的报告模型（" + "、".join(sorted(report_sources)) + "）"
 

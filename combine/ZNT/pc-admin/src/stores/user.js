@@ -2,14 +2,15 @@
  * 用户状态（登录态 / 角色 / 当前项目）
  */
 import { defineStore } from 'pinia'
+import { readStoredObject } from '@/utils/safeStorage'
 import { login as loginApi } from '@/api/auth'
 import { switchProject as switchProjectApi } from '@/api/resource'
 
 export const useUserStore = defineStore('user', {
   state: () => ({
     token: localStorage.getItem('znt_token') || '',
-    user: JSON.parse(localStorage.getItem('znt_user') || 'null'),
-    project: JSON.parse(localStorage.getItem('znt_project') || 'null'),
+    user: readStoredObject('znt_user'),
+    project: readStoredObject('znt_project'),
   }),
   getters: {
     isLogin: (s) => !!s.token,

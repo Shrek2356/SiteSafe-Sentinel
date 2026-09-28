@@ -50,6 +50,7 @@
       </a-col>
     </a-row>
 
+    <ConstructionScene :key="projectKey" :points="sitePoints" :demo="isPresentationGroup('sitePoints')" @point-click="onPointClick" />
     <a-row :gutter="12" class="main-row">
       <!-- 左侧：工地 2D 平面点位图 -->
       <a-col :xs="24" :lg="12" :xl="7">
@@ -150,6 +151,7 @@ import { computed, nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import * as echarts from 'echarts'
 import { message } from 'ant-design-vue'
 import SiteMap from '@/components/SiteMap/index.vue'
+import ConstructionScene from '@/components/ConstructionScene/index.vue'
 import VideoPlayer from '@/components/VideoPlayer/index.vue'
 import { fetchDashboardData } from '@/api/dashboard'
 import { useRouter } from 'vue-router'
@@ -198,8 +200,8 @@ function levelText(l) {
   return { red: '高危', orange: '中危', yellow: '低危' }[l] || l
 }
 function getMasks(v) {
-  // 轮播项简单映射一级掩码示意
-  return [{ level: v.riskLevel, x: 35, y: 25, w: 20, h: 30, label: v.title.split(' - ')[1] || '风险' }]
+  // Never draw a fabricated risk box on a real video stream.
+  return Array.isArray(v.masks) ? v.masks : []
 }
 
 function isPresentationGroup(group) {
@@ -543,7 +545,7 @@ onBeforeUnmount(() => {
   margin-top: 16px;
   text-align: right;
 }
-.workspace-hero { position:relative; overflow:hidden; display:flex; align-items:center; justify-content:space-between; gap:20px; min-height:214px; padding:28px 32px; background:linear-gradient(115deg,#142e3c,#173c49); border:1px solid #365564; border-radius:18px; color:var(--hero-text); margin-bottom:20px; }
+.workspace-hero { position:relative; overflow:hidden; display:flex; align-items:center; justify-content:space-between; gap:20px; min-height:214px; padding:28px 32px; background:linear-gradient(115deg,var(--product-ink),var(--surface-2)); border:1px solid var(--border-color); border-radius:18px; color:var(--hero-text); margin-bottom:20px; }
 .workspace-copy { position:relative; z-index:1; min-width:0; flex:1; }
 .workspace-eyebrow { display:flex; align-items:center; gap:9px; font-size:10px; letter-spacing:2px; color:var(--hero-muted); }
 .workspace-eyebrow::before { content:''; width:18px; height:2px; background:var(--hero-accent); }
@@ -552,13 +554,13 @@ onBeforeUnmount(() => {
 .workspace-copy p { color:var(--hero-muted); font-size:12px; margin:0 0 22px; max-width:620px; }
 .workspace-actions { display:flex; flex-wrap:wrap; gap:12px; }
 .workspace-actions :deep(.ant-btn) { font-size:12px; height:36px; border-radius:8px; }
-.workspace-actions :deep(.ant-btn-primary:not(:disabled)) { background:#88e0ca; border-color:#88e0ca; color:#123b35; }
-.workspace-actions :deep(.ant-btn-primary:not(:disabled):hover) { background:#acf0df; border-color:#acf0df; color:#123b35; }
-.workspace-actions :deep(.ant-btn-default) { background:#ffffff08; border-color:#ffffff40; color:#e4eef4; }
-.workspace-actions :deep(.ant-btn-default:hover) { background:#ffffff15; border-color:#88e0ca; color:#fff; }
-.workspace-art { position:relative; align-self:center; width:29%; min-width:190px; max-width:340px; color:#85b4bf; }
+.workspace-actions :deep(.ant-btn-primary:not(:disabled)) { background:var(--primary); border-color:var(--primary); color:var(--on-primary); }
+.workspace-actions :deep(.ant-btn-primary:not(:disabled):hover) { background:var(--primary-strong); border-color:var(--primary-strong); color:var(--on-primary); }
+.workspace-actions :deep(.ant-btn-default) { background:transparent; border-color:var(--border-color); color:var(--hero-text); }
+.workspace-actions :deep(.ant-btn-default:hover) { background:var(--surface-muted); border-color:var(--primary); color:var(--text-primary); }
+.workspace-art { position:relative; align-self:center; width:29%; min-width:190px; max-width:340px; color:var(--hero-muted); }
 .workspace-art svg { position:relative; z-index:1; width:100%; height:auto; }
-.art-orbit { position:absolute; width:210px; height:210px; right:0; top:-55px; border-radius:50%; border:1px solid #8ce0ca24; box-shadow:0 0 0 28px #b5d5cc07,0 0 0 56px #b5d5cc04; }
+.art-orbit { position:absolute; width:210px; height:210px; right:0; top:-55px; border-radius:50%; border:1px solid color-mix(in srgb,var(--hero-accent) 18%,transparent); box-shadow:0 0 0 28px color-mix(in srgb,var(--hero-accent) 3%,transparent),0 0 0 56px color-mix(in srgb,var(--hero-accent) 2%,transparent); }
 .art-note { position:relative; font-size:10px; letter-spacing:2px; text-align:right; color:var(--hero-muted); margin-top:5px; }
 .art-note span { display:inline-block; width:5px; height:5px; border-radius:50%; background:var(--hero-accent); margin-right:8px; }
 .main-row { row-gap:16px; }

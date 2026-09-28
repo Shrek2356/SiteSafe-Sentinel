@@ -1,7 +1,7 @@
 {
   "name": "znt-pc-admin",
   "private": true,
-  "version": "1.4.2",
+  "version": "1.5.1",
   "type": "module",
   "description": "工地AI安全智能检测系统 - PC管理后台",
   "scripts": {
@@ -20,6 +20,7 @@
     "html2canvas": "^1.4.1",
     "jspdf": "^4.2.1",
     "pinia": "^3.0.3",
+    "three": "0.186.0",
     "vue": "^3.5.17",
     "vue-router": "^4.5.1"
   },

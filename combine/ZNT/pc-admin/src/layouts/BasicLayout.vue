@@ -48,8 +48,8 @@
             <a-radio-button value="professional">工作台</a-radio-button>
             <a-radio-button value="showcase">展示视图</a-radio-button>
           </a-radio-group>
-          <a-tooltip :title="colorTheme === 'dark' ? '切换明亮模式' : '切换暗色模式'">
-            <a-button class="theme-toggle" shape="circle" :aria-label="colorTheme === 'dark' ? '切换明亮模式' : '切换暗色模式'" @click="toggleColorTheme">
+          <a-tooltip :title="colorTheme === 'dark' ? '切换黑白水墨主题' : '切换深蓝工业主题'">
+            <a-button class="theme-toggle" shape="circle" :aria-label="colorTheme === 'dark' ? '切换黑白水墨主题' : '切换深蓝工业主题'" @click="toggleColorTheme">
               <BulbOutlined v-if="colorTheme === 'dark'" />
               <span v-else aria-hidden="true">☾</span>
             </a-button>

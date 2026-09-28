@@ -9,6 +9,7 @@ from __future__ import annotations
 import argparse
 import ctypes
 import html
+import hashlib
 import json
 import os
 import socket
@@ -67,6 +68,15 @@ LOG_DIR = RUNTIME_DIR / "logs"
 CONFIG_PATH = ROOT / "desktop-settings.json"
 
 
+def frontend_revision(root: Path) -> str:
+    """Address each compiled entry by content; retain WebView user storage."""
+    return hashlib.sha256((root / "index.html").read_bytes()).hexdigest()[:16]
+
+
+def frontend_entry_url(port: int, root: Path) -> str:
+    return f"http://127.0.0.1:{port}/login?build={frontend_revision(root)}"
+
+
 def load_config() -> dict[str, Any]:
     config = dict(DEFAULT_CONFIG)
     if CONFIG_PATH.is_file():
@@ -107,7 +117,7 @@ def http_ready(url: str, timeout: float = 1.5, *, service: str = "") -> bool:
 
 
 class SpaHandler(GatewayMixin, SimpleHTTPRequestHandler):
-    server_version = "SiteSafeDesktop/1.4"
+    server_version = "SiteSafeDesktop/1.5.1"
     MIME_OVERRIDES = {
         ".css": "text/css; charset=utf-8",
         ".js": "text/javascript; charset=utf-8",
@@ -133,6 +143,13 @@ class SpaHandler(GatewayMixin, SimpleHTTPRequestHandler):
                 return super().send_head()
         if requested and not candidate.exists() and "." not in Path(requested).name:
             self.path = "/index.html"
+        self._html_entry = not requested or urlsplit(self.path).path.endswith(".html")
+        if self._html_entry:
+            # An upgrade must never reuse a previously cached SPA entry, even
+            # when an extracted file has an older or equal modification time.
+            for header in ("If-Modified-Since", "If-None-Match"):
+                if header in self.headers:
+                    del self.headers[header]
         return super().send_head()
 
     def guess_type(self, path: str) -> str:
@@ -140,6 +157,10 @@ class SpaHandler(GatewayMixin, SimpleHTTPRequestHandler):
         return override or super().guess_type(path)
 
     def end_headers(self) -> None:
+        if getattr(self, "_html_entry", False):
+            self.send_header("Cache-Control", "no-store, no-cache, must-revalidate")
+            self.send_header("Pragma", "no-cache")
+            self.send_header("Expires", "0")
         self.send_header("X-Content-Type-Options", "nosniff")
         self.send_header("Referrer-Policy", "same-origin")
         super().end_headers()
@@ -510,7 +531,7 @@ def main() -> int:
     def startup() -> None:
         try:
             runtime.start_services()
-            window.load_url(f"http://127.0.0.1:{runtime.frontend_port}/login")
+            window.load_url(frontend_entry_url(runtime.frontend_port, runtime.frontend_root))
             if args.smoke_test_seconds > 0:
                 timer = threading.Timer(args.smoke_test_seconds, window.destroy)
                 timer.daemon = True

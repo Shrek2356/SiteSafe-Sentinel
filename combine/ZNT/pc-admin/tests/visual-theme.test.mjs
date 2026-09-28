@@ -47,6 +47,16 @@ test('both themes cover the same tokens; all are concrete CSS values', () => {
   }
 })
 
+test('ink theme uses neutral action and chart colors; industrial theme uses blue, not teal', () => {
+  for (const key of ['primary','link','chart-1','chart-2','chart-3','chart-4','chart-5']) {
+    const rgb=palettes.light[key].slice(1).match(/../g).map(v=>parseInt(v,16))
+    assert.ok(Math.max(...rgb)-Math.min(...rgb)<=12,key)
+  }
+  const blue=palettes.dark.primary.slice(1).match(/../g).map(v=>parseInt(v,16))
+  assert.ok(blue[2]>blue[1] && blue[1]>blue[0])
+  assert.notEqual(palettes.light.danger,palettes.light.primary)
+})
+
 test('global theme leaves semantic progress and disabled states to the component library', async () => {
   const css = await readFile(new URL('../src/styles/global.css', import.meta.url), 'utf8')
   assert.ok(!css.includes('.ant-progress-bg'))

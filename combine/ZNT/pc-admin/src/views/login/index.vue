@@ -474,6 +474,28 @@ onBeforeUnmount(() => {
 .login-foot { display: flex; justify-content: space-between; gap: 12px; margin-top: 34px; padding-top: 18px; border-top: 1px solid var(--border-color); color: var(--text-muted); font-size: 10px; }
 .login-foot span:first-child { display: flex; align-items: center; gap: 7px; }
 .status-dot { width: 6px; height: 6px; box-shadow: none; }
+/* Login surfaces follow the same palette; video and status semantics stay intact. */
+.login-page { color:var(--text-primary); background:radial-gradient(ellipse at 12% 20%,color-mix(in srgb,var(--primary) 10%,transparent),transparent 50%),var(--bg); }
+.login-page::before { background-image:linear-gradient(var(--border-color) 1px,transparent 1px),linear-gradient(90deg,var(--border-color) 1px,transparent 1px); }
+.login-shell { background:var(--surface); border-color:var(--border-color); box-shadow:var(--shadow-float); }
+.ambient-one,.ambient-two { border-color:var(--border-color); }
+.animation-side::after { background:color-mix(in srgb,var(--primary) 8%,transparent); }
+.animation-copy h1 { color:var(--text-primary); }
+.animation-copy p,.inspection-name,.group-title { color:var(--text-secondary); }
+.fallback-note,.inspection-count,.module-chip { color:var(--text-muted); }
+.animation-stage { background:var(--surface-2); border-color:var(--border-color); }
+.stage-grid { background-image:linear-gradient(var(--border-color) 1px,transparent 1px),linear-gradient(90deg,var(--border-color) 1px,transparent 1px); }
+.scan-ring { border-color:var(--border-color); }
+.magnifier { border-color:var(--primary); box-shadow:0 0 18px color-mix(in srgb,var(--primary) 20%,transparent); }
+.magnifier::after { background:var(--primary); }
+.module-group { background:var(--surface-2); border-color:var(--border-color); }
+.module-chip.active,.agent-group .module-chip.active { background:var(--primary-soft); color:var(--text-primary); box-shadow:inset 0 0 0 1px var(--border-color); }
+.module-chip.checked { color:var(--success); background:color-mix(in srgb,var(--success) 9%,var(--surface)); box-shadow:inset 0 0 0 1px color-mix(in srgb,var(--success) 30%,transparent); }
+.inspection-name.complete { color:var(--success); }
+.pulse-dot,.status-dot { background:var(--success); box-shadow:0 0 12px color-mix(in srgb,var(--success) 30%,transparent); }
+.progress-track { background:var(--surface-muted); }
+.progress-track span { background:var(--primary); }
+.progress-track span.complete { background:var(--success); box-shadow:none; }
 @keyframes pulse { 50% { opacity: 0.42; transform: scale(0.78); } }
 @keyframes mascot-float { 50% { transform: translateY(-7px); } }
 @keyframes scan { from { transform: scale(0.72); opacity: 0.7; } to { transform: scale(1.15); opacity: 0; } }

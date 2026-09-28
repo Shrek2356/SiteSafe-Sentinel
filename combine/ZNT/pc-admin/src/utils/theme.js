@@ -3,7 +3,7 @@ import { paletteFor } from './designTokens'
 
 const STORAGE_KEY = 'znt_color_theme'
 const saved = localStorage.getItem(STORAGE_KEY)
-export const colorTheme = ref(saved === 'dark' ? 'dark' : 'light')
+export const colorTheme = ref(saved === 'light' ? 'light' : 'dark')
 
 function applyTheme(value) {
   for (const [key, color] of Object.entries(paletteFor(value))) {

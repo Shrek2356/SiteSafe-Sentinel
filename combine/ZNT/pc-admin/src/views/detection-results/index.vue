@@ -61,7 +61,7 @@
                 <a-tag v-else-if="c.presentationAsset" color="cyan">预设展示</a-tag>
                 <a-tag v-else color="green">真实记录</a-tag>
                 <a-tag>{{ statusText(c.status) }}</a-tag>
-                <a-tag>{{ (c.confidence * 100).toFixed(0) }}%</a-tag>
+                <a-tag v-if="c.confidence != null">{{ (c.confidence * 100).toFixed(0) }}%</a-tag>
               </div>
             </div>
             <div class="body">
@@ -69,11 +69,11 @@
               <div class="result">{{ c.result }}</div>
               <p class="analysis">{{ c.analysis }}</p>
               <p v-if="!c.presentationAsset">人工结论：{{ {confirmed:'已确认', rejected:'已驳回', pending:'待确认'}[c.humanReviewStatus] || '未记录' }}</p>
-              <KnowledgeEvidence v-if="!c.presentationAsset" :references="c.knowledgeReferences || []" :status="c.knowledgeStatus" />
+              <KnowledgeEvidence v-if="!c.presentationAsset && !c.noRiskDetected" :references="c.knowledgeReferences || []" :status="c.knowledgeStatus" :image="c.images?.original || c.cover" :image-title="c.expected" />
               <div class="suggest">建议：{{ c.suggestion }}</div>
               <div class="actions">
                 <a-button v-if="c.eventId" type="link" @click="downloadEvidence(c)">导出证据报告</a-button>
-                <a-button type="link" @click="preview(c.images?.overlay || c.cover)">查看标注图</a-button>
+                <a-button v-if="!c.noRiskDetected" type="link" @click="preview(c.images?.overlay || c.cover)">查看标注图</a-button>
                 <a-button
                   v-if="c.images?.original"
                   type="link"
@@ -181,7 +181,7 @@ function displayId(c) {
   return `${c.id}.`
 }
 function statusText(s) {
-  return { confirmed: '机器支持', partial: '机器部分支持', review: '机器建议复核' }[s] || s
+  return { confirmed: '机器支持', partial: '机器部分支持', review: '机器建议复核', no_risk_detected: '本次未检出' }[s] || s
 }
 function preview(url) {
   if (!url) return
@@ -229,7 +229,7 @@ watch(
       filter.value = 'all'
       await scrollToCase(route.query.case)
     } else if (route.query.job) {
-      filter.value = 'live'
+      filter.value = 'all'
       const hit = cases.value.find((c) => c.detectJobId === route.query.job)
       if (hit) await scrollToCase(hit.id)
     }
@@ -243,7 +243,7 @@ onMounted(async () => {
     filter.value = 'all'
     await scrollToCase(route.query.case)
   } else if (route.query.job) {
-    filter.value = 'live'
+    filter.value = 'all'
     const hit = cases.value.find((c) => c.detectJobId === route.query.job)
     if (hit) await scrollToCase(hit.id)
   }

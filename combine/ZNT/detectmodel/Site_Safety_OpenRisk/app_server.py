@@ -802,6 +802,23 @@ class AppState:
     def frontend_events(self) -> List[dict]:
         result = []
         for event in reversed(self.db.list("event")):
+            if not event.get("risks"):
+                original = self.media_url(event.get("media", {}).get("image_path"))
+                result.append({
+                    "id": f"{event['event_id']}:no-risk", "eventId": event["event_id"],
+                    "siteId": event.get("device", {}).get("site_id", "SITE-DEFAULT"),
+                    "expected": "本次未检出异常", "result": event.get("scene_summary") or "未发现进入候选链的风险。",
+                    "analysis": "未检出不等于现场无风险；请结合原图与实际现场人工核对。",
+                    "confidence": None, "autoConfirm": False, "humanReview": False,
+                    "noRiskDetected": True, "status": "no_risk_detected", "machineVerified": False,
+                    "humanReviewStatus": event.get("review", {}).get("status", "pending"),
+                    "suggestion": "保留本次未检出记录，不以旧标注或预设异常覆盖模型结果。",
+                    "cover": original, "images": {"original": original, "overlay": "", "mask": ""},
+                    "detectJobId": event.get("pipeline", {}).get("job_id"),
+                    "profile": event.get("pipeline", {}).get("config_name", ""),
+                    "source": "business-backend", "live": event.get("data_mode") == "realtime",
+                    "createTime": event.get("time", {}).get("detected_at", ""), "riskCount": 0,
+                })
             for risk in event.get("risks", []):
                 geom = risk.get("geometry") or {}
                 result.append({
@@ -1164,7 +1181,7 @@ def frontend_detection_summary(user: dict = Depends(auth_viewer)) -> dict:
     cases = STATE.frontend_events()
     review = sum(1 for c in cases if c["humanReview"])
     return {"summary": {"total": len(cases), "autoConfirmed": sum(1 for c in cases if c["autoConfirm"]),
-                        "humanReview": review, "highConfidenceNoReview": sum(1 for c in cases if c["confidence"] >= .9 and not c["humanReview"]),
+                        "humanReview": review, "highConfidenceNoReview": sum(1 for c in cases if (c["confidence"] or 0) >= .9 and not c["humanReview"]),
                         "liveCount": sum(1 for c in cases if c["live"]),
                         "conclusion": f"共 {len(cases)} 条真实持久化检测结果，其中 {review} 条需要人工复核。"},
             "cases": cases,
