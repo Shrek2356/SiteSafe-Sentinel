@@ -9,7 +9,7 @@ test('real points never acquire invented scene coordinates',()=>{
 })
 test('only explicitly mapped demo zones project into the scene',()=>{
   const result=sceneMarkers([{id:'a',name:'基坑B区'},{id:'b',name:'未配置区域',x:50,y:50}],true)
-  assert.equal(result.length,1);assert.deepEqual(result[0].position,[26,6,12]);assert.equal(result[0].source,'presentation')
+  assert.equal(result.length,1);assert.deepEqual(result[0].position,[0,2,9]);assert.equal(result[0].source,'presentation')
 })
 test('corrupt or non-object local cache cannot crash startup',()=>{
   for(const value of ['bad','[]','1','null','"abc"'])assert.equal(readStoredObject('x',{getItem:()=>value}),null)

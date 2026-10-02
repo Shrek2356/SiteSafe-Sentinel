@@ -3,13 +3,14 @@ import vue from '@vitejs/plugin-vue'
 import { resolve } from 'path'
 import { tmpdir } from 'os'
 import fontScale from './scripts/fontScale.js'
+import site3DAssets from './scripts/site3DAssets.js'
 
 /**
  * Vite 配置
  * 【后续修改入口】若后端代理地址变化，请修改下方 server.proxy
  */
 export default defineConfig({
-  plugins: [vue()],
+  plugins: [vue(), site3DAssets()],
   css: { postcss: { plugins: [fontScale()] } },
   cacheDir: resolve(tmpdir(), 'znt-pc-admin-vite-cache'),
   resolve: {
