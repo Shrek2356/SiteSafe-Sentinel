@@ -2,6 +2,32 @@
 ## SiteSafe-Sentinel 嘉然今天也在守护工地
 An open-risk visual detection and multi-agent safety management platform for construction sites.
 
+## 本分支：完整三维交互与源码启动
+
+首页已接入四川公司完整交互场景：8 个分区定位、8 路模拟摄像头、监控范围、无人机巡航暂停/继续与跟随，以及截图和全屏。业务点位入口保留在场景下方。
+
+- 模型、交互 HTML、纹理和说明统一位于 [`3D`](./3D)；交互页面可以离线打开。
+- 开发服务器直接读取 `3D`，前端构建时自动复制到 `combine/ZNT/pc-admin/dist/3D`。
+- HTML 自带场景和控制逻辑；GLB 用于模型交换。修改场景时需同步更新两者。
+- 本分支更新不包含在下面链接的上游 v1.5.2 安装包中。
+
+源码演示环境可按以下步骤配置（无需模型权重）：
+
+```bat
+conda create -n sitesafe python=3.12 -y
+conda activate sitesafe
+cd combine\ZNT
+python -m pip install -r requirements\detect-bridge.txt
+cd pc-admin
+npm ci
+cd ..
+start-sitesafe-demo.bat
+```
+
+另需安装 Node.js 22.12+ 或 24，并将 `node`、`npm` 加入 PATH。请在项目根目录打开 Anaconda Prompt 后执行上述命令。启动脚本优先使用已激活的 Python 环境，也支持 `SITESAFE_PYTHON` 和 `SITESAFE_NODE` 指定可执行文件。管理员演示账号为 `admin / admin123`，入口为 `http://127.0.0.1:5173/login`。
+
+如需大屏与移动端，分别在 `combine/ZNT/big-screen`、`combine/ZNT/mobile` 执行 `npm ci`，然后运行 `start-sitesafe-demo.bat --displays`。真实模型仍需单独安装 Full 依赖及配置权重。
+
 ## 下载与安装（Windows）
 
 **[下载 Windows 安装包 v1.5.2（EXE，约485 MiB）](https://github.com/Shrek2356/SiteSafe-Sentinel/releases/download/v1.5.2/SiteSafe-Sentinel_Setup_v1.5.2_x64.exe)** · [版本说明与校验值](https://github.com/Shrek2356/SiteSafe-Sentinel/releases/tag/v1.5.2)

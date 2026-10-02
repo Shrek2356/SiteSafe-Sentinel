@@ -189,3 +189,14 @@ combine/ZNT/runtime/desktop/
 
 # Local imported-source copies and authenticated review records are runtime data.
 combine/ZNT/detectmodel/Site_Safety_OpenRisk/knowledge_base/.history/
+
+# Locally installed dependencies, service state and diagnostic files
+node_modules/
+combine/ZNT/runtime/
+combine/ZNT/node-runtime/
+combine/ZNT/python-runtime/
+combine/ZNT/sitesafe-start-diagnostic.bat
+combine/ZNT/desktop-settings.local.json
+.env.local
+.env.*.local
+*.pid

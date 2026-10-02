@@ -3,10 +3,8 @@ setlocal
 cd /d "%~dp0"
 call "%~dp0sitesafe-runtime.bat"
 if errorlevel 1 goto failed
-"%PY%" "%~dp0sitesafe-launch.py" --profile demo --displays --no-browser
+"%PY%" "%~dp0sitesafe-launch.py" --profile demo %*
 if errorlevel 1 goto failed
-start "" "http://127.0.0.1:5174"
-start "" "http://127.0.0.1:5175"
 exit /b 0
 :failed
 echo Startup failed. See the error above and runtime/sitesafe-start logs.
