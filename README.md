@@ -8,9 +8,9 @@ An open-risk visual detection and multi-agent safety management platform for con
 
 [下载 Windows 安装版 v1.5.2](https://github.com/Shrek2356/SiteSafe-Sentinel/releases/download/v1.5.2/SiteSafe-Sentinel_Setup_v1.5.2_x64.exe) · [版本说明与校验值](https://github.com/Shrek2356/SiteSafe-Sentinel/releases/tag/v1.5.2) · [源码演示](#源码演示) · [系统架构与使用说明](./combine/ZNT/docs/系统架构与使用说明.md)
 
-![筑安智巡工作台：深蓝工业主题与三维工地](./assets/readme/theme-industrial-20260928.png)
+![筑安智巡工作台：深蓝工业主题与三维工地](./assets/readme/workbench-industrial-20261111.png)
 
-*v1.5.2 桌面工作台截图。三维工地和摄像头点位为演示布局。*
+*以下界面截自 2026-11-11 的 `main` 源码演示（PC 端 1.5.3）。三维工地和摄像头点位为演示布局。*
 
 ## 先选体验方式
 
@@ -33,21 +33,21 @@ GitHub 的 **Code → Download ZIP** 是源码，不是免配置运行包。安�
 
 ## 界面展示
 
-**检测证据**：对照原图、定位结果和风险描述，进入人工复核和工单处置。
+**检测证据**：以下为内置展示案例，可对照原图、定位结果和风险描述。真实检测记录可进入人工复核和工单处置。
 
-![检测结果与图像证据](./assets/readme/detection-evidence-20260928.png)
+![检测结果与图像证据](./assets/readme/detection-results-20261111.png)
 
 <details>
 <summary>黑白水墨主题</summary>
 
-![黑白水墨工作台](./assets/readme/theme-ink-20260928.png)
+![黑白水墨工作台与三维工地](./assets/readme/workbench-ink-20261111.png)
 
 </details>
 
 <details>
 <summary>规范导入与来源核验</summary>
 
-![安全知识库界面](./assets/readme/knowledge-20260928.png)
+![安全知识库管理界面](./assets/readme/knowledge-20261111.png)
 
 </details>
 
